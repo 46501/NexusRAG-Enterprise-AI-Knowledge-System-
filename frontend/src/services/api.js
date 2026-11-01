@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL,
   withCredentials: true,
 })
 
@@ -12,7 +14,7 @@ api.interceptors.response.use(
     if (err.response?.status === 401 && !original._retry) {
       original._retry = true
       try {
-        await axios.post('/api/v1/auth/refresh', {}, { withCredentials: true })
+        await axios.post(`${baseURL}/auth/refresh`, {}, { withCredentials: true })
         return api(original)
       } catch {
         return Promise.reject(err)
