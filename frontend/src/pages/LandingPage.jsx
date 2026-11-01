@@ -418,7 +418,8 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
 
-  const borderColor = active ? "rgba(255,255,255,0.08)" : hovered ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)";
+  const isHighlighted = hovered || active;
+  const borderColor = hovered ? "rgba(255,255,255,0.18)" : active ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.08)";
 
   return (
     <div
@@ -428,12 +429,12 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
       style={{
-        background: active ? "rgba(255,255,255,0.04)" : "transparent",
+        background: hovered ? "rgba(255,255,255,0.04)" : active ? "rgba(255,255,255,0.02)" : "transparent",
         borderTop: `1px solid ${borderColor}`,
         borderRight: `1px solid ${borderColor}`,
         borderBottom: `1px solid ${borderColor}`,
-        borderLeft: active ? `4px solid ${dept.accent}66` : `1px solid ${borderColor}`,
-        padding: active ? "12px 20px 12px 17px" : "12px 20px",
+        borderLeft: hovered ? `4px solid ${dept.accent}66` : `1px solid ${borderColor}`,
+        padding: hovered ? "12px 20px 12px 17px" : "12px 20px",
         display: "flex",
         alignItems: "center",
         gap: 14,
@@ -449,17 +450,17 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
           width: 6,
           height: 6,
           borderRadius: "50%",
-          background: active ? dept.accent : `${dept.accent}60`,
+          background: isHighlighted ? dept.accent : `${dept.accent}60`,
           flexShrink: 0,
           transition: "background 0.15s",
         }}
       />
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: active ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.60)", letterSpacing: "-0.01em" }}>
+        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: isHighlighted ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.60)", letterSpacing: "-0.01em" }}>
           {loading === dept.email ? "Signing in…" : dept.name}
         </div>
-        <div style={{ fontSize: "0.72rem", color: active ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.30)", marginTop: 2, lineHeight: 1.4 }}>
+        <div style={{ fontSize: "0.72rem", color: isHighlighted ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.30)", marginTop: 2, lineHeight: 1.4 }}>
           {dept.tagline}
         </div>
       </div>
