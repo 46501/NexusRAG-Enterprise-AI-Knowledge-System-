@@ -532,8 +532,10 @@ export default function LandingPage() {
           .built-on-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 36px !important; }
           .built-on-item { border-left: none !important; padding-left: 0 !important; padding-right: 0 !important; }
           .landing-footer { padding: 24px !important; }
+          .landing-header { padding: 14px 24px !important; }
         }
         @media (max-width: 479px) {
+          .landing-header { padding: 12px 20px !important; }
           .hero-section { padding: 40px 20px !important; }
           .built-on-grid { grid-template-columns: 1fr !important; }
           .how-it-works-section { padding: 56px 20px !important; }
@@ -543,6 +545,7 @@ export default function LandingPage() {
 
       {/* ── TOP NAV BAR ───────────────────────────────────── */}
       <header
+        className="landing-header"
         style={{
           borderBottom: "1px solid rgba(255,255,255,0.08)",
           padding: "16px 48px",
@@ -576,39 +579,26 @@ export default function LandingPage() {
           <span style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "-0.01em", color: "#fff" }}>
             NexusRAG
           </span>
-          <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", marginLeft: 6 }}>
-            Enterprise AI
-          </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {user ? (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span
-                  style={{
-                    fontSize: "0.75rem",
-                    color: "rgba(255,255,255,0.6)",
-                  }}
-                >
-                  Signed in as <strong style={{ color: "#fff" }}>{user.full_name || user.email}</strong>
-                </span>
-                <span
-                  style={{
-                    fontSize: "0.65rem",
-                    padding: "2px 8px",
-                    borderRadius: 4,
-                    background: "rgba(255,255,255,0.08)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    color: "#a78bfa",
-                    fontWeight: 600,
-                  }}
-                >
-                  {user.role}
-                </span>
-              </div>
+              <span
+                style={{
+                  fontSize: "0.65rem",
+                  padding: "3px 10px",
+                  borderRadius: 6,
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#a78bfa",
+                  fontWeight: 600,
+                }}
+              >
+                {user.role}
+              </span>
 
               <button
                 type="button"
