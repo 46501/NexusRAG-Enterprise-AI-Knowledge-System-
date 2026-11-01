@@ -49,12 +49,18 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+_cors_origins = [o.strip() for o in _s.cors_origin.split(",") if o.strip()]
+if "https://nexus-rag-enterprise-ai-knowledge-s.vercel.app" not in _cors_origins:
+    _cors_origins.append("https://nexus-rag-enterprise-ai-knowledge-s.vercel.app")
+if "http://localhost:5173" not in _cors_origins:
+    _cors_origins.append("http://localhost:5173")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[_s.cors_origin],
+    allow_origins=_cors_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE", "PATCH"],
-    allow_headers=["Content-Type"],
+    allow_methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 app.include_router(health.router)

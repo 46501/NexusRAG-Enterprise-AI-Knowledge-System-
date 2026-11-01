@@ -32,8 +32,8 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     openai_timeout_seconds: int = 30
 
-    app_env: str = "development"
-    cors_origin: str = "http://localhost:5173"
+    app_env: str = "production"
+    cors_origin: str = "https://nexus-rag-enterprise-ai-knowledge-s.vercel.app,http://localhost:5173"
 
     langchain_tracing_v2: bool = True
     langchain_api_key: str = ""
