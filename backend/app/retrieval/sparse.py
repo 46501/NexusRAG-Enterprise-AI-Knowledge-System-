@@ -8,7 +8,14 @@ from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-_INDEX_PATH = Path("data/bm25_index")
+def _get_index_path() -> Path:
+    p = Path("data/bm25_index")
+    if p.exists():
+        return p
+    p2 = Path("backend/data/bm25_index")
+    if p2.exists():
+        return p2
+    return p
 
 _retriever: bm25s.BM25 | None = None
 _doc_store: list[dict] | None = None
@@ -16,11 +23,12 @@ _doc_store: list[dict] | None = None
 
 def load_sparse_index() -> None:
     global _retriever, _doc_store
-    if not _INDEX_PATH.exists():
-        logger.info("No BM25 index found at %s — sparse search disabled until ingestion runs", _INDEX_PATH)
+    index_path = _get_index_path()
+    if not index_path.exists():
+        logger.info("No BM25 index found at %s — sparse search disabled until ingestion runs", index_path)
         return
-    _retriever = bm25s.BM25.load(str(_INDEX_PATH), load_corpus=False)
-    with open(_INDEX_PATH / "doc_store.json") as f:
+    _retriever = bm25s.BM25.load(str(index_path), load_corpus=False)
+    with open(index_path / "doc_store.json") as f:
         _doc_store = json.load(f)
     logger.info("BM25 index loaded with %d documents", len(_doc_store))
 
@@ -29,33 +37,36 @@ def clear_sparse_index() -> None:
     global _retriever, _doc_store
     _retriever = None
     _doc_store = None
-    if _INDEX_PATH.exists():
-        for f in _INDEX_PATH.iterdir():
+    index_path = _get_index_path()
+    if index_path.exists():
+        for f in index_path.iterdir():
             f.unlink(missing_ok=True)
-        logger.info("BM25 index files cleared from %s", _INDEX_PATH)
+        logger.info("BM25 index files cleared from %s", index_path)
     logger.info("BM25 in-memory index cleared")
 
 
 def reload_sparse_index() -> None:
     global _retriever, _doc_store
-    if not _INDEX_PATH.exists():
-        logger.warning("reload_sparse_index: index path %s not found, clearing in-memory index", _INDEX_PATH)
+    index_path = _get_index_path()
+    if not index_path.exists():
+        logger.warning("reload_sparse_index: index path %s not found, clearing in-memory index", index_path)
         _retriever = None
         _doc_store = None
         return
-    _retriever = bm25s.BM25.load(str(_INDEX_PATH), load_corpus=False)
-    with open(_INDEX_PATH / "doc_store.json") as f:
+    _retriever = bm25s.BM25.load(str(index_path), load_corpus=False)
+    with open(index_path / "doc_store.json") as f:
         _doc_store = json.load(f)
     logger.info("BM25 index reloaded from disk with %d documents", len(_doc_store))
 
 
 def save_sparse_index(corpus_texts: list[str], doc_metadata: list[dict]) -> None:
-    _INDEX_PATH.mkdir(parents=True, exist_ok=True)
+    index_path = _get_index_path()
+    index_path.mkdir(parents=True, exist_ok=True)
     retriever = bm25s.BM25()
     tokens = bm25s.tokenize(corpus_texts)
     retriever.index(tokens)
-    retriever.save(str(_INDEX_PATH))
-    with open(_INDEX_PATH / "doc_store.json", "w") as f:
+    retriever.save(str(index_path))
+    with open(index_path / "doc_store.json", "w") as f:
         json.dump(doc_metadata, f)
     logger.info("BM25 index saved with %d documents", len(corpus_texts))
 

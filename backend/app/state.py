@@ -15,7 +15,13 @@ def init_semaphore() -> None:
     rag_semaphore = asyncio.Semaphore(RAG_SEMAPHORE_MAX)
 
 
-def rag_slots_in_use() -> int:
+def get_semaphore() -> asyncio.Semaphore:
+    global rag_semaphore
     if rag_semaphore is None:
-        return 0
-    return RAG_SEMAPHORE_MAX - rag_semaphore._value
+        rag_semaphore = asyncio.Semaphore(RAG_SEMAPHORE_MAX)
+    return rag_semaphore
+
+
+def rag_slots_in_use() -> int:
+    sem = get_semaphore()
+    return RAG_SEMAPHORE_MAX - sem._value

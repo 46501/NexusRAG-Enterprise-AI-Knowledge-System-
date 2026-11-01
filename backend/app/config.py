@@ -7,16 +7,16 @@ _ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):
-    postgres_user: str = "rag_user"
-    postgres_password: str = "changeme"
-    postgres_db: str = "rag_db"
-    postgres_host: str = "localhost"
-    postgres_port: int = 5432
+    postgres_user: str = "postgres.nrdcvbtpetultmpvicee"
+    postgres_password: str = "Omkar465011"
+    postgres_db: str = "postgres"
+    postgres_host: str = "aws-0-eu-west-1.pooler.supabase.com"
+    postgres_port: int = 6543
 
     qdrant_host: str = "localhost"
     qdrant_port: int = 6333
-    qdrant_url: str | None = None
-    qdrant_api_key: str | None = None
+    qdrant_url: str | None = "https://044c5233-84a4-4c48-94c0-7d81b8786b16.us-west-2-0.aws.cloud.qdrant.io"
+    qdrant_api_key: str | None = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIiwic3ViamVjdCI6ImFwaS1rZXk6NThjOGNmMmMtMTI4NS00OGQzLTkzZWEtM2MzY2MyOTRmYTIyIn0.lGJQX-97W82WudccTuHI6srutCi83FCXTdhUK9gK70Q"
     qdrant_collection: str = "rag_documents"
 
     jwt_secret_key: str

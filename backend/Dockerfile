@@ -21,9 +21,8 @@ RUN pip install -r requirements.txt
 
 # Pre-download models to shared app cache inside image layer
 RUN python - <<'EOF'
-from sentence_transformers import SentenceTransformer, CrossEncoder
+from sentence_transformers import SentenceTransformer
 SentenceTransformer("BAAI/bge-small-en-v1.5", device="cpu")
-CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2", device="cpu")
 EOF
 
 RUN groupadd --gid 1001 appgroup && \

@@ -32,6 +32,5 @@ Thumbs.db
 envrag/
 
 # Generated data
-backend/data/bm25_index/
 backend/eval/results/
 

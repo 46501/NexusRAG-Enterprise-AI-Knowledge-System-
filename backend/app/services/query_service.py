@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 REFUSAL_TEXT = "I can only answer questions based on your department's documents"
 
-_CITATION_RE = re.compile(r"\[\d+\]")
+_CITATION_RE = re.compile(r"\[\d+(?:[,\s]+\d+)*\]")
 
 _FILLER_RE = re.compile(
     r"^(?:"
@@ -75,7 +75,7 @@ async def run_query(query: str, role: RoleEnum, top_k: int) -> dict:
     retrieval_query = _preprocess_query(query)
 
     try:
-        async with _state.rag_semaphore:
+        async with _state.get_semaphore():
             logger.info("RAG query start role=%s query=%r retrieval_query=%r", role, query[:60], retrieval_query[:60])
             fused = await hybrid_search(retrieval_query, allowed_roles, top_k=top_k * 3)
             ranked = _normalize_rerank_scores(rerank(retrieval_query, fused, top_k=top_k))
@@ -104,7 +104,7 @@ async def run_query_stream(
     retrieval_query = _preprocess_query(query)
 
     try:
-        async with _state.rag_semaphore:
+        async with _state.get_semaphore():
             logger.info("RAG stream start role=%s query=%r retrieval_query=%r", role, query[:60], retrieval_query[:60])
             fused = await hybrid_search(retrieval_query, allowed_roles, top_k=top_k * 3)
             ranked = _normalize_rerank_scores(rerank(retrieval_query, fused, top_k=top_k))

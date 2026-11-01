@@ -9,6 +9,5 @@ frontend/dist/
 **/__pycache__/
 **/*.pyc
 backend/.env
-backend/data/bm25_index/
 backend/eval/results/
 .git/
