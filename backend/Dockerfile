@@ -1,16 +1,12 @@
-FROM node:20-alpine AS frontend
-WORKDIR /frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ ./
-RUN npm run build
-
-FROM python:3.11-slim AS base
+FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    HF_HOME=/app/.cache/huggingface \
+    TRANSFORMERS_CACHE=/app/.cache/huggingface \
+    TORCH_HOME=/app/.cache/torch
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -23,6 +19,7 @@ COPY backend/requirements.txt .
 
 RUN pip install -r requirements.txt
 
+# Pre-download models to shared app cache inside image layer
 RUN python - <<'EOF'
 from sentence_transformers import SentenceTransformer, CrossEncoder
 SentenceTransformer("BAAI/bge-small-en-v1.5", device="cpu")
@@ -33,14 +30,15 @@ RUN groupadd --gid 1001 appgroup && \
     useradd --uid 1001 --gid appgroup --no-create-home appuser
 
 COPY backend/ .
-COPY --from=frontend /frontend/dist /app/frontend/dist
 
 RUN chown -R appuser:appgroup /app
 
-RUN mkdir -p /home/appuser/.cache && chown -R appuser:appgroup /home/appuser/.cache
-
 USER appuser
+
+# Force offline mode at runtime: use pre-baked local cache only, zero network overhead
+ENV HF_HUB_OFFLINE=1 \
+    TRANSFORMERS_OFFLINE=1
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]

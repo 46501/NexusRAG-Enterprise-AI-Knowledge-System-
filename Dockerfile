@@ -3,7 +3,10 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    HF_HOME=/app/.cache/huggingface \
+    TRANSFORMERS_CACHE=/app/.cache/huggingface \
+    TORCH_HOME=/app/.cache/torch
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -16,7 +19,7 @@ COPY backend/requirements.txt .
 
 RUN pip install -r requirements.txt
 
-# Pre-download models to cache inside image layer
+# Pre-download models to shared app cache inside image layer
 RUN python - <<'EOF'
 from sentence_transformers import SentenceTransformer, CrossEncoder
 SentenceTransformer("BAAI/bge-small-en-v1.5", device="cpu")
@@ -29,9 +32,12 @@ RUN groupadd --gid 1001 appgroup && \
 COPY backend/ .
 
 RUN chown -R appuser:appgroup /app
-RUN mkdir -p /home/appuser/.cache && chown -R appuser:appgroup /home/appuser/.cache
 
 USER appuser
+
+# Force offline mode at runtime: use pre-baked local cache only, zero network overhead
+ENV HF_HUB_OFFLINE=1 \
+    TRANSFORMERS_OFFLINE=1
 
 EXPOSE 8000
 
