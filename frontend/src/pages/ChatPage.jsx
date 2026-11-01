@@ -4,6 +4,7 @@ import { useQuery } from '../hooks/useQuery'
 import MessageBubble from '../components/MessageBubble'
 import ThinkingIndicator from '../components/ThinkingIndicator'
 import Chat from '../components/Chat'
+import BackHomeButton from '../components/BackHomeButton'
 import api from '../services/api'
 
 const DEPT = {
@@ -71,6 +72,7 @@ export default function ChatPage() {
           style={{ background: 'rgba(10,10,10,0.85)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
         >
           <div className="flex items-center gap-3">
+            <BackHomeButton />
             {d && (
               <div className="flex items-center gap-2">
                 <span

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
+import BackHomeButton from '../components/BackHomeButton'
 import api from '../services/api'
 
 const DEPARTMENTS = ['hr', 'engineering', 'finance']
@@ -288,6 +289,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <header className="border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <BackHomeButton />
           <span className="text-sm font-semibold text-white truncate">Enterprise Knowledge Base</span>
           <span className="text-white/20 hidden sm:inline">/</span>
           <span className="text-sm text-white/40 hidden sm:inline">Admin Panel</span>
