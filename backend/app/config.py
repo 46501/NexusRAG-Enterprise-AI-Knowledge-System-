@@ -1,6 +1,9 @@
 import os
 from functools import lru_cache
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -36,7 +39,7 @@ class Settings(BaseSettings):
     langchain_endpoint: str = "https://api.smith.langchain.com"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(str(_ENV_PATH), ".env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",

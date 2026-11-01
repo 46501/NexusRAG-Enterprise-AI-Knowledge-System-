@@ -483,7 +483,7 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
 }
 
 export default function LandingPage() {
-  const { setUser, logout } = useAuth();
+  const { user, setUser, logout } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState(null);
@@ -540,6 +540,165 @@ export default function LandingPage() {
           .built-on-section { padding: 56px 20px !important; }
         }
       `}</style>
+
+      {/* ── TOP NAV BAR ───────────────────────────────────── */}
+      <header
+        style={{
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          padding: "16px 48px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          maxWidth: 1160,
+          margin: "0 auto",
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: "rgba(139,92,246,0.15)",
+              border: "1px solid rgba(139,92,246,0.3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#a78bfa",
+              fontSize: "0.85rem",
+              fontWeight: 700,
+            }}
+          >
+            N
+          </div>
+          <span style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "-0.01em", color: "#fff" }}>
+            NexusRAG
+          </span>
+          <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", marginLeft: 6 }}>
+            Enterprise AI
+          </span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {user ? (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "rgba(255,255,255,0.6)",
+                  }}
+                >
+                  Signed in as <strong style={{ color: "#fff" }}>{user.full_name || user.email}</strong>
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.65rem",
+                    padding: "2px 8px",
+                    borderRadius: 4,
+                    background: "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    color: "#a78bfa",
+                    fontWeight: 600,
+                  }}
+                >
+                  {user.role}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const dest = user.role === "admin" ? "/admin-panel" : user.role === "demo_admin" ? "/demo-admin" : "/chat";
+                  navigate(dest);
+                }}
+                style={{
+                  background: "#7c3aed",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "6px 14px",
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "background 0.15s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#6d28d9")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#7c3aed")}
+              >
+                Go to Workspace &rarr;
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await logout();
+                  navigate("/login");
+                }}
+                style={{
+                  background: "transparent",
+                  color: "rgba(255,255,255,0.5)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 8,
+                  padding: "6px 12px",
+                  fontSize: "0.75rem",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "#fff";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "rgba(255,255,255,0.5)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+                }}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                style={{
+                  background: "transparent",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: 8,
+                  padding: "6px 14px",
+                  fontSize: "0.78rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                }}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/signup")}
+                style={{
+                  background: "#7c3aed",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "6px 14px",
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Sign Up
+              </button>
+            </>
+          )}
+        </div>
+      </header>
 
       {/* ── HERO ─────────────────────────────────────────── */}
       <section

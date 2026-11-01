@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.jwt_handler import create_access_token, create_refresh_token, decode_token, hash_token
 from app.auth.password import hash_password, verify_password
-from app.db.models import RefreshToken, User
+from app.db.models import RefreshToken, RoleEnum, User
 from app.utils.logger import get_logger
 from app.config import get_settings
 
@@ -13,24 +13,45 @@ logger = get_logger(__name__)
 _s = get_settings()
 
 
-async def register_user(db: AsyncSession, email: str, password: str, role: str) -> User:
-    existing = await db.scalar(select(User).where(User.email == email))
+async def register_user(
+    db: AsyncSession,
+    email: str,
+    password: str,
+    role: RoleEnum,
+    full_name: str | None = None,
+) -> User:
+    if role in (RoleEnum.admin, RoleEnum.demo_admin):
+        raise ValueError("Public registration cannot grant administrative privileges.")
+
+    clean_email = email.strip().lower()
+    existing = await db.scalar(select(User).where(User.email == clean_email))
     if existing:
         raise ValueError(f"Email already registered: {email}")
-    user = User(email=email, hashed_password=hash_password(password), role=role)
+
+    user = User(
+        email=clean_email,
+        hashed_password=hash_password(password),
+        role=role,
+        full_name=full_name.strip() if full_name else None,
+        is_active=True,
+    )
     db.add(user)
     await db.flush()
-    logger.info("Registered user %s with role %s", email, role)
+    logger.info("Registered user %s with role %s", clean_email, role)
     return user
 
 
 async def authenticate_user(db: AsyncSession, email: str, password: str) -> User:
-    user = await db.scalar(select(User).where(User.email == email))
+    clean_email = email.strip().lower()
+    user = await db.scalar(select(User).where(User.email == clean_email))
     if not user or not verify_password(password, user.hashed_password):
         raise ValueError("Invalid email or password")
     if not user.is_active:
         raise ValueError("Account is inactive")
-    logger.info("Authenticated user %s", email)
+
+    user.last_login_at = datetime.now(timezone.utc)
+    await db.flush()
+    logger.info("Authenticated user %s", clean_email)
     return user
 
 

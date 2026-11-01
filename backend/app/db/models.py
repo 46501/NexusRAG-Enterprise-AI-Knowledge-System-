@@ -29,6 +29,10 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[RoleEnum] = mapped_column(SAEnum(RoleEnum), nullable=False)
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    full_name: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
+    last_login_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

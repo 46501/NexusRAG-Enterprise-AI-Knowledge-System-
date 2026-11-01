@@ -5,6 +5,16 @@ export async function login(email, password) {
   return res.data
 }
 
+export async function signup({ fullName, email, password, department }) {
+  const res = await api.post('/auth/signup', {
+    full_name: fullName,
+    email,
+    password,
+    department,
+  })
+  return res.data
+}
+
 export async function logout() {
   await api.post('/auth/logout')
 }

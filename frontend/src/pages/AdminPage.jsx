@@ -454,7 +454,7 @@ export default function AdminPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wide">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wide">User</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wide">Role</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wide">Joined</th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-white/40 uppercase tracking-wide">Active</th>
@@ -470,7 +470,12 @@ export default function AdminPage() {
                           : u.email
                         return (
                           <tr key={u.id} className="hover:bg-white/[0.02] transition-colors">
-                            <td className="px-6 py-3.5 text-white/80 text-xs">{displayEmail}</td>
+                            <td className="px-6 py-3.5 text-xs">
+                              <div className="font-medium text-white/90">
+                                {u.full_name || (u.role === 'admin' ? 'System Administrator' : `${u.role.toUpperCase()} User`)}
+                              </div>
+                              <div className="text-white/40 text-[11px] font-mono mt-0.5">{displayEmail}</div>
+                            </td>
                             <td className="px-6 py-3.5"><DeptBadge dept={u.role} /></td>
                             <td className="px-6 py-3.5 text-white/40 text-xs whitespace-nowrap">{fmtDate(u.created_at)}</td>
                             <td className="px-6 py-3.5 text-right" style={{ overflow: 'visible' }}>

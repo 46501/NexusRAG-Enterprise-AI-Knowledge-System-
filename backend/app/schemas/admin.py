@@ -26,6 +26,8 @@ class UserAdminResponse(BaseModel):
     role: RoleEnum
     is_active: bool
     created_at: datetime
+    full_name: str | None = None
+    last_login_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 

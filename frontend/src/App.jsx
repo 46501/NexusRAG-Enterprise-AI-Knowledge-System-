@@ -1,21 +1,38 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminPage from './pages/AdminPage'
 import ChatPage from './pages/ChatPage'
 
+function RootRoute() {
+  const { user } = useAuth()
+  if (user === undefined) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-white/20 border-t-violet-500 rounded-full animate-spin" />
+      </div>
+    )
+  }
+  if (user === null) {
+    return <Navigate to="/login" replace />
+  }
+  return <LandingPage />
+}
+
 function RequireAuth({ children }) {
   const { user } = useAuth()
   if (user === undefined) return null
-  if (user === null) return <Navigate to="/" replace />
+  if (user === null) return <Navigate to="/login" replace />
   return children
 }
 
 function RequireAdmin({ children }) {
   const { user } = useAuth()
   if (user === undefined) return null
-  if (user === null) return <Navigate to="/admin" replace />
+  if (user === null) return <Navigate to="/login" replace />
   if (user.role !== 'admin') return <Navigate to="/chat" replace />
   return children
 }
@@ -23,7 +40,7 @@ function RequireAdmin({ children }) {
 function RequireDemoAdmin({ children }) {
   const { user } = useAuth()
   if (user === undefined) return null
-  if (user === null) return <Navigate to="/" replace />
+  if (user === null) return <Navigate to="/login" replace />
   if (user.role !== 'demo_admin') return <Navigate to="/chat" replace />
   return children
 }
@@ -44,11 +61,20 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          {/* Unauthenticated visitors at / see Login; Authenticated visitors see Landing Dashboard */}
+          <Route path="/" element={<RootRoute />} />
+
+          {/* Authentication Routes */}
+          <Route path="/login" element={<RequireGuest><LoginPage /></RequireGuest>} />
+          <Route path="/signup" element={<RequireGuest><SignupPage /></RequireGuest>} />
           <Route path="/admin" element={<RequireGuest><AdminLoginPage /></RequireGuest>} />
+
+          {/* Protected Application Routes */}
           <Route path="/admin-panel" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
           <Route path="/demo-admin" element={<RequireDemoAdmin><AdminPage /></RequireDemoAdmin>} />
           <Route path="/chat" element={<RequireAuth><ChatPage /></RequireAuth>} />
+
+          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
