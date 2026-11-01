@@ -13,13 +13,24 @@ from app.config import get_settings
 from app.db.models import RoleEnum, User
 from app.utils.logger import get_logger
 
+import os
+
 logger = get_logger(__name__)
 _s = get_settings()
 
-_SYNC_DB_URL = (
-    f"postgresql+psycopg2://{_s.postgres_user}:{_s.postgres_password}"
-    f"@{_s.postgres_host}:{_s.postgres_port}/{_s.postgres_db}"
-)
+_raw = os.getenv("DATABASE_URL")
+if _raw:
+    if _raw.startswith("postgres://"):
+        _SYNC_DB_URL = _raw.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif _raw.startswith("postgresql://") and not _raw.startswith("postgresql+psycopg2://"):
+        _SYNC_DB_URL = _raw.replace("postgresql://", "postgresql+psycopg2://", 1)
+    else:
+        _SYNC_DB_URL = _raw
+else:
+    _SYNC_DB_URL = (
+        f"postgresql+psycopg2://{_s.postgres_user}:{_s.postgres_password}"
+        f"@{_s.postgres_host}:{_s.postgres_port}/{_s.postgres_db}"
+    )
 
 
 def main() -> None:

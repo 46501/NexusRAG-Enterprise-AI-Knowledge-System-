@@ -53,7 +53,10 @@ def ingest_file(
 
     doc_meta = build_doc_meta(file_path, role_access, original_filename=original_filename)
 
-    client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port)
+    if _s.qdrant_url:
+        client = QdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key)
+    else:
+        client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port)
     texts = [c.text for c in chunks]
     vectors = embed(texts)
 
@@ -94,7 +97,10 @@ def rebuild_bm25_index(db: Session | None = None) -> None:
     corpus_texts: list[str] = []
     doc_metadata: list[dict] = []
 
-    client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port)
+    if _s.qdrant_url:
+        client = QdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key)
+    else:
+        client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port)
 
     offset = None
     all_points = []

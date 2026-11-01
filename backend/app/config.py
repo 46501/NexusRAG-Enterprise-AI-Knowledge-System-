@@ -7,14 +7,16 @@ _ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):
-    postgres_user: str
-    postgres_password: str
-    postgres_db: str
+    postgres_user: str = "rag_user"
+    postgres_password: str = "changeme"
+    postgres_db: str = "rag_db"
     postgres_host: str = "localhost"
     postgres_port: int = 5432
 
     qdrant_host: str = "localhost"
     qdrant_port: int = 6333
+    qdrant_url: str | None = None
+    qdrant_api_key: str | None = None
     qdrant_collection: str = "rag_documents"
 
     jwt_secret_key: str
@@ -47,6 +49,13 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
+        raw = os.getenv("DATABASE_URL")
+        if raw:
+            if raw.startswith("postgres://"):
+                return raw.replace("postgres://", "postgresql+asyncpg://", 1)
+            if raw.startswith("postgresql://") and not raw.startswith("postgresql+asyncpg://"):
+                return raw.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return raw
         return (
             f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"

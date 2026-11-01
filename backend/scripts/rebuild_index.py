@@ -54,7 +54,10 @@ def main() -> None:
     logger.info("Loading embedder (required by bm25s tokeniser path)...")
     load_embedder()
 
-    client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port)
+    if _s.qdrant_url:
+        client = QdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key)
+    else:
+        client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port)
 
     collections = [c.name for c in client.get_collections().collections]
     if _s.qdrant_collection not in collections:
