@@ -586,6 +586,17 @@ export default function LandingPage() {
             <>
               <span
                 style={{
+                  fontSize: "0.8rem",
+                  fontWeight: 500,
+                  color: "rgba(255,255,255,0.9)",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {user.full_name || user.email}
+              </span>
+
+              <span
+                style={{
                   fontSize: "0.65rem",
                   padding: "3px 10px",
                   borderRadius: 6,
