@@ -17,12 +17,16 @@ SYSTEM_INSTRUCTION = (
     "(like 'hi', 'hello', 'thanks', 'good'), do NOT use the context documents at all. "
     "Just respond warmly and briefly as a helpful assistant would, then invite them to ask about their department's documents. "
     "The context documents below are only relevant when the user asks an actual question. "
-    "You are a helpful enterprise knowledge assistant. "
     "Answer the user's question using only the context provided. "
     "Cite sources by their bracketed number, e.g. [1]. "
     "Only if the question is a genuine off-topic request unrelated to work (e.g. write me a poem, what is the weather), "
     "respond with exactly: "
     "\"I can only answer questions based on your department's documents.\""
+    "\n\nAt the end of your response based on documents, provide 2 to 3 concise relevant follow-up questions formatted exactly as:\n"
+    "---FOLLOW_UPS---\n"
+    "- First follow-up question?\n"
+    "- Second follow-up question?\n"
+    "- Third follow-up question?"
 )
 
 GREETING_SYSTEM_INSTRUCTION = (
@@ -34,6 +38,21 @@ GREETING_SYSTEM_INSTRUCTION = (
 )
 
 _FALLBACK = "I can only answer questions based on your department's documents."
+
+
+def parse_answer_and_follow_ups(raw_text: str) -> tuple[str, list[str]]:
+    if not raw_text:
+        return "", []
+    if "---FOLLOW_UPS---" in raw_text:
+        parts = raw_text.split("---FOLLOW_UPS---", 1)
+        answer = parts[0].strip()
+        follow_ups = [
+            line.strip().lstrip("-*•0123456789. ").strip()
+            for line in parts[1].splitlines()
+            if line.strip() and len(line.strip().lstrip("-*•0123456789. ").strip()) > 3
+        ]
+        return answer, follow_ups[:3]
+    return raw_text, []
 
 
 def load_generator() -> None:
@@ -107,7 +126,15 @@ async def generate(query: str, chunks: list[dict]) -> dict:
 
     context = _build_context(chunks)
     sources = _extract_sources(chunks)
-    prompt = f"Context:\n{context}\n\nQuestion: {query}"
+    prompt = (
+        f"Context:\n{context}\n\n"
+        f"Question: {query}\n\n"
+        "At the end of your response based on the documents, provide 2 to 3 concise relevant follow-up questions formatted exactly as:\n"
+        "---FOLLOW_UPS---\n"
+        "- [First follow-up question]\n"
+        "- [Second follow-up question]\n"
+        "- [Third follow-up question]"
+    )
 
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
@@ -124,13 +151,15 @@ async def generate(query: str, chunks: list[dict]) -> dict:
         answer = response.text or _FALLBACK
         usage = getattr(response, "usage_metadata", None)
         token_count = getattr(usage, "total_token_count", 0) if usage else 0
+        clean_answer, follow_ups = parse_answer_and_follow_ups(answer)
         logger.info(
-            "Generated answer for query=%r using %d chunks, total_tokens=%d",
+            "Generated answer for query=%r using %d chunks, total_tokens=%d, follow_ups=%d",
             query[:60],
             len(chunks),
             token_count,
+            len(follow_ups),
         )
-        return {"answer": answer, "sources": sources}
+        return {"answer": clean_answer, "sources": sources, "suggested_questions": follow_ups}
     except errors.APIError as exc:
         logger.error("Gemini API error during generation: code=%s, status=%s", exc.code, exc.status)
         raise
@@ -168,7 +197,15 @@ async def generate_stream(query: str, chunks: list[dict]) -> AsyncIterator[str]:
         return
 
     context = _build_context(chunks)
-    prompt = f"Context:\n{context}\n\nQuestion: {query}"
+    prompt = (
+        f"Context:\n{context}\n\n"
+        f"Question: {query}\n\n"
+        "At the end of your response based on the documents, provide 2 to 3 concise relevant follow-up questions formatted exactly as:\n"
+        "---FOLLOW_UPS---\n"
+        "- [First follow-up question]\n"
+        "- [Second follow-up question]\n"
+        "- [Third follow-up question]"
+    )
 
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,

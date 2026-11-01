@@ -30,7 +30,12 @@ export function useQuery() {
     if (!stream) {
       try {
         const res = await api.post('/query', { query, stream: false })
-        appendMessage({ role: 'assistant', content: res.data.answer, sources: res.data.sources ?? [] })
+        appendMessage({
+          role: 'assistant',
+          content: res.data.answer,
+          sources: res.data.sources ?? [],
+          suggestedQuestions: res.data.suggested_questions ?? [],
+        })
       } catch (err) {
         if (err.response?.status === 401) {
           window.location.href = '/login'
@@ -104,7 +109,11 @@ export function useQuery() {
               }
               const remaining = pendingTokensRef.current.splice(0).join('')
               if (remaining) updateLastAssistant((prev) => ({ content: (prev.content ?? '') + remaining }))
-              updateLastAssistant({ sources: payload.sources ?? [], streaming: false })
+              updateLastAssistant({
+                sources: payload.sources ?? [],
+                suggestedQuestions: payload.suggested_questions ?? [],
+                streaming: false,
+              })
             }
           } catch (_) {
             // Ignore malformed individual SSE line

@@ -20,3 +20,4 @@ class SourceSchema(BaseModel):
 class QueryResponse(BaseModel):
     answer: str
     sources: list[SourceSchema]
+    suggested_questions: list[str] = []

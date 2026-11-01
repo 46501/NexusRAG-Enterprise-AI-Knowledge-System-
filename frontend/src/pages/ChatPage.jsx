@@ -197,7 +197,9 @@ export default function ChatPage() {
                     userRole={user?.role}
                     sources={msg.sources}
                     streaming={msg.streaming}
+                    suggestedQuestions={msg.suggestedQuestions}
                     onOpenCitation={(idx, srcList) => setActiveCitation({ isOpen: true, index: idx, sources: srcList || [] })}
+                    onSelectSuggestion={(q) => sendQuery(q, true)}
                   />
                 ))}
                 {thinking && <ThinkingIndicator />}

@@ -28,10 +28,42 @@ function toBoldHtml(text, isDark) {
     .join('')
 }
 
-export default function MessageBubble({ role, content, userRole, sources, streaming, onOpenCitation }) {
+export default function MessageBubble({
+  role,
+  content,
+  userRole,
+  sources,
+  streaming,
+  suggestedQuestions,
+  onOpenCitation,
+  onSelectSuggestion,
+}) {
   const { isDark } = useTheme()
   const isUser = role === 'user'
   const userBg = DEPT_BG[userRole] ?? '#374151'
+
+  // Extract follow-up questions from content or props
+  let cleanContent = content || ''
+  let followUpList = []
+
+  if (!isUser && content) {
+    const delimiter = /---FOLLOW_UPS---|Suggested Follow-ups:|Suggested Questions:/i
+    if (delimiter.test(content)) {
+      const parts = content.split(delimiter)
+      cleanContent = parts[0].trim()
+      if (parts[1]) {
+        followUpList = parts[1]
+          .split('\n')
+          .map((l) => l.replace(/^[-*•\d.]\s*/, '').trim())
+          .filter((l) => l.length > 3)
+          .slice(0, 3)
+      }
+    }
+  }
+
+  if (!isUser && (!followUpList || followUpList.length === 0) && suggestedQuestions && suggestedQuestions.length > 0) {
+    followUpList = suggestedQuestions.slice(0, 3)
+  }
 
   const unique = !isUser && sources && sources.length > 0
     ? Array.from(
@@ -79,9 +111,11 @@ export default function MessageBubble({ role, content, userRole, sources, stream
       >
         {isUser
           ? content
-          : <span dangerouslySetInnerHTML={{ __html: toBoldHtml(content, isDark) }} />
+          : <span dangerouslySetInnerHTML={{ __html: toBoldHtml(cleanContent, isDark) }} />
         }
       </div>
+
+      {/* Sources Bar */}
       {unique.length > 0 && (
         <div className="flex gap-1.5 flex-wrap max-w-[78%] items-center">
           <span className="text-[10px] font-semibold uppercase tracking-wider mr-1 opacity-50">
@@ -96,6 +130,37 @@ export default function MessageBubble({ role, content, userRole, sources, stream
           ))}
         </div>
       )}
+
+      {/* Clickable Suggested Follow-up Pills */}
+      {!isUser && !streaming && followUpList.length > 0 && (
+        <div className="flex flex-col gap-2 mt-1 max-w-[78%]">
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase opacity-50">
+            <span>✨</span>
+            <span>Suggested follow-ups</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {followUpList.map((q, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => onSelectSuggestion && onSelectSuggestion(q)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-left transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99] shadow-sm"
+                style={{
+                  background: isDark ? 'rgba(139,92,246,0.12)' : '#f5f3ff',
+                  color: isDark ? '#c4b5fd' : '#6d28d9',
+                  border: isDark ? '1px solid rgba(139,92,246,0.25)' : '1px solid #ddd6fe',
+                  fontFamily: 'inherit',
+                }}
+                title={`Ask: "${q}"`}
+              >
+                <span className="opacity-70 text-[11px]">↳</span>
+                <span>{q}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes msgFadeIn { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: translateY(0) } }
         .msg-body p:last-child { margin-bottom: 0 !important; }

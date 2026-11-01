@@ -183,3 +183,4 @@ export default function AccessDeniedPage({ targetDepartment: propTargetDept, use
     </div>
   )
 }
+
