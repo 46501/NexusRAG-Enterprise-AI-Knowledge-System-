@@ -520,14 +520,46 @@ export default function LandingPage() {
   return (
     <div style={{ background: "#0f1115", color: "#fff", fontFamily: FONT, overflowX: "hidden" }}>
       <style>{`
+        .how-it-works-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+        }
+        .how-it-works-step {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          border-radius: 14px;
+          padding: 36px 30px;
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
+          transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+        }
+        .how-it-works-step:hover {
+          transform: translateY(-3px);
+          border-color: rgba(139, 92, 246, 0.45);
+          background: rgba(139, 92, 246, 0.04);
+          box-shadow: 0 10px 24px -4px rgba(139, 92, 246, 0.12);
+        }
+        .how-it-works-step-num {
+          display: block;
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.22);
+          letter-spacing: 0.08em;
+          margin-bottom: 20px;
+          transition: color 0.25s ease;
+        }
+        .how-it-works-step:hover .how-it-works-step-num {
+          color: #a78bfa;
+        }
         @media (max-width: 1023px) {
           .hero-section { padding: 48px 24px !important; align-items: flex-start !important; }
           .hero-grid { grid-template-columns: 1fr !important; column-gap: 0 !important; }
           .hero-right { max-width: 100% !important; margin-left: 0 !important; margin-top: 36px !important; }
           .how-it-works-section { padding: 72px 24px !important; }
-          .how-it-works-grid { grid-template-columns: 1fr !important; }
-          .how-it-works-step { border-left: none !important; padding-left: 0 !important; padding-top: 36px !important; border-top: 1px solid rgba(255,255,255,0.07) !important; }
-          .how-it-works-step:first-child { padding-top: 0 !important; border-top: none !important; }
+          .how-it-works-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .how-it-works-step { padding: 28px 24px !important; }
           .built-on-section { padding: 72px 24px !important; }
           .built-on-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 36px !important; }
           .built-on-item { border-left: none !important; padding-left: 0 !important; padding-right: 0 !important; }
@@ -539,6 +571,7 @@ export default function LandingPage() {
           .hero-section { padding: 40px 20px !important; }
           .built-on-grid { grid-template-columns: 1fr !important; }
           .how-it-works-section { padding: 56px 20px !important; }
+          .how-it-works-step { padding: 24px 20px !important; }
           .built-on-section { padding: 56px 20px !important; }
         }
       `}</style>
@@ -785,7 +818,7 @@ export default function LandingPage() {
       <section
         className="how-it-works-section"
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.07)",
+          borderTop: "1px solid rgba(255,255,255,0.12)",
           padding: "120px 48px",
           maxWidth: 1160,
           margin: "0 auto",
@@ -796,24 +829,19 @@ export default function LandingPage() {
         <p style={{ fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", margin: "0 0 56px 0" }}>
           How it works
         </p>
-        <div className="how-it-works-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
-          {STEPS.map((step, i) => (
+        <div className="how-it-works-grid">
+          {STEPS.map((step) => (
             <div
               key={step.n}
               className="how-it-works-step"
-              style={{
-                borderLeft: i === 0 ? "none" : "1px solid rgba(255,255,255,0.07)",
-                paddingLeft: i === 0 ? 0 : 40,
-                paddingRight: 40,
-              }}
             >
-              <span style={{ display: "block", fontSize: "0.7rem", fontWeight: 500, color: "rgba(255,255,255,0.18)", letterSpacing: "0.06em", marginBottom: 18 }}>
+              <span className="how-it-works-step-num">
                 {step.n}
               </span>
               <h3 style={{ fontSize: "0.95rem", fontWeight: 600, letterSpacing: "-0.02em", color: "#fff", margin: "0 0 10px 0" }}>
                 {step.title}
               </h3>
-              <p style={{ fontSize: "0.825rem", color: "rgba(255,255,255,0.38)", lineHeight: 1.65, margin: 0 }}>
+              <p style={{ fontSize: "0.825rem", color: "rgba(255,255,255,0.40)", lineHeight: 1.65, margin: 0 }}>
                 {step.desc}
               </p>
             </div>
@@ -825,7 +853,7 @@ export default function LandingPage() {
       <section
         className="built-on-section"
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.07)",
+          borderTop: "1px solid rgba(255,255,255,0.15)",
           padding: "100px 48px",
           maxWidth: 1160,
           margin: "0 auto",
