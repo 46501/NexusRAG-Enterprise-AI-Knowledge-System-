@@ -553,6 +553,40 @@ export default function LandingPage() {
         .how-it-works-step:hover .how-it-works-step-num {
           color: #a78bfa;
         }
+        .built-on-grid {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 16px;
+        }
+        .built-on-item {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          border-radius: 14px;
+          padding: 28px 22px;
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
+          transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+        }
+        .built-on-item:hover {
+          transform: translateY(-3px);
+          border-color: rgba(139, 92, 246, 0.45);
+          background: rgba(139, 92, 246, 0.04);
+          box-shadow: 0 10px 24px -4px rgba(139, 92, 246, 0.12);
+        }
+        .built-on-label {
+          display: block;
+          font-family: 'JetBrains Mono', 'Fira Mono', 'Consolas', monospace;
+          font-size: 0.65rem;
+          font-weight: 600;
+          letter-spacing: 0.12em;
+          color: rgba(255, 255, 255, 0.28);
+          margin-bottom: 22px;
+          transition: color 0.25s ease;
+        }
+        .built-on-item:hover .built-on-label {
+          color: #a78bfa;
+        }
         @media (max-width: 1023px) {
           .hero-section { padding: 48px 24px !important; align-items: flex-start !important; }
           .hero-grid { grid-template-columns: 1fr !important; column-gap: 0 !important; }
@@ -561,18 +595,21 @@ export default function LandingPage() {
           .how-it-works-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
           .how-it-works-step { padding: 28px 24px !important; }
           .built-on-section { padding: 72px 24px !important; }
-          .built-on-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 36px !important; }
-          .built-on-item { border-left: none !important; padding-left: 0 !important; padding-right: 0 !important; }
+          .built-on-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
+          .built-on-item { padding: 24px 20px !important; }
           .landing-footer { padding: 24px !important; }
           .landing-header { padding: 14px 24px !important; }
+        }
+        @media (max-width: 639px) {
+          .built-on-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
         }
         @media (max-width: 479px) {
           .landing-header { padding: 12px 20px !important; }
           .hero-section { padding: 40px 20px !important; }
-          .built-on-grid { grid-template-columns: 1fr !important; }
           .how-it-works-section { padding: 56px 20px !important; }
           .how-it-works-step { padding: 24px 20px !important; }
           .built-on-section { padding: 56px 20px !important; }
+          .built-on-item { padding: 20px 18px !important; }
         }
       `}</style>
 
@@ -864,28 +901,13 @@ export default function LandingPage() {
         <p style={{ fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", margin: "0 0 48px 0" }}>
           Built on
         </p>
-        <div className="built-on-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 0 }}>
-          {TECH_GROUPS.map((group, i) => (
+        <div className="built-on-grid">
+          {TECH_GROUPS.map((group) => (
             <div
               key={group.label}
               className="built-on-item"
-              style={{
-                borderLeft: i === 0 ? "none" : "1px solid rgba(255,255,255,0.07)",
-                paddingLeft: i === 0 ? 0 : 32,
-                paddingRight: i === TECH_GROUPS.length - 1 ? 0 : 32,
-              }}
             >
-              <span
-                style={{
-                  display: "block",
-                  fontFamily: MONO,
-                  fontSize: "0.65rem",
-                  fontWeight: 500,
-                  letterSpacing: "0.1em",
-                  color: "rgba(255,255,255,0.2)",
-                  marginBottom: 24,
-                }}
-              >
+              <span className="built-on-label">
                 [{group.label}]
               </span>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -909,7 +931,7 @@ export default function LandingPage() {
       <footer
         className="landing-footer"
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.07)",
+          borderTop: "1px solid rgba(255,255,255,0.14)",
           padding: "28px 48px",
           display: "flex",
           justifyContent: "space-between",
