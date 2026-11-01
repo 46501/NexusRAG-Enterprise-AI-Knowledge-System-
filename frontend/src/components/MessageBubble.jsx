@@ -1,4 +1,5 @@
 import SourceCard from './SourceCard'
+import { useTheme } from '../context/ThemeContext'
 
 const DEPT_BG = {
   hr: '#7c3aed',
@@ -6,14 +7,15 @@ const DEPT_BG = {
   finance: '#059669',
 }
 
-function toBoldHtml(text) {
+function toBoldHtml(text, isDark) {
   const markers = (text.match(/\*\*/g) || []).length
   const cleaned = markers % 2 !== 0 ? text.replace(/\*\*(?=[^*]*$)/, '') : text
+  const strongColor = isDark ? 'rgba(255,255,255,0.95)' : '#020617'
   const escaped = cleaned
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/\*\*(.*?)\*\*/gs, '<strong style="font-weight:600;color:rgba(255,255,255,0.95)">$1</strong>')
+    .replace(/\*\*(.*?)\*\*/gs, `<strong style="font-weight:600;color:${strongColor}">$1</strong>`)
   return escaped
     .split(/\n\n+/)
     .map((p) => `<p style="margin:0 0 14px 0;line-height:1.6">${p.replace(/\n/g, '<br>')}</p>`)
@@ -21,6 +23,7 @@ function toBoldHtml(text) {
 }
 
 export default function MessageBubble({ role, content, userRole, sources, streaming }) {
+  const { isDark } = useTheme()
   const isUser = role === 'user'
   const userBg = DEPT_BG[userRole] ?? '#374151'
 
@@ -49,12 +52,17 @@ export default function MessageBubble({ role, content, userRole, sources, stream
           borderRadius: isUser ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
           ...(isUser
             ? { background: userBg, color: '#fff', whiteSpace: 'pre-wrap' }
-            : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.08)' })
+            : {
+                background: isDark ? 'rgba(255,255,255,0.06)' : '#ffffff',
+                color: isDark ? 'rgba(255,255,255,0.85)' : '#0f172a',
+                border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+                boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)',
+              })
         }}
       >
         {isUser
           ? content
-          : <span dangerouslySetInnerHTML={{ __html: toBoldHtml(content) }} />
+          : <span dangerouslySetInnerHTML={{ __html: toBoldHtml(content, isDark) }} />
         }
       </div>
       {unique.length > 0 && (

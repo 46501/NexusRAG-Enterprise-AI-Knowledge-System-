@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom'
+import { useTheme } from '../context/ThemeContext'
 
 export default function BackHomeButton({ className = '' }) {
   const navigate = useNavigate()
+  const { isDark } = useTheme()
 
   return (
     <button
@@ -9,10 +11,15 @@ export default function BackHomeButton({ className = '' }) {
       onClick={() => navigate('/')}
       title="Back to Home"
       aria-label="Back to Home"
-      className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-white/50 hover:text-white hover:bg-white/10 active:bg-white/15 transition-all duration-150 cursor-pointer flex-shrink-0 ${className}`}
+      className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150 cursor-pointer flex-shrink-0 ${
+        isDark
+          ? 'text-white/60 hover:text-white hover:bg-white/10 active:bg-white/15'
+          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200'
+      } ${className}`}
       style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid rgba(255, 255, 255, 0.10)',
+        background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
+        border: isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1',
+        boxShadow: isDark ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.05)',
       }}
     >
       <svg

@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useTheme } from '../context/ThemeContext'
 
 const DEPT_BTN = {
   hr: '#7c3aed',
@@ -7,6 +8,7 @@ const DEPT_BTN = {
 }
 
 export default function Chat({ onSend, disabled, userRole }) {
+  const { isDark } = useTheme()
   const [input, setInput] = useState('')
   const textareaRef = useRef(null)
   const btnColor = DEPT_BTN[userRole] ?? '#374151'
@@ -43,8 +45,12 @@ export default function Chat({ onSend, disabled, userRole }) {
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); submit() }}
-      className="flex items-end gap-2.5 rounded-[14px] px-3.5 py-2.5"
-      style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.08)' }}
+      className="flex items-end gap-2.5 rounded-[14px] px-3.5 py-2.5 transition-colors"
+      style={{
+        background: isDark ? '#141414' : '#ffffff',
+        border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1',
+        boxShadow: isDark ? 'none' : '0 2px 6px rgba(0,0,0,0.04)',
+      }}
     >
       <textarea
         ref={textareaRef}
@@ -54,11 +60,13 @@ export default function Chat({ onSend, disabled, userRole }) {
         placeholder="Ask a question about your department's documents…"
         rows={1}
         disabled={disabled}
-        className="flex-1 resize-none text-sm focus:outline-none disabled:opacity-50 placeholder:text-white/40"
+        className={`flex-1 resize-none text-sm focus:outline-none disabled:opacity-50 ${
+          isDark ? 'placeholder:text-white/40' : 'placeholder:text-slate-400'
+        }`}
         style={{
           lineHeight: '1.5rem',
           background: 'transparent',
-          color: 'rgba(255,255,255,0.85)',
+          color: isDark ? 'rgba(255,255,255,0.85)' : '#0f172a',
           fontFamily: 'inherit',
           overflowY: 'hidden',
         }}
@@ -66,7 +74,7 @@ export default function Chat({ onSend, disabled, userRole }) {
       <button
         type="submit"
         disabled={disabled || !input.trim()}
-        className="shrink-0 text-white text-xs font-medium rounded-[10px] px-4 py-1.5 transition-opacity disabled:opacity-30"
+        className="shrink-0 text-white text-xs font-medium rounded-[10px] px-4 py-1.5 transition-opacity disabled:opacity-30 cursor-pointer"
         style={{ background: btnColor }}
       >
         Send

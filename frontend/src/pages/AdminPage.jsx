@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import BackHomeButton from '../components/BackHomeButton'
+import ThemeToggle from '../components/ThemeToggle'
 import api from '../services/api'
 
 const DEPARTMENTS = ['hr', 'engineering', 'finance']
@@ -12,15 +14,25 @@ const METRICS = [
   { key: 'context_precision', label: 'Context Precision' },
 ]
 
-const DEPT_STYLE = {
+const DEPT_STYLE_DARK = {
   hr: 'text-violet-400 bg-violet-500/10 border-violet-500/20',
   engineering: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
   finance: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
   admin: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
 }
 
+const DEPT_STYLE_LIGHT = {
+  hr: 'text-violet-700 bg-violet-50 border-violet-200',
+  engineering: 'text-sky-700 bg-sky-50 border-sky-200',
+  finance: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+  admin: 'text-rose-700 bg-rose-50 border-rose-200',
+}
+
 function DeptBadge({ dept }) {
-  const style = DEPT_STYLE[dept] ?? 'text-white/50 bg-white/5 border-white/10'
+  const { isDark } = useTheme()
+  const map = isDark ? DEPT_STYLE_DARK : DEPT_STYLE_LIGHT
+  const fallback = isDark ? 'text-white/50 bg-white/5 border-white/10' : 'text-slate-600 bg-slate-100 border-slate-200'
+  const style = map[dept] ?? fallback
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${style}`}>
       {dept}
@@ -29,15 +41,16 @@ function DeptBadge({ dept }) {
 }
 
 function ScoreBar({ score }) {
+  const { isDark } = useTheme()
   const pct = score != null ? Math.round(score * 100) : 0
-  const color = score == null ? 'bg-white/10' : score >= 0.8 ? 'bg-emerald-500' : score >= 0.6 ? 'bg-amber-500' : 'bg-rose-500'
+  const color = score == null ? (isDark ? 'bg-white/10' : 'bg-slate-300') : score >= 0.8 ? 'bg-emerald-500' : score >= 0.6 ? 'bg-amber-500' : 'bg-rose-500'
   return (
     <div className="mt-3">
       <div className="flex justify-between items-baseline mb-1.5">
-        <span className="text-2xl font-bold text-white">{score != null ? score.toFixed(3) : '—'}</span>
-        <span className="text-xs text-white/30">{score != null ? `${pct}%` : 'no data'}</span>
+        <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{score != null ? score.toFixed(3) : '—'}</span>
+        <span className={`text-xs ${isDark ? 'text-white/30' : 'text-slate-400'}`}>{score != null ? `${pct}%` : 'no data'}</span>
       </div>
-      <div className="h-1.5 w-full rounded-full bg-white/10">
+      <div className={`h-1.5 w-full rounded-full ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
         <div className={`h-1.5 rounded-full ${color} transition-all`} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -45,6 +58,7 @@ function ScoreBar({ score }) {
 }
 
 function Tooltip({ text, children }) {
+  const { isDark } = useTheme()
   const [vis, setVis] = useState(false)
   return (
     <span
@@ -60,11 +74,12 @@ function Tooltip({ text, children }) {
           right: 0,
           left: 'auto',
           padding: '4px 8px',
-          background: '#1a1a1a',
-          border: '1px solid rgba(255,255,255,0.12)',
+          background: isDark ? '#1a1a1a' : '#ffffff',
+          border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #e2e8f0',
           borderRadius: 6,
           fontSize: '0.68rem',
-          color: 'rgba(255,255,255,0.65)',
+          color: isDark ? 'rgba(255,255,255,0.65)' : '#475569',
+          boxShadow: isDark ? 'none' : '0 4px 12px rgba(0,0,0,0.1)',
           whiteSpace: 'nowrap',
           zIndex: 50,
           pointerEvents: 'none',
@@ -77,17 +92,19 @@ function Tooltip({ text, children }) {
 }
 
 function Spinner() {
+  const { isDark } = useTheme()
   return (
     <div className="flex items-center justify-center py-16">
-      <div className="h-5 w-5 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
+      <div className={`h-5 w-5 rounded-full border-2 animate-spin ${isDark ? 'border-white/20 border-t-white/70' : 'border-slate-300 border-t-slate-700'}`} />
     </div>
   )
 }
 
 function EmptyRow({ cols, message }) {
+  const { isDark } = useTheme()
   return (
     <tr>
-      <td colSpan={cols} className="py-12 text-center text-sm text-white/25">{message}</td>
+      <td colSpan={cols} className={`py-12 text-center text-sm ${isDark ? 'text-white/25' : 'text-slate-400'}`}>{message}</td>
     </tr>
   )
 }
@@ -127,6 +144,7 @@ const TABS = [
 
 export default function AdminPage() {
   const { user, logout } = useAuth()
+  const { isDark } = useTheme()
   const isDemoAdmin = user?.role === 'demo_admin'
   const [tab, setTab] = useState('documents')
 
@@ -286,19 +304,26 @@ export default function AdminPage() {
   const { scores: latestScores, runAt: lastRunAt } = latestRunScores(evalResults)
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <header className="border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+    <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0a] text-white' : 'bg-[#f8fafc] text-slate-900'} transition-colors`}>
+      <header className={`border-b ${isDark ? 'border-white/10 bg-[#0a0a0a]' : 'border-slate-200 bg-white shadow-sm'} px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between transition-colors`}>
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <BackHomeButton />
-          <span className="text-sm font-semibold text-white truncate">Enterprise Knowledge Base</span>
-          <span className="text-white/20 hidden sm:inline">/</span>
-          <span className="text-sm text-white/40 hidden sm:inline">Admin Panel</span>
+          <span className={`text-sm font-semibold truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>Enterprise Knowledge Base</span>
+          <span className={`${isDark ? 'text-white/20' : 'text-slate-300'} hidden sm:inline`}>/</span>
+          <span className={`text-sm ${isDark ? 'text-white/40' : 'text-slate-500'} hidden sm:inline`}>Admin Panel</span>
         </div>
-        <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
-          <span className="text-xs text-white/30 hidden sm:inline">{user?.email}</span>
+        <div className="flex items-center gap-2.5 sm:gap-3.5 flex-shrink-0">
+          <span className={`text-xs ${isDark ? 'text-white/30' : 'text-slate-400'} hidden sm:inline`}>{user?.email}</span>
+          <DeptBadge dept={user?.role} />
+          {/* ThemeToggle placed directly between department badge and Sign Out button */}
+          <ThemeToggle />
           <button
             onClick={logout}
-            className="text-xs text-white/40 hover:text-white/70 transition-colors py-1.5 px-1"
+            className={`text-xs transition-colors py-1.5 px-2.5 rounded-lg border ${
+              isDark
+                ? 'text-white/50 hover:text-white border-white/10 hover:border-white/25'
+                : 'text-slate-600 hover:text-slate-900 border-slate-200 hover:border-slate-300 bg-white shadow-xs'
+            }`}
           >
             Sign out
           </button>
@@ -306,15 +331,15 @@ export default function AdminPage() {
       </header>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <div className="flex gap-1 mb-8 border-b border-white/10">
+        <div className={`flex gap-1 mb-8 border-b ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
                 tab === t.key
-                  ? 'text-white border-white'
-                  : 'text-white/40 border-transparent hover:text-white/70'
+                  ? isDark ? 'text-white border-white' : 'text-slate-900 border-slate-900 font-semibold'
+                  : isDark ? 'text-white/40 border-transparent hover:text-white/70' : 'text-slate-500 border-transparent hover:text-slate-800'
               }`}
             >
               {t.label}
@@ -324,8 +349,8 @@ export default function AdminPage() {
 
         {tab === 'documents' && (
           <div className="space-y-6">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-              <h2 className="text-sm font-semibold text-white mb-4">Upload Document</h2>
+            <div className={`rounded-2xl border ${isDark ? 'border-white/10 bg-white/[0.03]' : 'border-slate-200 bg-white shadow-sm'} p-6 transition-colors`}>
+              <h2 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'} mb-4`}>Upload Document</h2>
               <form onSubmit={handleUpload} className="flex flex-col gap-3">
                 <div
                   className="flex flex-col sm:flex-row gap-3 items-start sm:items-center"
@@ -336,15 +361,23 @@ export default function AdminPage() {
                     type="file"
                     accept=".pdf,.txt,.md"
                     onChange={(e) => { setUploadFile(e.target.files[0] ?? null); setUploadSuccess(false) }}
-                    className="block w-full text-sm text-white/50 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-white/10 file:bg-white/5 file:text-white/70 file:text-xs file:cursor-pointer hover:file:bg-white/10 file:transition-colors"
+                    className={`block w-full text-sm ${
+                      isDark
+                        ? 'text-white/50 file:border-white/10 file:bg-white/5 file:text-white/70 hover:file:bg-white/10'
+                        : 'text-slate-600 file:border-slate-200 file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200'
+                    } file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:text-xs file:cursor-pointer file:transition-colors`}
                   />
                   <select
                     value={uploadDept}
                     onChange={(e) => setUploadDept(e.target.value)}
-                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/70 focus:outline-none focus:border-white/30"
+                    className={`rounded-lg border px-3 py-1.5 text-sm focus:outline-none ${
+                      isDark
+                        ? 'border-white/10 bg-white/5 text-white/70 focus:border-white/30'
+                        : 'border-slate-300 bg-white text-slate-700 focus:border-violet-500'
+                    }`}
                   >
                     {DEPARTMENTS.map((d) => (
-                      <option key={d} value={d} className="bg-[#111]">{d}</option>
+                      <option key={d} value={d} className={isDark ? "bg-[#111]" : "bg-white"}>{d}</option>
                     ))}
                   </select>
                 </div>
@@ -353,7 +386,9 @@ export default function AdminPage() {
                     <button
                       type="button"
                       disabled
-                      className="px-4 py-1.5 rounded-lg bg-white text-black text-sm font-medium disabled:opacity-30 whitespace-nowrap cursor-not-allowed"
+                      className={`px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-30 whitespace-nowrap cursor-not-allowed ${
+                        isDark ? 'bg-white text-black' : 'bg-slate-900 text-white'
+                      }`}
                     >
                       Upload
                     </button>
@@ -362,56 +397,58 @@ export default function AdminPage() {
                   <button
                     type="submit"
                     disabled={uploading || !uploadFile}
-                    className="px-4 py-1.5 rounded-lg bg-white text-black text-sm font-medium disabled:opacity-30 hover:bg-white/90 transition-colors whitespace-nowrap"
+                    className={`px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-30 transition-colors whitespace-nowrap ${
+                      isDark ? 'bg-white text-black hover:bg-white/90' : 'bg-slate-900 text-white hover:bg-slate-800'
+                    }`}
                   >
                     {uploading ? 'Uploading…' : 'Upload'}
                   </button>
                 )}
               </form>
-              {uploadError && <p className="mt-3 text-xs text-rose-400">{uploadError}</p>}
-              {uploadSuccess && <p className="mt-3 text-xs text-emerald-400">Document ingested successfully.</p>}
-              {deleteError && <p className="mt-3 text-xs text-rose-400">Delete failed: {deleteError}</p>}
+              {uploadError && <p className="mt-3 text-xs text-rose-500">{uploadError}</p>}
+              {uploadSuccess && <p className="mt-3 text-xs text-emerald-500">Document ingested successfully.</p>}
+              {deleteError && <p className="mt-3 text-xs text-rose-500">Delete failed: {deleteError}</p>}
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
-              <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-white">Ingested Documents</h2>
+            <div className={`rounded-2xl border ${isDark ? 'border-white/10 bg-white/[0.03]' : 'border-slate-200 bg-white shadow-sm'} overflow-hidden transition-colors`}>
+              <div className={`px-6 py-4 border-b ${isDark ? 'border-white/10' : 'border-slate-200'} flex items-center justify-between`}>
+                <h2 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Ingested Documents</h2>
                 {docs !== null && (
-                  <span className="text-xs text-white/30">{docs.length} total</span>
+                  <span className={`text-xs ${isDark ? 'text-white/30' : 'text-slate-400'}`}>{docs.length} total</span>
                 )}
               </div>
               {docsLoading ? (
                 <Spinner />
               ) : docsError ? (
-                <p className="px-6 py-12 text-center text-sm text-rose-400">{docsError}</p>
+                <p className="px-6 py-12 text-center text-sm text-rose-500">{docsError}</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-white/10">
-                        <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wide">Name</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wide">Dept</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wide">Chunks</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wide">Uploaded</th>
+                      <tr className={`border-b ${isDark ? 'border-white/10' : 'border-slate-200 bg-slate-50/70'}`}>
+                        <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-white/40' : 'text-slate-500'} uppercase tracking-wide`}>Name</th>
+                        <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-white/40' : 'text-slate-500'} uppercase tracking-wide`}>Dept</th>
+                        <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-white/40' : 'text-slate-500'} uppercase tracking-wide`}>Chunks</th>
+                        <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-white/40' : 'text-slate-500'} uppercase tracking-wide`}>Uploaded</th>
                         <th className="px-6 py-3" />
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.06]">
+                    <tbody className={`divide-y ${isDark ? 'divide-white/[0.06]' : 'divide-slate-100'}`}>
                       {!docs || docs.length === 0 ? (
                         <EmptyRow cols={5} message="No documents ingested yet." />
                       ) : (
                         docs.map((doc) => (
-                          <tr key={doc.id} className="hover:bg-white/[0.02] transition-colors">
-                            <td className="px-6 py-3.5 text-white/80 font-mono text-xs max-w-[200px] truncate">{doc.name}</td>
+                          <tr key={doc.id} className={`${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-slate-50/80'} transition-colors`}>
+                            <td className={`px-6 py-3.5 font-mono text-xs max-w-[200px] truncate ${isDark ? 'text-white/80' : 'text-slate-800'}`}>{doc.name}</td>
                             <td className="px-6 py-3.5"><DeptBadge dept={doc.department} /></td>
-                            <td className="px-6 py-3.5 text-white/50">{doc.chunk_count}</td>
-                            <td className="px-6 py-3.5 text-white/40 text-xs whitespace-nowrap">{fmtDate(doc.uploaded_at)}</td>
+                            <td className={`px-6 py-3.5 ${isDark ? 'text-white/50' : 'text-slate-600'}`}>{doc.chunk_count}</td>
+                            <td className={`px-6 py-3.5 ${isDark ? 'text-white/40' : 'text-slate-500'} text-xs whitespace-nowrap`}>{fmtDate(doc.uploaded_at)}</td>
                             <td className="px-6 py-3.5 text-right" style={{ overflow: 'visible' }}>
                               {isDemoAdmin ? (
                                 <Tooltip text="Demo accounts have read-only access">
                                   <button
                                     disabled
-                                    className="text-xs text-rose-400/30 disabled:opacity-30 cursor-not-allowed"
+                                    className="text-xs text-rose-500/30 disabled:opacity-30 cursor-not-allowed"
                                   >
                                     Delete
                                   </button>
@@ -420,7 +457,7 @@ export default function AdminPage() {
                                 <button
                                   onClick={() => deleteDoc(doc.id)}
                                   disabled={deletingId === doc.id}
-                                  className="text-xs text-rose-400/60 hover:text-rose-400 disabled:opacity-30 transition-colors"
+                                  className="text-xs text-rose-500 hover:text-rose-600 disabled:opacity-30 transition-colors"
                                 >
                                   {deletingId === doc.id ? 'Deleting…' : 'Delete'}
                                 </button>
@@ -438,29 +475,29 @@ export default function AdminPage() {
         )}
 
         {tab === 'users' && (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-white">Users</h2>
+          <div className={`rounded-2xl border ${isDark ? 'border-white/10 bg-white/[0.03]' : 'border-slate-200 bg-white shadow-sm'} overflow-hidden transition-colors`}>
+            <div className={`px-6 py-4 border-b ${isDark ? 'border-white/10' : 'border-slate-200'} flex items-center justify-between`}>
+              <h2 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Users</h2>
               {users !== null && (
-                <span className="text-xs text-white/30">{users.length} total</span>
+                <span className={`text-xs ${isDark ? 'text-white/30' : 'text-slate-400'}`}>{users.length} total</span>
               )}
             </div>
             {usersLoading ? (
               <Spinner />
             ) : usersError ? (
-              <p className="px-6 py-12 text-center text-sm text-rose-400">{usersError}</p>
+              <p className="px-6 py-12 text-center text-sm text-rose-500">{usersError}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wide">User</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wide">Role</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wide">Joined</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-white/40 uppercase tracking-wide">Active</th>
+                    <tr className={`border-b ${isDark ? 'border-white/10' : 'border-slate-200 bg-slate-50/70'}`}>
+                      <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-white/40' : 'text-slate-500'} uppercase tracking-wide`}>User</th>
+                      <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-white/40' : 'text-slate-500'} uppercase tracking-wide`}>Role</th>
+                      <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-white/40' : 'text-slate-500'} uppercase tracking-wide`}>Joined</th>
+                      <th className={`px-6 py-3 text-right text-xs font-medium ${isDark ? 'text-white/40' : 'text-slate-500'} uppercase tracking-wide`}>Active</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.06]">
+                  <tbody className={`divide-y ${isDark ? 'divide-white/[0.06]' : 'divide-slate-100'}`}>
                     {!users || users.length === 0 ? (
                       <EmptyRow cols={4} message="No users found." />
                     ) : (
@@ -469,22 +506,22 @@ export default function AdminPage() {
                           ? 'admin@apex-systems.com'
                           : u.email
                         return (
-                          <tr key={u.id} className="hover:bg-white/[0.02] transition-colors">
+                          <tr key={u.id} className={`${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-slate-50/80'} transition-colors`}>
                             <td className="px-6 py-3.5 text-xs">
-                              <div className="font-medium text-white/90">
+                              <div className={`font-medium ${isDark ? 'text-white/90' : 'text-slate-900'}`}>
                                 {u.full_name || (u.role === 'admin' ? 'System Administrator' : `${u.role.toUpperCase()} User`)}
                               </div>
-                              <div className="text-white/40 text-[11px] font-mono mt-0.5">{displayEmail}</div>
+                              <div className={`${isDark ? 'text-white/40' : 'text-slate-500'} text-[11px] font-mono mt-0.5`}>{displayEmail}</div>
                             </td>
                             <td className="px-6 py-3.5"><DeptBadge dept={u.role} /></td>
-                            <td className="px-6 py-3.5 text-white/40 text-xs whitespace-nowrap">{fmtDate(u.created_at)}</td>
+                            <td className={`px-6 py-3.5 ${isDark ? 'text-white/40' : 'text-slate-500'} text-xs whitespace-nowrap`}>{fmtDate(u.created_at)}</td>
                             <td className="px-6 py-3.5 text-right" style={{ overflow: 'visible' }}>
                               {isDemoAdmin ? (
                                 <Tooltip text="Demo accounts have read-only access">
                                   <button
                                     disabled
                                     className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full disabled:opacity-30 cursor-not-allowed focus:outline-none ${
-                                      u.is_active ? 'bg-emerald-500' : 'bg-white/10'
+                                      u.is_active ? 'bg-emerald-500' : isDark ? 'bg-white/10' : 'bg-slate-300'
                                     }`}
                                   >
                                     <span
@@ -500,7 +537,7 @@ export default function AdminPage() {
                                   disabled={togglingId === u.id || u.id === user?.id}
                                   title={u.id === user?.id ? 'Cannot disable your own account' : undefined}
                                   className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors disabled:opacity-30 focus:outline-none ${
-                                    u.is_active ? 'bg-emerald-500' : 'bg-white/10'
+                                    u.is_active ? 'bg-emerald-500' : isDark ? 'bg-white/10' : 'bg-slate-300'
                                   }`}
                                 >
                                   <span
@@ -526,11 +563,11 @@ export default function AdminPage() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
               <div>
-                <h2 className="text-sm font-semibold text-white">RAGAS Evaluation</h2>
+                <h2 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>RAGAS Evaluation</h2>
                 {lastRunAt ? (
-                  <p className="mt-1 text-xs text-white/30">Last run: {fmtTs(lastRunAt)}</p>
+                  <p className={`mt-1 text-xs ${isDark ? 'text-white/30' : 'text-slate-500'}`}>Last run: {fmtTs(lastRunAt)}</p>
                 ) : (
-                  <p className="mt-1 text-xs text-white/30">No runs yet.</p>
+                  <p className={`mt-1 text-xs ${isDark ? 'text-white/30' : 'text-slate-500'}`}>No runs yet.</p>
                 )}
               </div>
               <div className="flex flex-col items-start sm:items-end gap-2">
@@ -538,7 +575,9 @@ export default function AdminPage() {
                   <Tooltip text="Demo accounts cannot run evaluations.">
                     <button
                       disabled
-                      className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-white text-black text-sm font-medium opacity-40 whitespace-nowrap cursor-not-allowed"
+                      className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium opacity-40 whitespace-nowrap cursor-not-allowed ${
+                        isDark ? 'bg-white text-black' : 'bg-slate-900 text-white'
+                      }`}
                     >
                       Run Eval
                     </button>
@@ -547,26 +586,30 @@ export default function AdminPage() {
                   <button
                     onClick={triggerEval}
                     disabled={runningEval || evalPolling}
-                    className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-white text-black text-sm font-medium disabled:opacity-40 hover:bg-white/90 transition-colors whitespace-nowrap"
+                    className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-40 transition-colors whitespace-nowrap ${
+                      isDark ? 'bg-white text-black hover:bg-white/90' : 'bg-slate-900 text-white hover:bg-slate-800'
+                    }`}
                   >
                     {evalPolling && (
-                      <span className="h-3.5 w-3.5 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+                      <span className={`h-3.5 w-3.5 rounded-full border-2 animate-spin ${
+                        isDark ? 'border-black/30 border-t-black' : 'border-white/30 border-t-white'
+                      }`} />
                     )}
                     {runningEval ? 'Starting…' : evalPolling ? 'Running…' : 'Run Eval'}
                   </button>
                 )}
                 {evalError && (
-                  <span className="text-xs text-rose-400">{evalError}</span>
+                  <span className="text-xs text-rose-500">{evalError}</span>
                 )}
               </div>
             </div>
 
             {evalPolling && (
-              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex items-start gap-3">
-                <span className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 rounded-full border-2 border-amber-500/40 border-t-amber-400 animate-spin" />
+              <div className={`rounded-xl border ${isDark ? 'border-amber-500/20 bg-amber-500/5' : 'border-amber-500/30 bg-amber-50'} px-4 py-3 flex items-start gap-3`}>
+                <span className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 rounded-full border-2 border-amber-500/40 border-t-amber-500 animate-spin" />
                 <div>
-                  <p className="text-xs font-medium text-amber-400">Evaluation in progress</p>
-                  <p className="text-xs text-amber-400/60 mt-0.5">Typically takes 5–8 minutes. Results will update automatically.</p>
+                  <p className={`text-xs font-medium ${isDark ? 'text-amber-400' : 'text-amber-800'}`}>Evaluation in progress</p>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-amber-400/60' : 'text-amber-700/80'}`}>Typically takes 5–8 minutes. Results will update automatically.</p>
                 </div>
               </div>
             )}
@@ -577,14 +620,14 @@ export default function AdminPage() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {METRICS.map(({ key, label }) => (
-                    <div key={key} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                      <p className="text-xs font-medium text-white/40 uppercase tracking-wide">{label}</p>
+                    <div key={key} className={`rounded-2xl border ${isDark ? 'border-white/10 bg-white/[0.03]' : 'border-slate-200 bg-white shadow-sm'} p-5 transition-colors`}>
+                      <p className={`text-xs font-medium ${isDark ? 'text-white/40' : 'text-slate-500'} uppercase tracking-wide`}>{label}</p>
                       <ScoreBar score={latestScores[key] ?? null} />
                     </div>
                   ))}
                 </div>
                 {evalResults !== null && evalResults.length === 0 && !evalPolling && (
-                  <p className="text-center text-sm text-white/25 py-4">
+                  <p className={`text-center text-sm ${isDark ? 'text-white/25' : 'text-slate-400'} py-4`}>
                     No eval results yet. Click "Run Eval" to start.
                   </p>
                 )}

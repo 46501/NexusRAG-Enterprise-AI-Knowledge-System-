@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
+import ThemeToggle from '../components/ThemeToggle'
 import { getMe, login } from '../services/auth'
 
 export default function LoginPage() {
   const { setUser } = useAuth()
+  const { isDark } = useTheme()
   const navigate = useNavigate()
 
   const [email, setEmail] = useState('')
@@ -67,16 +70,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
+    <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0a] text-white' : 'bg-[#f8fafc] text-slate-900'} flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden transition-colors`}>
+      {/* Theme toggle in top right */}
+      <div className="absolute top-5 right-5 z-20">
+        <ThemeToggle />
+      </div>
+
       {/* Background ambient glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className={`absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 ${isDark ? 'bg-violet-600/10' : 'bg-violet-400/15'} rounded-full blur-3xl pointer-events-none`} />
+      <div className={`absolute bottom-1/4 right-1/4 w-80 h-80 ${isDark ? 'bg-blue-600/10' : 'bg-sky-400/15'} rounded-full blur-3xl pointer-events-none`} />
 
       {/* Main card */}
-      <div className="w-full max-w-md bg-[#111318] border border-white/10 rounded-2xl shadow-2xl p-7 sm:p-9 relative z-10">
+      <div className={`w-full max-w-md ${isDark ? 'bg-[#111318] border-white/10 shadow-2xl' : 'bg-white border-slate-200 shadow-xl shadow-slate-200/50'} border rounded-2xl p-7 sm:p-9 relative z-10 transition-colors`}>
         {/* Brand header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 mb-3 shadow-inner">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-500 mb-3 shadow-inner">
             <svg
               className="w-6 h-6"
               fill="none"
@@ -91,14 +99,14 @@ export default function LoginPage() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">NexusRAG</h1>
-          <p className="text-xs uppercase tracking-widest text-violet-400 font-semibold mt-1">Enterprise AI Knowledge System</p>
-          <p className="text-xs text-white/50 mt-2">Sign in to access your authorized department workspace</p>
+          <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>NexusRAG</h1>
+          <p className="text-xs uppercase tracking-widest text-violet-500 font-semibold mt-1">Enterprise AI Knowledge System</p>
+          <p className={`text-xs ${isDark ? 'text-white/50' : 'text-slate-500'} mt-2`}>Sign in to access your authorized department workspace</p>
         </div>
 
         {/* Error message banner */}
         {error && (
-          <div className="mb-6 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs flex items-start gap-2.5">
+          <div className="mb-6 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs flex items-start gap-2.5">
             <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -109,20 +117,24 @@ export default function LoginPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-white/70 mb-1.5">Work Email</label>
+            <label className={`block text-xs font-medium ${isDark ? 'text-white/70' : 'text-slate-700'} mb-1.5`}>Work Email</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@company.com"
-              className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-violet-500 focus:bg-white/[0.07] transition-all"
+              className={`w-full border rounded-xl px-3.5 py-2.5 text-sm transition-all focus:outline-none ${
+                isDark
+                  ? 'bg-white/[0.04] border-white/10 text-white placeholder-white/25 focus:border-violet-500 focus:bg-white/[0.07]'
+                  : 'bg-slate-50/70 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-violet-600 focus:bg-white'
+              }`}
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-medium text-white/70">Password</label>
+              <label className={`block text-xs font-medium ${isDark ? 'text-white/70' : 'text-slate-700'}`}>Password</label>
             </div>
             <div className="relative">
               <input
@@ -131,12 +143,18 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-violet-500 focus:bg-white/[0.07] transition-all pr-10"
+                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm transition-all pr-10 focus:outline-none ${
+                  isDark
+                    ? 'bg-white/[0.04] border-white/10 text-white placeholder-white/25 focus:border-violet-500 focus:bg-white/[0.07]'
+                    : 'bg-slate-50/70 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-violet-600 focus:bg-white'
+                }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 focus:outline-none transition-colors"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors focus:outline-none ${
+                  isDark ? 'text-white/40 hover:text-white/70' : 'text-slate-400 hover:text-slate-700'
+                }`}
                 title={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
@@ -159,9 +177,11 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-white/20 bg-white/5 text-violet-600 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                className={`w-4 h-4 rounded text-violet-600 focus:ring-0 focus:ring-offset-0 cursor-pointer ${
+                  isDark ? 'border-white/20 bg-white/5' : 'border-slate-300 bg-white'
+                }`}
               />
-              <span className="text-xs text-white/60 hover:text-white/80 transition-colors">Remember my email</span>
+              <span className={`text-xs transition-colors ${isDark ? 'text-white/60 hover:text-white/80' : 'text-slate-600 hover:text-slate-900'}`}>Remember my email</span>
             </label>
           </div>
 
@@ -182,59 +202,75 @@ export default function LoginPage() {
         </form>
 
         {/* Demo Accounts Quick-Fill Section */}
-        <div className="mt-6 pt-5 border-t border-white/[0.08]">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-white/40 mb-2.5 text-center">
+        <div className={`mt-6 pt-5 border-t ${isDark ? 'border-white/[0.08]' : 'border-slate-200'}`}>
+          <p className={`text-[11px] font-medium uppercase tracking-wider ${isDark ? 'text-white/40' : 'text-slate-400'} mb-2.5 text-center`}>
             Or select a demo account
           </p>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <button
               type="button"
               onClick={() => handleQuickDemo('hr@demo.com', 'hr-demo-2026')}
-              className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] hover:bg-violet-500/10 border border-white/5 hover:border-violet-500/20 text-white/70 hover:text-violet-300 text-left transition-all"
+              className={`px-2.5 py-1.5 rounded-lg border text-left transition-all ${
+                isDark
+                  ? 'bg-white/[0.03] hover:bg-violet-500/10 border-white/5 hover:border-violet-500/20 text-white/70 hover:text-violet-300'
+                  : 'bg-slate-50 hover:bg-violet-50/70 border-slate-200 hover:border-violet-300 text-slate-700 hover:text-violet-800'
+              }`}
             >
-              <div className="font-semibold text-[11px] text-violet-400">HR Dept</div>
-              <div className="text-[10px] text-white/40 truncate">hr@demo.com</div>
+              <div className="font-semibold text-[11px] text-violet-500">HR Dept</div>
+              <div className={`text-[10px] ${isDark ? 'text-white/40' : 'text-slate-400'} truncate`}>hr@demo.com</div>
             </button>
             <button
               type="button"
               onClick={() => handleQuickDemo('engineering@demo.com', 'eng-demo-2026')}
-              className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] hover:bg-sky-500/10 border border-white/5 hover:border-sky-500/20 text-white/70 hover:text-sky-300 text-left transition-all"
+              className={`px-2.5 py-1.5 rounded-lg border text-left transition-all ${
+                isDark
+                  ? 'bg-white/[0.03] hover:bg-sky-500/10 border-white/5 hover:border-sky-500/20 text-white/70 hover:text-sky-300'
+                  : 'bg-slate-50 hover:bg-sky-50/70 border-slate-200 hover:border-sky-300 text-slate-700 hover:text-sky-800'
+              }`}
             >
-              <div className="font-semibold text-[11px] text-sky-400">Engineering</div>
-              <div className="text-[10px] text-white/40 truncate">engineering@demo.com</div>
+              <div className="font-semibold text-[11px] text-sky-500">Engineering</div>
+              <div className={`text-[10px] ${isDark ? 'text-white/40' : 'text-slate-400'} truncate`}>engineering@demo.com</div>
             </button>
             <button
               type="button"
               onClick={() => handleQuickDemo('finance@demo.com', 'fin-demo-2026')}
-              className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/20 text-white/70 hover:text-emerald-300 text-left transition-all"
+              className={`px-2.5 py-1.5 rounded-lg border text-left transition-all ${
+                isDark
+                  ? 'bg-white/[0.03] hover:bg-emerald-500/10 border-white/5 hover:border-emerald-500/20 text-white/70 hover:text-emerald-300'
+                  : 'bg-slate-50 hover:bg-emerald-50/70 border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-800'
+              }`}
             >
-              <div className="font-semibold text-[11px] text-emerald-400">Finance</div>
-              <div className="text-[10px] text-white/40 truncate">finance@demo.com</div>
+              <div className="font-semibold text-[11px] text-emerald-500">Finance</div>
+              <div className={`text-[10px] ${isDark ? 'text-white/40' : 'text-slate-400'} truncate`}>finance@demo.com</div>
             </button>
             <button
               type="button"
               onClick={() => handleQuickDemo('admin@example.com', 'admin-demo-2026')}
-              className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] hover:bg-amber-500/10 border border-white/5 hover:border-amber-500/20 text-white/70 hover:text-amber-300 text-left transition-all"
+              className={`px-2.5 py-1.5 rounded-lg border text-left transition-all ${
+                isDark
+                  ? 'bg-white/[0.03] hover:bg-amber-500/10 border-white/5 hover:border-amber-500/20 text-white/70 hover:text-amber-300'
+                  : 'bg-slate-50 hover:bg-amber-50/70 border-slate-200 hover:border-amber-300 text-slate-700 hover:text-amber-800'
+              }`}
             >
-              <div className="font-semibold text-[11px] text-amber-400">Admin</div>
-              <div className="text-[10px] text-white/40 truncate">admin@example.com</div>
+              <div className="font-semibold text-[11px] text-amber-500">Admin</div>
+              <div className={`text-[10px] ${isDark ? 'text-white/40' : 'text-slate-400'} truncate`}>admin@example.com</div>
             </button>
           </div>
         </div>
 
         {/* Signup Link */}
-        <div className="mt-6 text-center text-xs text-white/50">
+        <div className={`mt-6 text-center text-xs ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
           Don't have an account?{' '}
           <Link
             to="/signup"
-            className="text-violet-400 hover:text-violet-300 font-medium transition-colors underline-offset-4 hover:underline"
+            className="text-violet-500 hover:text-violet-600 font-medium transition-colors underline-offset-4 hover:underline"
           >
             Create an account
           </Link>
         </div>
       </div>
 
-      <div className="mt-8 text-xs text-white/20">
+      <div className={`mt-8 text-xs ${isDark ? 'text-white/20' : 'text-slate-400'}`}>
         NexusRAG Enterprise AI Platform &bull; Secure Multi-Tenant RBAC
       </div>
     </div>

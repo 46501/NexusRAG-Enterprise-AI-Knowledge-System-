@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 import { getMe, login } from "../services/auth";
 
 const FONT = "'Inter', ui-sans-serif, system-ui, sans-serif";
@@ -192,6 +194,7 @@ function useMockTyping(key) {
 }
 
 function MockChatWindow({ deptKey }) {
+  const { isDark } = useTheme();
   const [currentKey, setCurrentKey] = useState(deptKey);
   const [opacity, setOpacity] = useState(1);
   const convo = MOCK_CONVOS[currentKey];
@@ -210,8 +213,9 @@ function MockChatWindow({ deptKey }) {
   return (
     <div
       style={{
-        background: "#0d0d0d",
-        border: "1px solid rgba(255,255,255,0.25)",
+        background: isDark ? "#0d0d0d" : "#ffffff",
+        border: isDark ? "1px solid rgba(255,255,255,0.25)" : "1px solid #e2e8f0",
+        boxShadow: isDark ? "none" : "0 10px 25px -5px rgba(0,0,0,0.06), 0 8px 10px -6px rgba(0,0,0,0.03)",
         borderRadius: 12,
         overflow: "hidden",
         fontFamily: FONT,
@@ -224,7 +228,7 @@ function MockChatWindow({ deptKey }) {
       <div
         style={{
           padding: "10px 16px",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          borderBottom: isDark ? "1px solid rgba(255,255,255,0.07)" : "1px solid #e2e8f0",
           display: "flex",
           alignItems: "center",
           gap: 8,
@@ -251,7 +255,7 @@ function MockChatWindow({ deptKey }) {
             fontWeight: 600,
             letterSpacing: "0.06em",
             textTransform: "uppercase",
-            color: "rgba(255,255,255,0.65)",
+            color: isDark ? "rgba(255,255,255,0.65)" : "#334155",
           }}
         >
           {convo.name}
@@ -263,7 +267,7 @@ function MockChatWindow({ deptKey }) {
             fontWeight: 500,
             letterSpacing: "0.1em",
             textTransform: "uppercase",
-            color: "rgba(255,255,255,0.2)",
+            color: isDark ? "rgba(255,255,255,0.2)" : "#94a3b8",
           }}
         >
           Preview
@@ -305,9 +309,9 @@ function MockChatWindow({ deptKey }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
             <div
               style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "rgba(255,255,255,0.82)",
+                background: isDark ? "rgba(255,255,255,0.05)" : "#f8fafc",
+                border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e2e8f0",
+                color: isDark ? "rgba(255,255,255,0.82)" : "#0f172a",
                 padding: "10px 14px",
                 borderRadius: "4px 14px 14px 14px",
                 fontSize: "0.8rem",
@@ -323,7 +327,7 @@ function MockChatWindow({ deptKey }) {
                     display: "inline-block",
                     width: 2,
                     height: "0.9em",
-                    background: "rgba(255,255,255,0.5)",
+                    background: isDark ? "rgba(255,255,255,0.5)" : "#64748b",
                     marginLeft: 2,
                     verticalAlign: "text-bottom",
                     animation: "blink 0.8s step-end infinite",
@@ -339,12 +343,13 @@ function MockChatWindow({ deptKey }) {
                   alignItems: "center",
                   gap: 6,
                   padding: "3px 10px",
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  background: "rgba(255,255,255,0.04)",
+                  border: isDark ? "1px solid rgba(255,255,255,0.10)" : "1px solid #e2e8f0",
+                  background: isDark ? "rgba(255,255,255,0.04)" : "#ffffff",
                   borderRadius: 9999,
                   fontSize: "0.7rem",
-                  color: "rgba(255,255,255,0.5)",
+                  color: isDark ? "rgba(255,255,255,0.5)" : "#475569",
                   animation: "fadeIn 0.35s ease",
+                  boxShadow: isDark ? "none" : "0 1px 2px rgba(0,0,0,0.04)",
                 }}
               >
                 <span
@@ -361,7 +366,7 @@ function MockChatWindow({ deptKey }) {
                   {convo.label}
                 </span>
                 {convo.source}
-                <span style={{ color: "rgba(255,255,255,0.25)" }}>{convo.score}</span>
+                <span style={{ color: isDark ? "rgba(255,255,255,0.25)" : "#94a3b8" }}>{convo.score}</span>
               </div>
             )}
           </div>
@@ -375,7 +380,7 @@ function MockChatWindow({ deptKey }) {
             left: 0,
             right: 0,
             height: 64,
-            background: "linear-gradient(to bottom, transparent, #0d0d0d)",
+            background: isDark ? "linear-gradient(to bottom, transparent, #0d0d0d)" : "linear-gradient(to bottom, transparent, #ffffff)",
             pointerEvents: "none",
           }}
         />
@@ -385,19 +390,19 @@ function MockChatWindow({ deptKey }) {
       <div
         style={{
           padding: "10px 14px",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid #e2e8f0",
           flexShrink: 0,
-          opacity: 0.4,
+          opacity: 0.6,
         }}
       >
         <div
           style={{
             padding: "7px 12px",
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: isDark ? "rgba(255,255,255,0.04)" : "#f8fafc",
+            border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e2e8f0",
             borderRadius: 8,
             fontSize: "0.75rem",
-            color: "rgba(255,255,255,0.2)",
+            color: isDark ? "rgba(255,255,255,0.2)" : "#94a3b8",
             cursor: "default",
           }}
         >
@@ -415,11 +420,14 @@ function MockChatWindow({ deptKey }) {
 }
 
 function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
+  const { isDark } = useTheme();
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
 
   const isHighlighted = hovered || active;
-  const borderColor = hovered ? "rgba(255,255,255,0.18)" : active ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.08)";
+  const borderColor = isDark
+    ? (hovered ? "rgba(255,255,255,0.18)" : active ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.08)")
+    : (hovered ? "#cbd5e1" : active ? "#e2e8f0" : "#e2e8f0");
 
   return (
     <div
@@ -429,7 +437,9 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
       style={{
-        background: hovered ? "rgba(255,255,255,0.04)" : active ? "rgba(255,255,255,0.02)" : "transparent",
+        background: isDark
+          ? (hovered ? "rgba(255,255,255,0.04)" : active ? "rgba(255,255,255,0.02)" : "transparent")
+          : (hovered ? "#ffffff" : active ? "#f8fafc" : "#ffffff"),
         borderTop: `1px solid ${borderColor}`,
         borderRight: `1px solid ${borderColor}`,
         borderBottom: `1px solid ${borderColor}`,
@@ -439,8 +449,9 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
         alignItems: "center",
         gap: 14,
         cursor: loading !== null ? "not-allowed" : "pointer",
-        transition: "background 0.15s, border-color 0.15s, transform 0.1s",
+        transition: "background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s",
         transform: hovered && !pressed ? "scale(1.005)" : pressed ? "scale(0.99)" : "scale(1)",
+        boxShadow: !isDark ? (hovered ? "0 4px 12px rgba(0,0,0,0.04)" : "0 1px 3px rgba(0,0,0,0.02)") : "none",
         opacity: loading !== null && loading !== dept.email ? 0.4 : 1,
         userSelect: "none",
       }}
@@ -457,10 +468,10 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
       />
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: isHighlighted ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.60)", letterSpacing: "-0.01em" }}>
+        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: isDark ? (isHighlighted ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.60)") : (isHighlighted ? "#0f172a" : "#475569"), letterSpacing: "-0.01em" }}>
           {loading === dept.email ? "Signing in…" : dept.name}
         </div>
-        <div style={{ fontSize: "0.72rem", color: isHighlighted ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.30)", marginTop: 2, lineHeight: 1.4 }}>
+        <div style={{ fontSize: "0.72rem", color: isDark ? (isHighlighted ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.30)") : (isHighlighted ? "#475569" : "#64748b"), marginTop: 2, lineHeight: 1.4 }}>
           {dept.tagline}
         </div>
       </div>
@@ -485,6 +496,7 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
 
 export default function LandingPage() {
   const { user, setUser, logout } = useAuth();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState(null);
@@ -519,7 +531,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div style={{ background: "#0f1115", color: "#fff", fontFamily: FONT, overflowX: "hidden" }}>
+    <div style={{ background: isDark ? "#0f1115" : "#f8fafc", color: isDark ? "#fff" : "#0f172a", fontFamily: FONT, overflowX: "hidden", minHeight: "100vh" }}>
       <style>{`
         .how-it-works-grid {
           display: grid;
@@ -588,6 +600,44 @@ export default function LandingPage() {
         .built-on-item:hover .built-on-label {
           color: #a78bfa;
         }
+        html.light .how-it-works-step {
+          background: #ffffff;
+          border-color: #e2e8f0;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        html.light .how-it-works-step:hover {
+          border-color: rgba(139, 92, 246, 0.55);
+          background: rgba(139, 92, 246, 0.03);
+          box-shadow: 0 10px 24px -4px rgba(139, 92, 246, 0.12);
+        }
+        html.light .how-it-works-step-num {
+          color: #94a3b8;
+        }
+        html.light .how-it-works-step h3 {
+          color: #0f172a !important;
+        }
+        html.light .how-it-works-step p {
+          color: #475569 !important;
+        }
+        html.light .built-on-item {
+          background: #ffffff;
+          border-color: #e2e8f0;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        html.light .built-on-item:hover {
+          border-color: rgba(139, 92, 246, 0.55);
+          background: rgba(139, 92, 246, 0.03);
+          box-shadow: 0 10px 24px -4px rgba(139, 92, 246, 0.12);
+        }
+        html.light .built-on-label {
+          color: #94a3b8;
+        }
+        html.light .built-on-item .tech-name {
+          color: #0f172a !important;
+        }
+        html.light .built-on-item .tech-desc {
+          color: #64748b !important;
+        }
         @media (max-width: 1023px) {
           .hero-section { padding: 48px 24px !important; align-items: flex-start !important; }
           .hero-grid { grid-template-columns: 1fr !important; column-gap: 0 !important; }
@@ -618,7 +668,9 @@ export default function LandingPage() {
       <header
         className="landing-header"
         style={{
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e2e8f0",
+          background: isDark ? "transparent" : "rgba(255,255,255,0.85)",
+          backdropFilter: "blur(8px)",
           padding: "16px 48px",
           display: "flex",
           justifyContent: "space-between",
@@ -647,7 +699,7 @@ export default function LandingPage() {
           >
             N
           </div>
-          <span style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "-0.01em", color: "#fff" }}>
+          <span style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "-0.01em", color: isDark ? "#fff" : "#0f172a" }}>
             NexusRAG
           </span>
         </div>
@@ -659,7 +711,7 @@ export default function LandingPage() {
                 style={{
                   fontSize: "0.8rem",
                   fontWeight: 500,
-                  color: "rgba(255,255,255,0.9)",
+                  color: isDark ? "rgba(255,255,255,0.9)" : "#334155",
                   letterSpacing: "-0.01em",
                 }}
               >
@@ -671,16 +723,19 @@ export default function LandingPage() {
                   fontSize: "0.65rem",
                   padding: "3px 10px",
                   borderRadius: 6,
-                  background: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.12)",
+                  background: isDark ? "rgba(255,255,255,0.08)" : "rgba(124,58,237,0.08)",
+                  border: isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(124,58,237,0.2)",
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
-                  color: "#a78bfa",
+                  color: isDark ? "#a78bfa" : "#7c3aed",
                   fontWeight: 600,
                 }}
               >
                 {user.role}
               </span>
+
+              {/* Theme toggle placed directly between department badge and Sign Out button */}
+              <ThemeToggle />
 
               <button
                 type="button"
@@ -690,8 +745,8 @@ export default function LandingPage() {
                 }}
                 style={{
                   background: "transparent",
-                  color: "rgba(255,255,255,0.5)",
-                  border: "1px solid rgba(255,255,255,0.12)",
+                  color: isDark ? "rgba(255,255,255,0.5)" : "#64748b",
+                  border: isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #cbd5e1",
                   borderRadius: 8,
                   padding: "6px 12px",
                   fontSize: "0.75rem",
@@ -699,12 +754,12 @@ export default function LandingPage() {
                   transition: "all 0.15s",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#fff";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
+                  e.currentTarget.style.color = isDark ? "#fff" : "#0f172a";
+                  e.currentTarget.style.borderColor = isDark ? "rgba(255,255,255,0.3)" : "#94a3b8";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "rgba(255,255,255,0.5)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+                  e.currentTarget.style.color = isDark ? "rgba(255,255,255,0.5)" : "#64748b";
+                  e.currentTarget.style.borderColor = isDark ? "rgba(255,255,255,0.12)" : "#cbd5e1";
                 }}
               >
                 Sign Out
@@ -712,13 +767,14 @@ export default function LandingPage() {
             </>
           ) : (
             <>
+              <ThemeToggle />
               <button
                 type="button"
                 onClick={() => navigate("/login")}
                 style={{
                   background: "transparent",
-                  color: "#fff",
-                  border: "1px solid rgba(255,255,255,0.15)",
+                  color: isDark ? "#fff" : "#0f172a",
+                  border: isDark ? "1px solid rgba(255,255,255,0.15)" : "1px solid #cbd5e1",
                   borderRadius: 8,
                   padding: "6px 14px",
                   fontSize: "0.78rem",
@@ -780,7 +836,7 @@ export default function LandingPage() {
                 fontWeight: 700,
                 letterSpacing: "0.18em",
                 textTransform: "uppercase",
-                color: "rgba(255,255,255,0.28)",
+                color: isDark ? "rgba(255,255,255,0.28)" : "#64748b",
                 marginBottom: 14,
               }}
             >
@@ -794,7 +850,7 @@ export default function LandingPage() {
                 letterSpacing: "-0.04em",
                 lineHeight: 1.1,
                 margin: 0,
-                color: "#fff",
+                color: isDark ? "#fff" : "#0f172a",
               }}
             >
               The knowledge base<br />that knows<br />who's asking.
@@ -804,7 +860,7 @@ export default function LandingPage() {
               style={{
                 marginTop: 0,
                 fontSize: "0.9rem",
-                color: "rgba(255,255,255,0.38)",
+                color: isDark ? "rgba(255,255,255,0.38)" : "#475569",
                 lineHeight: 1.65,
                 letterSpacing: "-0.01em",
                 maxWidth: 380,
@@ -822,7 +878,7 @@ export default function LandingPage() {
                   fontWeight: 500,
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.5)",
+                  color: isDark ? "rgba(255,255,255,0.5)" : "#64748b",
                 }}
               >
                 Select a role to explore
@@ -856,7 +912,7 @@ export default function LandingPage() {
       <section
         className="how-it-works-section"
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.12)",
+          borderTop: isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #e2e8f0",
           padding: "120px 48px",
           maxWidth: 1160,
           margin: "0 auto",
@@ -864,7 +920,7 @@ export default function LandingPage() {
           boxSizing: "border-box",
         }}
       >
-        <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.75)", margin: "0 0 56px 0" }}>
+        <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: isDark ? "rgba(255,255,255,0.75)" : "#334155", margin: "0 0 56px 0" }}>
           How it works
         </p>
         <div className="how-it-works-grid">
@@ -876,10 +932,10 @@ export default function LandingPage() {
               <span className="how-it-works-step-num">
                 {step.n}
               </span>
-              <h3 style={{ fontSize: "0.95rem", fontWeight: 600, letterSpacing: "-0.02em", color: "#fff", margin: "0 0 10px 0" }}>
+              <h3 style={{ fontSize: "0.95rem", fontWeight: 600, letterSpacing: "-0.02em", color: isDark ? "#fff" : "#0f172a", margin: "0 0 10px 0" }}>
                 {step.title}
               </h3>
-              <p style={{ fontSize: "0.825rem", color: "rgba(255,255,255,0.40)", lineHeight: 1.65, margin: 0 }}>
+              <p style={{ fontSize: "0.825rem", color: isDark ? "rgba(255,255,255,0.40)" : "#475569", lineHeight: 1.65, margin: 0 }}>
                 {step.desc}
               </p>
             </div>
@@ -891,7 +947,7 @@ export default function LandingPage() {
       <section
         className="built-on-section"
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.15)",
+          borderTop: isDark ? "1px solid rgba(255,255,255,0.15)" : "1px solid #e2e8f0",
           padding: "100px 48px",
           maxWidth: 1160,
           margin: "0 auto",
@@ -899,7 +955,7 @@ export default function LandingPage() {
           boxSizing: "border-box",
         }}
       >
-        <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.75)", margin: "0 0 48px 0" }}>
+        <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: isDark ? "rgba(255,255,255,0.75)" : "#334155", margin: "0 0 48px 0" }}>
           Built on
         </p>
         <div className="built-on-grid">
@@ -914,10 +970,10 @@ export default function LandingPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {group.items.map((t) => (
                   <div key={t.name}>
-                    <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#fff", letterSpacing: "-0.01em" }}>
+                    <div className="tech-name" style={{ fontSize: "0.875rem", fontWeight: 600, color: isDark ? "#fff" : "#0f172a", letterSpacing: "-0.01em" }}>
                       {t.name}
                     </div>
-                    <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
+                    <div className="tech-desc" style={{ fontSize: "0.75rem", color: isDark ? "rgba(255,255,255,0.45)" : "#64748b", marginTop: 2 }}>
                       {t.desc}
                     </div>
                   </div>
@@ -932,7 +988,7 @@ export default function LandingPage() {
       <footer
         className="landing-footer"
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.14)",
+          borderTop: isDark ? "1px solid rgba(255,255,255,0.14)" : "1px solid #e2e8f0",
           padding: "28px 48px",
           display: "flex",
           justifyContent: "space-between",
@@ -943,7 +999,7 @@ export default function LandingPage() {
           boxSizing: "border-box",
         }}
       >
-        <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.18)" }}>rag.shikharjain.com</span>
+        <span style={{ fontSize: "0.72rem", color: isDark ? "rgba(255,255,255,0.18)" : "#94a3b8" }}>rag.shikharjain.com</span>
       </footer>
 
     </div>

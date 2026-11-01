@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { useQuery } from '../hooks/useQuery'
 import MessageBubble from '../components/MessageBubble'
 import ThinkingIndicator from '../components/ThinkingIndicator'
 import Chat from '../components/Chat'
 import BackHomeButton from '../components/BackHomeButton'
+import ThemeToggle from '../components/ThemeToggle'
 import api from '../services/api'
 
 const DEPT = {
@@ -31,6 +33,7 @@ function fmtDate(iso) {
 
 export default function ChatPage() {
   const { user, logout } = useAuth()
+  const { isDark } = useTheme()
   const { messages, thinking, sendQuery } = useQuery()
   const bottomRef = useRef(null)
   const messagesRef = useRef(null)
@@ -59,17 +62,28 @@ export default function ChatPage() {
   }, [])
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#0a0a0a', color: '#fff', fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
+    <div
+      className="flex h-screen overflow-hidden transition-colors"
+      style={{
+        background: isDark ? '#0a0a0a' : '#f8fafc',
+        color: isDark ? '#fff' : '#0f172a',
+        fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif"
+      }}
+    >
 
       {/* ── LEFT: Chat column ─────────────────────────────── */}
       <div
         className="flex flex-col min-w-0 overflow-hidden"
-        style={{ flex: 1, borderRight: '1px solid rgba(255,255,255,0.07)' }}
+        style={{ flex: 1, borderRight: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e2e8f0' }}
       >
         {/* Header */}
         <header
-          className="flex-shrink-0 flex items-center justify-between px-4 sm:px-5 py-2.5 sm:py-3 z-10"
-          style={{ background: 'rgba(10,10,10,0.85)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+          className="flex-shrink-0 flex items-center justify-between px-4 sm:px-5 py-2.5 sm:py-3 z-10 transition-colors"
+          style={{
+            background: isDark ? 'rgba(10,10,10,0.85)' : 'rgba(255,255,255,0.85)',
+            backdropFilter: 'blur(8px)',
+            borderBottom: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e2e8f0'
+          }}
         >
           <div className="flex items-center gap-3">
             <BackHomeButton />
@@ -79,7 +93,7 @@ export default function ChatPage() {
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ background: d.dot, boxShadow: `0 0 6px ${d.dot}` }}
                 />
-                <span className="text-sm font-semibold" style={{ color: '#fff', letterSpacing: '-0.01em' }}>
+                <span className="text-sm font-semibold" style={{ color: isDark ? '#fff' : '#0f172a', letterSpacing: '-0.01em' }}>
                   {DEPT_NAMES[user?.role] ?? user?.role}
                 </span>
               </div>
@@ -87,20 +101,44 @@ export default function ChatPage() {
             {/* Mobile docs toggle */}
             <button
               className="md:hidden ml-2 text-xs px-3 py-1.5 rounded-lg"
-              style={{ color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.12)', background: 'none', cursor: 'pointer' }}
+              style={{
+                color: isDark ? 'rgba(255,255,255,0.45)' : '#475569',
+                border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
+                background: 'none',
+                cursor: 'pointer'
+              }}
               onClick={() => setDocsOpen((v) => !v)}
             >
               Docs
             </button>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="hidden sm:block text-[11px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <span className="hidden sm:block text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.45)' }}>
               {user?.email}
             </span>
+            {d && (
+              <span
+                className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider"
+                style={{
+                  background: isDark ? d.bg : d.bg.replace('0.10', '0.12'),
+                  color: d.dot,
+                  border: `1px solid ${d.dot}40`,
+                }}
+              >
+                {user?.role}
+              </span>
+            )}
+            {/* ThemeToggle placed directly between department badge and Sign Out button */}
+            <ThemeToggle />
             <button
               onClick={logout}
               className="text-[11px] transition-colors"
-              style={{ color: 'rgba(255,255,255,0.30)', background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{
+                color: isDark ? 'rgba(255,255,255,0.40)' : 'rgba(0,0,0,0.55)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+              }}
             >
               Sign out
             </button>
@@ -120,10 +158,10 @@ export default function ChatPage() {
                     <span className="text-white text-base font-bold uppercase">{user?.role?.[0]}</span>
                   </div>
                 )}
-                <h2 className="text-lg font-semibold text-white capitalize mb-1.5">
+                <h2 className={`text-lg font-semibold capitalize mb-1.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   {user?.role} Knowledge Base
                 </h2>
-                <p className="text-sm max-w-xs leading-relaxed mb-7" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                <p className="text-sm max-w-xs leading-relaxed mb-7" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : '#64748b' }}>
                   Ask anything about your department's documents. Every answer is grounded in your role's knowledge base and cited with sources.
                 </p>
                 <div className="flex flex-col gap-2 w-full max-w-[420px]">
@@ -131,11 +169,12 @@ export default function ChatPage() {
                     <button
                       key={s}
                       onClick={() => sendQuery(s, true)}
-                      className="text-left px-3.5 py-2.5 rounded-xl text-sm transition-colors"
+                      className="text-left px-3.5 py-2.5 rounded-xl text-sm transition-colors hover:border-violet-500/50"
                       style={{
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.09)',
-                        color: 'rgba(255,255,255,0.55)',
+                        background: isDark ? 'rgba(255,255,255,0.04)' : '#ffffff',
+                        border: isDark ? '1px solid rgba(255,255,255,0.09)' : '1px solid #e2e8f0',
+                        color: isDark ? 'rgba(255,255,255,0.65)' : '#334155',
+                        boxShadow: isDark ? 'none' : '0 1px 2px rgba(0,0,0,0.03)',
                         cursor: 'pointer',
                         fontFamily: 'inherit',
                       }}
@@ -167,8 +206,11 @@ export default function ChatPage() {
 
         {/* Input */}
         <div
-          className="flex-shrink-0 px-5 py-3.5"
-          style={{ background: 'rgba(10,10,10,0.90)', borderTop: '1px solid rgba(255,255,255,0.07)' }}
+          className="flex-shrink-0 px-5 py-3.5 transition-colors"
+          style={{
+            background: isDark ? 'rgba(10,10,10,0.90)' : 'rgba(255,255,255,0.90)',
+            borderTop: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e2e8f0'
+          }}
         >
           <div className="max-w-[700px] mx-auto">
             <Chat onSend={sendQuery} disabled={thinking} userRole={user?.role} />
@@ -178,18 +220,23 @@ export default function ChatPage() {
 
       {/* ── RIGHT: Documents panel ──────────────────────── */}
       <aside
-        className={`flex-col flex-shrink-0 md:w-[260px] ${docsOpen ? 'flex fixed inset-0 z-50 w-full md:relative md:inset-auto md:z-auto' : 'hidden md:flex'}`}
-        style={{ background: '#0f0f0f' }}
+        className={`flex-col flex-shrink-0 md:w-[260px] transition-colors ${docsOpen ? 'flex fixed inset-0 z-50 w-full md:relative md:inset-auto md:z-auto' : 'hidden md:flex'}`}
+        style={{ background: isDark ? '#0f0f0f' : '#ffffff', borderLeft: isDark ? 'none' : '1px solid #e2e8f0' }}
       >
         {/* Panel header */}
-        <div className="px-4 py-3.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="px-4 py-3.5" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0' }}>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.1em]" style={{ color: 'rgba(255,255,255,0.20)' }}>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>
               Documents
             </p>
             <button
               className="md:hidden text-[11px] px-2 py-0.5 rounded"
-              style={{ color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.12)', background: 'none', cursor: 'pointer' }}
+              style={{
+                color: isDark ? 'rgba(255,255,255,0.35)' : '#475569',
+                border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
+                background: 'none',
+                cursor: 'pointer'
+              }}
               onClick={() => setDocsOpen(false)}
             >
               ✕ Close
@@ -200,7 +247,7 @@ export default function ChatPage() {
             <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: d?.text }}>
               {user?.role}
             </span>
-            <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.20)' }}>
+            <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>
               · {docs.length} files
             </span>
           </div>
@@ -210,18 +257,20 @@ export default function ChatPage() {
         <div className="flex-1 overflow-y-auto p-2 doc-scroll">
           {docsLoading ? (
             <div className="flex items-center gap-2 px-2 py-3">
-              <div className="w-3 h-3 rounded-full border border-white/20 border-t-white/50 animate-spin" />
-              <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.25)' }}>Loading…</span>
+              <div className={`w-3 h-3 rounded-full border border-t-transparent animate-spin ${isDark ? 'border-white/30 border-t-white' : 'border-slate-300 border-t-slate-700'}`} />
+              <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8' }}>Loading…</span>
             </div>
           ) : docs.length === 0 ? (
-            <p className="px-2 text-[11px]" style={{ color: 'rgba(255,255,255,0.20)' }}>No documents found.</p>
+            <p className="px-2 text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>No documents found.</p>
           ) : (
             <ul className="space-y-1">
               {docs.map((doc) => (
                 <li key={doc.id}>
                   <button
                     onClick={() => setSelectedDoc(selectedDoc === doc.id ? null : doc.id)}
-                    className="w-full text-left px-2.5 py-2 rounded-[10px] transition-colors hover:bg-white/[0.04]"
+                    className={`w-full text-left px-2.5 py-2 rounded-[10px] transition-colors ${
+                      isDark ? 'hover:bg-white/[0.04]' : 'hover:bg-slate-50'
+                    }`}
                     style={{
                       background: selectedDoc === doc.id ? d?.bg : undefined,
                       border: 'none',
@@ -232,15 +281,15 @@ export default function ChatPage() {
                   >
                     <p
                       className="text-xs font-medium truncate leading-snug mb-0.5"
-                      style={{ color: selectedDoc === doc.id ? '#fff' : 'rgba(255,255,255,0.50)' }}
+                      style={{ color: selectedDoc === doc.id ? (isDark ? '#fff' : '#0f172a') : (isDark ? 'rgba(255,255,255,0.60)' : '#334155') }}
                     >
                       {doc.name}
                     </p>
                     <div className="flex gap-2">
-                      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.20)' }}>
+                      <span className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8' }}>
                         {doc.chunk_count} chunks
                       </span>
-                      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.15)' }}>
+                      <span className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#cbd5e1' }}>
                         {fmtDate(doc.uploaded_at)}
                       </span>
                     </div>
@@ -252,11 +301,11 @@ export default function ChatPage() {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="px-4 py-3" style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0' }}>
           <button
             onClick={logout}
-            className="text-[11px] transition-colors"
-            style={{ color: 'rgba(255,255,255,0.20)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+            className="text-[11px] transition-colors hover:underline"
+            style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#64748b', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Sign out
           </button>

@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTheme } from '../context/ThemeContext'
+import ThemeToggle from '../components/ThemeToggle'
 import { signup } from '../services/auth'
 
 export default function SignupPage() {
   const navigate = useNavigate()
+  const { isDark } = useTheme()
 
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -82,16 +85,21 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
+    <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0a] text-white' : 'bg-[#f8fafc] text-slate-900'} flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden transition-colors`}>
+      {/* Theme toggle in top right */}
+      <div className="absolute top-5 right-5 z-20">
+        <ThemeToggle />
+      </div>
+
       {/* Background ambient glow */}
-      <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className={`absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-96 h-96 ${isDark ? 'bg-violet-600/10' : 'bg-violet-400/15'} rounded-full blur-3xl pointer-events-none`} />
+      <div className={`absolute bottom-1/4 right-1/3 w-80 h-80 ${isDark ? 'bg-indigo-600/10' : 'bg-indigo-400/15'} rounded-full blur-3xl pointer-events-none`} />
 
       {/* Main card */}
-      <div className="w-full max-w-md bg-[#111318] border border-white/10 rounded-2xl shadow-2xl p-7 sm:p-9 relative z-10">
+      <div className={`w-full max-w-md ${isDark ? 'bg-[#111318] border-white/10 shadow-2xl' : 'bg-white border-slate-200 shadow-xl shadow-slate-200/50'} border rounded-2xl p-7 sm:p-9 relative z-10 transition-colors`}>
         {/* Brand header */}
         <div className="text-center mb-7">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 mb-3 shadow-inner">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-500 mb-3 shadow-inner">
             <svg
               className="w-6 h-6"
               fill="none"
@@ -106,14 +114,14 @@ export default function SignupPage() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Create an Account</h1>
-          <p className="text-xs uppercase tracking-widest text-violet-400 font-semibold mt-1">NexusRAG Enterprise</p>
-          <p className="text-xs text-white/50 mt-1.5">Sign up to access your team's confidential knowledge base</p>
+          <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Create an Account</h1>
+          <p className="text-xs uppercase tracking-widest text-violet-500 font-semibold mt-1">NexusRAG Enterprise</p>
+          <p className={`text-xs ${isDark ? 'text-white/50' : 'text-slate-500'} mt-1.5`}>Sign up to access your team's confidential knowledge base</p>
         </div>
 
         {/* Error banner */}
         {error && (
-          <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs flex items-start gap-2.5">
+          <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs flex items-start gap-2.5">
             <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -123,7 +131,7 @@ export default function SignupPage() {
 
         {/* Success banner */}
         {success && (
-          <div className="mb-5 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs flex items-start gap-2.5">
+          <div className="mb-5 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 text-xs flex items-start gap-2.5">
             <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
@@ -134,49 +142,61 @@ export default function SignupPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-white/70 mb-1.5">Full Name</label>
+            <label className={`block text-xs font-medium ${isDark ? 'text-white/70' : 'text-slate-700'} mb-1.5`}>Full Name</label>
             <input
               type="text"
               required
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="e.g. Sarah Connor"
-              className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-violet-500 focus:bg-white/[0.07] transition-all"
+              className={`w-full border rounded-xl px-3.5 py-2.5 text-sm transition-all focus:outline-none ${
+                isDark
+                  ? 'bg-white/[0.04] border-white/10 text-white placeholder-white/25 focus:border-violet-500 focus:bg-white/[0.07]'
+                  : 'bg-slate-50/70 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-violet-600 focus:bg-white'
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-white/70 mb-1.5">Work Email</label>
+            <label className={`block text-xs font-medium ${isDark ? 'text-white/70' : 'text-slate-700'} mb-1.5`}>Work Email</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="sconnor@company.com"
-              className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-violet-500 focus:bg-white/[0.07] transition-all"
+              className={`w-full border rounded-xl px-3.5 py-2.5 text-sm transition-all focus:outline-none ${
+                isDark
+                  ? 'bg-white/[0.04] border-white/10 text-white placeholder-white/25 focus:border-violet-500 focus:bg-white/[0.07]'
+                  : 'bg-slate-50/70 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-violet-600 focus:bg-white'
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-white/70 mb-1.5">Department Workspace</label>
+            <label className={`block text-xs font-medium ${isDark ? 'text-white/70' : 'text-slate-700'} mb-1.5`}>Department Workspace</label>
             <select
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              className="w-full bg-[#16181f] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500 transition-all cursor-pointer"
+              className={`w-full border rounded-xl px-3.5 py-2.5 text-sm transition-all cursor-pointer focus:outline-none ${
+                isDark
+                  ? 'bg-[#16181f] border-white/10 text-white focus:border-violet-500'
+                  : 'bg-slate-50/70 border-slate-300 text-slate-900 focus:border-violet-600 focus:bg-white'
+              }`}
             >
-              <option value="engineering" className="bg-[#16181f] text-white">Engineering Workspace</option>
-              <option value="hr" className="bg-[#16181f] text-white">Human Resources (HR) Workspace</option>
-              <option value="finance" className="bg-[#16181f] text-white">Finance Workspace</option>
+              <option value="engineering" className={isDark ? "bg-[#16181f] text-white" : "bg-white text-slate-900"}>Engineering Workspace</option>
+              <option value="hr" className={isDark ? "bg-[#16181f] text-white" : "bg-white text-slate-900"}>Human Resources (HR) Workspace</option>
+              <option value="finance" className={isDark ? "bg-[#16181f] text-white" : "bg-white text-slate-900"}>Finance Workspace</option>
             </select>
-            <p className="text-[11px] text-white/40 mt-1">
+            <p className={`text-[11px] ${isDark ? 'text-white/40' : 'text-slate-500'} mt-1`}>
               Determines role-based document access controls (RBAC).
             </p>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-medium text-white/70">Password</label>
-              <span className="text-[11px] text-white/40">Min 8 characters</span>
+              <label className={`block text-xs font-medium ${isDark ? 'text-white/70' : 'text-slate-700'}`}>Password</label>
+              <span className={`text-[11px] ${isDark ? 'text-white/40' : 'text-slate-500'}`}>Min 8 characters</span>
             </div>
             <div className="relative">
               <input
@@ -186,12 +206,18 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-violet-500 focus:bg-white/[0.07] transition-all pr-10"
+                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm transition-all pr-10 focus:outline-none ${
+                  isDark
+                    ? 'bg-white/[0.04] border-white/10 text-white placeholder-white/25 focus:border-violet-500 focus:bg-white/[0.07]'
+                    : 'bg-slate-50/70 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-violet-600 focus:bg-white'
+                }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 focus:outline-none transition-colors"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors focus:outline-none ${
+                  isDark ? 'text-white/40 hover:text-white/70' : 'text-slate-400 hover:text-slate-700'
+                }`}
                 title={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
@@ -209,7 +235,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-white/70 mb-1.5">Confirm Password</label>
+            <label className={`block text-xs font-medium ${isDark ? 'text-white/70' : 'text-slate-700'} mb-1.5`}>Confirm Password</label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -218,12 +244,18 @@ export default function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-violet-500 focus:bg-white/[0.07] transition-all pr-10"
+                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm transition-all pr-10 focus:outline-none ${
+                  isDark
+                    ? 'bg-white/[0.04] border-white/10 text-white placeholder-white/25 focus:border-violet-500 focus:bg-white/[0.07]'
+                    : 'bg-slate-50/70 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-violet-600 focus:bg-white'
+                }`}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 focus:outline-none transition-colors"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors focus:outline-none ${
+                  isDark ? 'text-white/40 hover:text-white/70' : 'text-slate-400 hover:text-slate-700'
+                }`}
                 title={showConfirmPassword ? 'Hide password' : 'Show password'}
               >
                 {showConfirmPassword ? (
@@ -257,18 +289,18 @@ export default function SignupPage() {
         </form>
 
         {/* Login Link */}
-        <div className="mt-6 text-center text-xs text-white/50">
+        <div className={`mt-6 text-center text-xs ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
           Already have an account?{' '}
           <Link
             to="/login"
-            className="text-violet-400 hover:text-violet-300 font-medium transition-colors underline-offset-4 hover:underline"
+            className="text-violet-500 hover:text-violet-600 font-medium transition-colors underline-offset-4 hover:underline"
           >
             Sign in
           </Link>
         </div>
       </div>
 
-      <div className="mt-8 text-xs text-white/20">
+      <div className={`mt-8 text-xs ${isDark ? 'text-white/20' : 'text-slate-400'}`}>
         NexusRAG Enterprise AI Platform &bull; Secure Multi-Tenant RBAC
       </div>
     </div>
