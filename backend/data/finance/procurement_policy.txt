@@ -1,0 +1,84 @@
+Apex Systems Procurement Policy
+Effective January 1, 2026
+
+This policy governs the acquisition of goods and services by Apex Systems. It applies to all employees who initiate, approve, or manage purchases on behalf of the company, including department heads, finance business partners, the Procurement team, and the Legal team. The purpose of this policy is to ensure that Apex Systems spends company funds responsibly, selects vendors who meet quality and risk standards, negotiates favorable terms, and maintains the documentation and controls required for financial reporting and audit.
+
+Procurement Principles
+
+All purchases must be for legitimate business purposes and must fall within an approved budget. Employees must not make purchases for personal benefit or to circumvent internal controls. The company expects employees who manage vendor relationships to act at arm's length, to disclose any personal relationships with vendor representatives, and to make vendor decisions based on merit, cost, quality, and risk rather than personal preference or outside influence.
+
+Apex Systems is committed to working with vendors who meet the company's ethical, environmental, and security standards. Large vendors providing critical services are subject to periodic vendor risk assessments managed by the Procurement and Security teams.
+
+Approval Thresholds
+
+All purchases require approval before a purchase order is issued or a contract is signed. Approval requirements are based on total contract value, defined as the cumulative value of the agreement over its full term including all renewals.
+
+Up to $5,000: The purchasing employee's direct manager may approve. No formal competitive process is required, but the employee should document the basis for vendor selection and the price reasonableness.
+
+$5,001 to $25,000: Department head approval is required. The Procurement team must be notified. At least two vendor quotes must be obtained and documented.
+
+$25,001 to $100,000: Chief Financial Officer approval is required. A formal vendor evaluation with at least three quotes is required unless the Procurement team documents a valid reason for a sole-source selection. Legal review is required before contract execution.
+
+$100,001 to $500,000: Chief Executive Officer and Chief Financial Officer approval is required. A full RFP process is required unless the Procurement team grants a documented exemption. Legal review and negotiation support from the Legal team is required.
+
+Above $500,000: Board approval is required. The CEO presents the procurement to the board with a written justification and financial analysis. An external legal counsel review of the contract is required in addition to internal legal review.
+
+Recurring purchases that have previously been approved under a multi-year contract do not require re-approval unless the contract is being renewed, materially amended, or the cumulative value exceeds the original approved amount. The Procurement team tracks all active contracts in the contract management system.
+
+Vendor Selection Criteria
+
+Vendor selection must be based on documented evaluation criteria. The standard criteria used by Apex Systems are: technical capability and fit for the intended use case, financial stability and business viability of the vendor, security and compliance posture including SOC 2 Type II certification or equivalent for vendors handling company data, pricing and total cost of ownership, service level agreements and support quality, references and reputation in the market, and geographic and regulatory fit.
+
+The weighting of criteria varies by category of purchase. The Procurement team maintains a scoring template for each major category of spend. Department heads may request adjustments to criteria weighting for a specific procurement with written justification approved by the Procurement team.
+
+Sole-source selections — purchases made from a single vendor without a competitive process — are permitted in limited circumstances: where only one vendor in the market provides the required capability, where a competitive process would compromise security or confidentiality, where the cost or time required for a competitive process is disproportionate to the value of the purchase given strong existing data, or where an emergency procurement is required to prevent business disruption. All sole-source selections above the $25,000 threshold require written documentation approved by the Procurement team and, for purchases above $100,000, by the CFO.
+
+RFP Process
+
+For purchases above $100,000, the standard procurement vehicle is a formal Request for Proposals. The RFP is managed by the Procurement team in coordination with the sponsoring department.
+
+RFP Preparation: The sponsoring department provides the Procurement team with a written statement of requirements. The statement describes the business need, the scope of services or goods, the evaluation criteria, the desired contract duration, and any specific technical, regulatory, or security requirements. The Procurement team reviews the requirements for completeness and clarity before the RFP is issued.
+
+Vendor List: The Procurement team develops an initial list of qualified vendors based on market research, industry databases, and internal knowledge. The sponsoring department may nominate vendors for inclusion with written justification. Vendors with active conflicts of interest involving Apex Systems employees are excluded.
+
+RFP Issuance: The RFP document includes the statement of requirements, submission instructions, the evaluation criteria and their weighting, the scoring methodology, the timeline, the anticipated contract structure, and required certifications (such as SOC 2 or ISO 27001). RFPs are issued simultaneously to all invited vendors.
+
+Q&A Period: Vendors may submit written questions during the designated Q&A period. All questions and answers are shared with all participating vendors to ensure a fair process. Verbal communications with vendors during an active RFP are prohibited to prevent information asymmetry.
+
+Proposal Evaluation: Proposals are evaluated by a cross-functional committee including the sponsoring department, the Procurement team, Finance, Legal, and Security as appropriate. Each committee member scores responses against the stated criteria independently, and scores are then discussed as a group. The Procurement team prepares a written evaluation summary documenting the scoring and the rationale for the recommended selection.
+
+Vendor Negotiations: Following committee selection of a preferred vendor, the Procurement team leads commercial negotiations with support from Legal. Key areas of negotiation include pricing and payment terms, service levels and remedies, data handling and security obligations, intellectual property ownership, limitation of liability, termination rights, and renewal terms. The sponsoring department participates in discussions about scope and service levels. Pricing and legal terms are negotiated by the Procurement and Legal teams.
+
+Contract Review and Execution
+
+All contracts with a total value above $5,000 must be reviewed by the Legal team before execution. The Legal team reviews for compliance with Apex Systems' standard requirements, identifies non-standard terms, and negotiates changes with the vendor's legal team as needed.
+
+Contracts must include at minimum: a clear scope of services or goods, pricing and payment terms, a defined contract term and renewal provisions, confidentiality and data protection terms, SLAs and remedies for breach, termination rights for both parties, and a governing law and dispute resolution clause.
+
+No employee may execute a contract on behalf of Apex Systems unless they hold an approved signatory authority. Signatory authority levels are: department heads may sign contracts up to $25,000; the CFO may sign contracts up to $100,000; the CEO may sign contracts up to $500,000; contracts above $500,000 require both the CEO and board authorization. Employees who sign contracts without appropriate authority are personally liable for any resulting obligation and are subject to disciplinary action.
+
+Signed contracts are stored in the contract management system and indexed by vendor, department, contract value, and expiration date. The Procurement team sends renewal notifications to the sponsoring department sixty days before a contract expires.
+
+Preferred Vendor List
+
+Apex Systems maintains a preferred vendor list for common categories of spend including cloud infrastructure, software development tools, office supplies, travel and accommodation, legal services, accounting and audit services, and staffing and recruiting. Preferred vendors have completed the vendor qualification process, have current approved contracts, and offer Apex Systems negotiated pricing.
+
+Employees are required to use preferred vendors when a suitable vendor is available on the list. Deviating from the preferred vendor list requires written justification submitted to the Procurement team and approval from the department head. Repeated deviations without justification will be reviewed by the CFO.
+
+New vendors are added to the preferred vendor list through the full vendor qualification process, which includes a security assessment for any vendor who will handle company or customer data, a financial review, legal review of standard contract terms, and Procurement team approval.
+
+Payment Terms
+
+Apex Systems' standard payment terms are net thirty days from receipt of a valid invoice. The Procurement team negotiates longer payment terms (net forty-five or net sixty) for large contracts where it is commercially reasonable to do so. Early payment discounts (e.g., two percent ten net thirty) may be accepted at the discretion of the CFO when the cash position supports it.
+
+Invoices must reference the relevant purchase order number. The Procurement team maintains purchase orders for all approved contracts. Invoices without a matching purchase order will not be processed by Accounts Payable until a purchase order is issued or the Procurement team provides written authorization.
+
+The Accounts Payable team processes payments on the Friday of each week. Emergency payments outside this cycle require CFO approval. Payments to new vendors require vendor setup in the ERP system, including verification of banking details through the bank confirmation process. The bank confirmation process requires direct outreach to the vendor using contact information on file, not information provided in the payment instruction itself, to prevent fraud.
+
+Vendor Risk Management
+
+Vendors who provide critical services or who handle Apex Systems or customer data are subject to ongoing risk management. The Procurement and Security teams maintain a tiered vendor risk classification. Tier one vendors are those providing critical infrastructure, handling customer data, or providing services that would cause significant business disruption if unavailable. Tier two vendors provide important but non-critical services. Tier three vendors provide commodity or low-risk goods and services.
+
+Tier one vendors are assessed annually. The assessment includes a review of their security posture (SOC 2 Type II report review or equivalent), financial health, SLA performance against contract, and any changes in their business that could affect service quality or risk. Tier two vendors are assessed every two years. Tier three vendors are not subject to periodic assessment unless a risk event occurs.
+
+Results of vendor risk assessments are shared with the sponsoring department and escalated to the CFO for Tier one vendors with material findings. The Procurement team works with the sponsoring department to develop a remediation plan or contingency plan where risks are identified.

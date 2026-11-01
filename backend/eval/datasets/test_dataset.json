@@ -1,0 +1,77 @@
+[
+  {
+    "question": "How many weeks of parental leave does Apex provide to primary and secondary caregivers?",
+    "role": "hr",
+    "ground_truth": "Apex provides 16 weeks of fully paid parental leave for the primary caregiver and 8 weeks of fully paid parental leave for the secondary caregiver. These benefits apply to birth, adoption, or foster placement and to both biological and adoptive parents."
+  },
+  {
+    "question": "What is the PTO accrual rate for full-time employees?",
+    "role": "hr",
+    "ground_truth": "Full-time employees accrue PTO at the rate of 1.67 days per calendar month, totaling 20 days per year. Accrual begins on the first day of employment and is credited at the start of each calendar month."
+  },
+  {
+    "question": "When do formal performance reviews occur and what is the purpose of each cycle?",
+    "role": "hr",
+    "ground_truth": "Apex operates a two-cycle review process. The mid-year review is held in June and is a lightweight check-in focused on goal progress and course corrections; it does not produce a formal rating or compensation change. The annual review is held in December and is the primary evaluation, producing a formal performance rating that feeds directly into compensation decisions and promotions, with ratings finalized before December 15 and compensation adjustments effective January 1."
+  },
+  {
+    "question": "What are the seven career levels and their base salary ranges at Apex?",
+    "role": "hr",
+    "ground_truth": "Apex uses a seven-level framework for Tier 1 locations: L1 Associate ($70,000–$90,000), L2 Specialist ($90,000–$120,000), L3 Senior ($120,000–$160,000), L4 Staff ($160,000–$210,000), L5 Principal ($210,000–$280,000), L6 Director ($250,000–$350,000), and L7 Vice President ($350,000 and above). The same framework applies across all functions."
+  },
+  {
+    "question": "What are the onboarding milestones expected at 30, 60, and 90 days?",
+    "role": "hr",
+    "ground_truth": "By day 30, new hires should have a working understanding of the product, have met every member of their immediate team, and shipped one measurable deliverable. By day 60, they should be operating independently on core responsibilities with periodic check-ins. By day 90, they should be contributing at the level expected for their role and level. HR schedules a formal 90-day check-in with the HR Business Partner covering performance against the 30-60-90 plan."
+  },
+  {
+    "question": "What is the deductible for the PPO health plan and the HDHP?",
+    "role": "hr",
+    "ground_truth": "The PPO plan has an in-network deductible of $500 per individual and $1,000 per family. The HDHP has a higher in-network deductible of $1,500 per individual and $3,000 per family. The HDHP uses an aggregate family deductible, meaning any combination of family members' expenses counts toward the single $3,000 threshold."
+  },
+  {
+    "question": "How should employees report a code of conduct violation, and what happens after a report is filed?",
+    "role": "hr",
+    "ground_truth": "Concerns can be reported to the employee's direct manager, the manager's manager, People Operations, or the General Counsel. An anonymous reporting hotline is also available. For concerns involving a manager, employees are encouraged to go directly to People Operations or the General Counsel. After a report is filed, People Operations leads the investigation, interviewing the reporting employee, the subject of the complaint, and any witnesses. The company aims to conclude investigations within thirty days, and both the reporting employee and the subject are informed of the outcome to the extent permitted by confidentiality obligations."
+  },
+  {
+    "question": "What are the stages of the deployment pipeline from merge to production?",
+    "role": "engineering",
+    "ground_truth": "After a merge to main, the CI pipeline runs five stages in order: build (Bazel), unit tests, integration tests against ephemeral Kind clusters, static analysis, and security scans. On success, Argo CD automatically deploys to staging within two minutes. Deployment to canary requires a human approval step in the Argo UI and is permitted only during business hours (09:00–17:00 Pacific, Monday–Friday). Canary receives 5% of production traffic for 30 minutes. If no SLO alerts fire, promotion to production is automatic via a blue-green rollout across three regions sequenced east-to-west with a 5-minute wait between regions."
+  },
+  {
+    "question": "What are the four incident severity levels and their resolution SLA targets?",
+    "role": "engineering",
+    "ground_truth": "Apex defines four severity levels: P0 (Critical) for complete outages of core customer-facing services, with a 4-hour resolution SLA and a 30-minute status page update requirement; P1 (High) for significant degradation of core services, with an 8-hour resolution SLA and a 1-hour status page update requirement; P2 (Medium) for partial degradation with no confirmed broad customer impact, with a 24-hour resolution SLA; and P3 (Low) for minor non-customer-affecting issues, with a 72-hour resolution SLA."
+  },
+  {
+    "question": "What are the default API rate limits and what happens when they are exceeded?",
+    "role": "engineering",
+    "ground_truth": "Default limits are 600 requests per minute across all API keys and tokens combined, with a burst allowance of 60 requests per second. Ingestion endpoints have a separate limit of 100 requests per minute. Query endpoints have a concurrency limit of 10 simultaneous in-flight queries per tenant. When the rate limit is exceeded, the API returns HTTP 429 Too Many Requests with three headers: X-RateLimit-Limit, X-RateLimit-Remaining, and Retry-After indicating when the limit resets. Enterprise plans have higher limits of 3,000 requests per minute and 200 simultaneous queries."
+  },
+  {
+    "question": "What percentage of traffic does the canary environment receive and how is it managed?",
+    "role": "engineering",
+    "ground_truth": "The canary environment receives 5% of production traffic. Traffic is split using Argo Rollouts with a weighted VirtualService in Istio. Canary deployments are permitted only during business hours (09:00–17:00 Pacific, Monday–Friday) unless the change is a rollback for an active incident. The canary window lasts 30 minutes. If no SLO-based alerts fire during the canary window, promotion to full production is automatic."
+  },
+  {
+    "question": "How is the on-call rotation structured and what are the escalation rules?",
+    "role": "engineering",
+    "ground_truth": "Apex maintains a 24x7 on-call rotation with a primary on-call engineer, a secondary on-call engineer, and an on-call engineering manager. The primary must acknowledge PagerDuty pages within 5 minutes; failure to acknowledge escalates to the secondary. If the secondary does not respond within an additional 5 minutes, the on-call engineering manager is paged. The on-call manager is automatically paged for all P0 incidents and must be manually paged by the incident commander for P1 incidents. On-call engineers receive a $200 per week stipend, and incidents requiring more than 2 hours of out-of-hours work in a week earn one additional day of PTO."
+  },
+  {
+    "question": "What is the deadline for submitting expense reports and what are the per-meal reimbursement caps?",
+    "role": "finance",
+    "ground_truth": "Expenses must be submitted within 30 calendar days of the transaction date through the Navan platform. Expenses submitted 31–60 days after the transaction require a written explanation; expenses more than 60 days old are not reimbursable without prior written VP of Finance approval. Per-meal reimbursement caps while traveling are: breakfast $25, lunch $40, and dinner $75. These caps do not apply when hosting a customer, candidate, or external partner, in which case the limit is $100 per attendee with VP pre-approval required above that amount."
+  },
+  {
+    "question": "When are the four quarterly budget reviews held and who attends them?",
+    "role": "finance",
+    "ground_truth": "Apex holds four quarterly budget reviews. Q1 is held in the first two weeks of April, attended by the CFO, VP Finance, FP&A lead, all finance business partners, and all department heads. Q2 is held in the first two weeks of July and is the most consequential review; the CEO and Chief Revenue Officer also attend, and the board audit committee chair receives the package. Q3 is held in the first two weeks of October, attended by the CFO, VP Finance, FP&A lead, all finance business partners, and all department heads, with the CEO joining a summary segment. Q4 and the annual review is held in January after the accounting close and is attended by the full senior leadership team and eventually the board of directors."
+  },
+  {
+    "question": "What are the spend approval thresholds by organizational level?",
+    "role": "finance",
+    "ground_truth": "Individual contributors may approve up to $500 per purchase within an approved budget line. People managers may approve up to $5,000. Directors may approve up to $25,000. Vice presidents may approve up to $100,000. The CFO may approve up to $500,000. The CEO and board of directors must approve any transaction exceeding $500,000 and any unbudgeted spend exceeding $250,000 at any level. Approval must be obtained before committing to a purchase; retroactive approval is not permitted except in emergencies with CFO authorization."
+  }
+]

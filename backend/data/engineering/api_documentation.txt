@@ -1,0 +1,128 @@
+Apex Systems Public API — Developer Documentation
+API version v2 — Revision January 2026
+
+The Apex Systems Public API enables customers to programmatically ingest data, execute analytical queries, manage users and roles, configure webhooks, and monitor audit events. This document is the primary reference for developers integrating with the v2 API. The full machine-readable specification is published as an OpenAPI 3.1 document at https://api.apex-systems.example/openapi.json and is kept in sync with each release.
+
+Base URL and Versioning
+
+The v2 API is served at https://api.apex-systems.example/v2. All HTTPS requests must use TLS 1.2 or higher. TLS 1.0 and 1.1 connections are rejected at the load balancer.
+
+Apex uses semantic versioning for the API. Breaking changes — removal of a field, change to an existing field's type or constraints, change in HTTP status code semantics, removal of an endpoint — always increment the major version. A deprecated major version is maintained for a minimum of 12 months after the successor version reaches general availability, after which it is sunset with 90 days of advance notice via the developer changelog and a deprecation header added to responses.
+
+Non-breaking additions — new optional request fields, new response fields, new optional query parameters, new endpoints — may appear in the current version at any time. Clients must be written to tolerate unknown fields in responses.
+
+The current API version is included in every response in the X-Apex-Api-Version header. If a client detects that the version in the response differs from the expected version, it should log a warning and test for forward compatibility.
+
+Authentication
+
+Every API request must include a bearer token in the Authorization HTTP header: Authorization: Bearer {token}. Two token types are supported.
+
+API keys are long-lived credentials associated with a service account. They are issued from the Apex administrator console, scoped to one or more roles at issuance time, and remain valid until explicitly revoked. API keys are the recommended authentication method for server-to-server integrations. The key secret is shown exactly once at creation and is not recoverable; if lost, a replacement must be issued and the old key revoked. API keys do not expire automatically but should be rotated on a 90-day schedule as a security best practice.
+
+OAuth 2.0 access tokens are obtained through the authorization code flow with PKCE (Proof Key for Code Exchange), the recommended flow for interactive applications where the user authenticates with their identity provider. The Apex OIDC discovery document is published at https://auth.apex-systems.example/.well-known/openid-configuration. Access tokens are short-lived with a 15-minute expiry. Refresh tokens are issued alongside access tokens and are valid for 30 days, rotated on each use.
+
+Unauthenticated requests receive HTTP 401 Unauthorized with a WWW-Authenticate header. Authenticated requests that lack the required role for the requested operation receive HTTP 403 Forbidden. The error response body follows the standard error model described below.
+
+Rate Limits
+
+The API enforces rate limits at the tenant level. Default limits apply to all tenants unless overridden by a plan-level or contract-level configuration.
+
+Default limits: 600 requests per minute across all API keys and access tokens combined, with a burst allowance of 60 requests in any single second. Ingestion endpoints have a separate limit of 100 requests per minute to protect downstream Kafka throughput. Query endpoints have a concurrency limit of 10 simultaneous in-flight queries per tenant.
+
+Enterprise plan limits: 3,000 requests per minute and 200 simultaneous queries. Higher limits are available with advance notice; contact your account manager.
+
+When the rate limit is reached, the API returns HTTP 429 Too Many Requests. The response includes three headers: X-RateLimit-Limit (the configured limit), X-RateLimit-Remaining (the number of requests remaining in the current window), and Retry-After (the number of seconds until the limit resets). Clients must respect the Retry-After value. Ignoring the retry guidance and polling at high frequency during a rate-limit period may result in temporary IP-level blocking.
+
+All SDKs maintained by Apex implement exponential backoff with full jitter starting from the Retry-After value. Third-party integrations should implement the same.
+
+Error Model
+
+All error responses conform to RFC 7807 Problem Details. The response body is a JSON object with the following fields:
+
+type: a URI that identifies the error class, such as https://api.apex-systems.example/errors/schema-validation-failed. These URIs are stable and may be used in client code for programmatic error handling.
+
+title: a human-readable summary of the problem type, consistent for all occurrences of the same type.
+
+status: the HTTP status code as an integer, included for convenience.
+
+detail: a human-readable description of the specific occurrence, including actionable guidance where applicable.
+
+instance: a URI that identifies the specific request, useful for tracing in logs.
+
+correlation_id: a UUID generated per request. Customers should include this in support tickets. Apex support uses it to locate the request trace in Datadog.
+
+For validation errors, an additional errors array is included, where each element identifies the field path that failed validation and the rule that was violated.
+
+Ingestion Endpoints
+
+POST /datasets/{dataset_id}/records
+
+Synchronously validates and asynchronously ingests a batch of JSON records. The request body is a JSON object with a records array of up to 1,000 individual records. Each record is validated against the dataset schema; records that fail validation are rejected and included in the error response without affecting the valid records in the same batch. The maximum size per record is 1 MB; the maximum total request body size is 50 MB.
+
+The response returns HTTP 202 Accepted with a body containing a submission_id (UUID), a submitted_count, a rejected_count, and an array of rejection details. The submission is processed asynchronously; the submission status can be polled using GET /submissions/{submission_id}.
+
+POST /datasets/{dataset_id}/files
+
+Creates a pre-signed S3 PUT URL for uploading a file directly to Apex storage without passing through the API servers. Accepted file formats are Parquet, CSV (UTF-8 with configurable delimiter), and newline-delimited JSON. Maximum file size is 5 GB. The request body specifies the filename, format, and expected row count (optional, used for progress reporting). The response contains the pre-signed URL (valid for 2 hours), an upload_id, and the expected Content-Type header to use in the PUT request.
+
+After the file is uploaded to the pre-signed URL, the file must be registered by calling POST /datasets/{dataset_id}/files/{upload_id}/complete. This triggers ingestion processing. Progress can be monitored through GET /datasets/{dataset_id}/files/{upload_id}/status.
+
+GET /submissions/{submission_id}
+
+Returns the current status of a batch ingestion submission. Possible statuses are pending, processing, complete, and failed. A complete response includes the total record count, the accepted count, and the rejected count. A failed response includes a top-level error describing the systemic failure.
+
+Schema management: GET /datasets/{dataset_id}/schema returns the current schema version, column definitions, and validation rules. POST /datasets/{dataset_id}/schema creates a new schema version. Schema versions are immutable once a dataset has data written under them; older versions continue to support ingestion until explicitly deprecated by the dataset owner.
+
+Query Endpoints
+
+POST /datasets/{dataset_id}/query
+
+Executes a SQL query against the dataset and streams results using server-sent events (SSE). The request body contains a sql string (maximum 64 KB) and an optional params object for parameterized values. Parameterization is strongly recommended to prevent SQL injection and improve query plan caching.
+
+The SSE stream emits one JSON event per row produced by the query, a progress event every 5 seconds for long-running queries, and a final statistics event containing the row count, bytes scanned, execution duration, and cache hit indicator. The stream closes after the statistics event or on error. Queries are subject to a maximum execution time of 10 minutes; queries that exceed this threshold are terminated and the client receives an error event with the reason execution_timeout.
+
+GET /jobs
+
+For queries expected to exceed 10 minutes, use the asynchronous jobs endpoint. POST /jobs accepts the same request body as POST /query. The response returns a job_id and an estimated duration. The job runs in the background; results are written to a temporary S3 location accessible via GET /jobs/{job_id}/results. Jobs expire 24 hours after completion.
+
+Filtering and projection: To avoid transferring unnecessary columns, include a select array of column names in the query request. Server-side projection reduces response size and latency significantly for wide tables.
+
+Administration Endpoints
+
+User management: POST /users creates a user in the tenant with a specified role. The request body includes email, role, and an optional display_name. A welcome email with a credential setup link is sent automatically. PATCH /users/{user_id} updates a user's role or active status. DELETE /users/{user_id} deactivates the user and revokes all active sessions; the user record is retained for audit purposes.
+
+Role management: GET /roles returns the built-in roles (administrator, analyst, viewer) and all customer-defined roles. POST /roles creates a custom role with a name, a description, and an array of permission strings. PATCH /roles/{role_id} updates the permission set of a custom role; the change propagates to all active sessions within 60 seconds via the OPA policy bundle refresh cycle.
+
+API key management: POST /api-keys issues a new API key for a service account. The request body includes a name, a role, and an optional expiry date. The response includes the key_id and the plaintext secret in a single_use_secret field. The plaintext secret is shown exactly once and is not stored by Apex. GET /api-keys lists all active keys with their names, roles, creation dates, and last-used timestamps. DELETE /api-keys/{key_id} immediately revokes the key.
+
+Tenant configuration: GET /tenant returns the current tenant configuration, including the identity provider settings, rate limit tiers, data retention policy, and feature flags enabled for the tenant. PATCH /tenant updates mutable configuration fields. Multi-region replication settings are not mutable through the API; contact support for changes.
+
+Webhooks
+
+Apex delivers event notifications to customer-configured HTTP endpoints. Supported event types are: ingestion.completed, ingestion.failed, schema.changed, query.completed (for async jobs), audit.event, and billing.threshold_reached.
+
+Webhook subscriptions are created with POST /webhooks. The request body specifies the endpoint URL (HTTPS only), an array of event types to subscribe to, and a human-readable description. The response includes the webhook_id and a webhook_secret used to verify payloads.
+
+Every webhook request includes the headers X-Apex-Webhook-Id, X-Apex-Event-Type, X-Apex-Delivery-Id, and X-Apex-Timestamp (Unix epoch seconds, UTC). Payloads are signed with HMAC-SHA256 using the webhook secret. The signature is in the X-Apex-Signature-256 header and is computed over the raw request body. Receiver implementations must verify the signature before processing the payload and must reject requests where the X-Apex-Timestamp is more than 5 minutes in the past to prevent replay attacks.
+
+Apex delivers webhook events with at-least-once semantics. Receivers must be idempotent; the X-Apex-Delivery-Id header provides a stable identifier per event occurrence that can be used for deduplication. Apex retries delivery up to 5 times with exponential backoff (1, 5, 25, 125, 625 seconds) if the receiver returns any non-2xx response. After 5 failures, the event is written to the webhook dead-letter log accessible through GET /webhooks/{webhook_id}/failures.
+
+Pagination
+
+All list endpoints use cursor-based pagination. When a response contains more results than the requested page_size, the response body includes a next_cursor field containing an opaque string. Pass this value as the cursor query parameter in the next request. The default page size is 25; the maximum is 200. Cursor values are valid for 24 hours; requests with an expired cursor receive HTTP 400 with a cursor_expired type.
+
+Offset-based pagination is not supported, as it produces inconsistent results on frequently changing datasets.
+
+SDKs and Client Libraries
+
+Official SDKs are maintained by Apex and published under the Apache-2.0 license. Available for Python 3.10 and later, TypeScript 5.0 and later, Java 17 LTS and later, and Go 1.22 and later. Each SDK provides typed models for all request and response objects, automatic retry logic with exponential backoff, transparent token refresh, rate-limit handling, and streaming support for SSE query results.
+
+SDK releases are versioned independently from the API. Each SDK documents which API versions it supports. Customers using a supported SDK are notified of API deprecations through the SDK's release notes. Community-maintained SDKs for Ruby and .NET are linked from the developer portal but are not supported by Apex.
+
+SDK installation examples: Python: pip install apex-sdk. TypeScript: npm install @apex-systems/sdk. Go: go get github.com/apex-systems/apex-go.
+
+Support and SLA
+
+API support is available through the in-product support widget, the customer portal, and a dedicated Slack Connect channel for Enterprise customers. Response time SLAs by severity: P1 (service unavailable) — 15 minutes to engagement, 4 hours to resolution target. P2 (degraded service) — 1 hour to engagement. P3 (questions or feature requests) — 1 business day.
+
+The API health status, including current incidents and historical uptime, is published at status.apex-systems.example. Customers should subscribe to status page updates to receive notifications when incidents are declared and resolved.

@@ -1,0 +1,86 @@
+Apex Systems Platform Architecture
+Revision 4.2 — January 2026
+
+This document is the authoritative reference for the Apex Systems production architecture. It is maintained by the Platform Engineering team, reviewed quarterly, and updated after any change that alters a named component, a communication boundary, or a stated reliability target. Engineers should not rely on tribal knowledge; if something contradicts this document, raise it in the #platform-eng Slack channel and file a correction ticket.
+
+Overview
+
+The Apex platform is a multi-tenant SaaS product that ingests, transforms, and serves analytical data for enterprise customers in financial services, healthcare, and the public sector. Customers use Apex to centralize data from disparate source systems, apply compliance-aware transformations, and expose clean, governed datasets to analysts, dashboards, and downstream APIs.
+
+The system is organized into four independently operated planes: ingestion, storage, query, and control. Each plane is a set of independently releasable services with its own release cadence, on-call rotation, and reliability budget. Planes communicate exclusively through documented APIs and asynchronous event streams. No direct database access across plane boundaries is permitted.
+
+Runtime and Deployment Infrastructure
+
+All services run on Kubernetes clusters hosted in Amazon Web Services across three regions. The primary region is us-east-1 and serves the majority of customer traffic. The warm standby is us-west-2, which maintains a synchronized replica of the storage and control planes and can absorb full traffic within 10 minutes of a primary region failure. The third region, eu-central-1, serves European customers subject to GDPR data residency requirements; data written in eu-central-1 never leaves the region under any circumstances, including disaster recovery.
+
+Each region runs an EKS cluster with three dedicated worker node groups. General-purpose nodes use m6i.large instances and host control plane services, ingestion APIs, and background workers that are not CPU or memory bound. Memory-optimized nodes use r6i.xlarge instances and host the Trino query engine, which requires large JVM heap sizes proportional to query complexity and concurrent user count. Compute-optimized nodes use c6i.2xlarge instances and host the Rust-based ingestion workers, which benefit from high core counts for parallel parsing.
+
+Autoscaling is managed by Karpenter, which provisions and terminates nodes within approximately 30 seconds of a scaling signal. The target utilization is 60% CPU across the node group, providing headroom for burst traffic. Pod autoscaling uses the Kubernetes HPA for CPU-bound services and KEDA for event-driven scaling of Kafka consumers.
+
+Ingestion Plane
+
+Customer data enters the platform through the ingestion API, a horizontally scaled FastAPI service running on general-purpose nodes. The API accepts two modes of input. Batch uploads accept files up to 5 GB delivered as a multipart HTTP POST; the file is written directly to a per-tenant staging bucket in S3 with server-side encryption using a customer-managed KMS key, and a processing job is enqueued. Streaming events are delivered through a webhook endpoint that writes messages to a per-tenant Kafka partition in near real time.
+
+The ingestion workers, written in Rust, consume from Kafka topics and process records in parallel. Each worker validates records against the tenant-defined schema stored in the schema registry, applies PII detection rules configured per tenant, strips or masks sensitive fields, and serializes clean records as Parquet files. Validated records are published to the normalized Kafka topic. Records that fail schema validation or exceed the size limit are routed to a tenant-specific dead-letter queue with a 14-day retention, after which they are deleted. DLQ events are surfaced in the customer console with a summary of the failure reason.
+
+Schema changes are applied through a versioned migration API rather than in-place modification. Each schema version is immutable once published. The ingestion worker uses the schema version embedded in each incoming message to route to the correct validation and serialization logic, allowing old and new versions to coexist during migration windows.
+
+Storage Plane
+
+Normalized records from the ingestion plane land in an Apache Iceberg data lake stored on S3. Iceberg provides ACID transaction guarantees, partition evolution, and time-travel queries. The Iceberg catalog is managed by a Go service backed by AWS Glue, which tracks table definitions, partition metadata, schema history, and compaction state. The catalog service exposes a gRPC API consumed by both the ingestion workers (for writing) and the Trino query engine (for reading).
+
+Hot partitions — those representing the most recent 48 hours of data for any tenant — are cached in Redis using a time-to-live keyed to the partition date. Dashboard tile queries that aggregate over recent partitions are satisfied from cache without hitting S3. The cache invalidation strategy is event-driven: the ingestion worker publishes a cache invalidation message to Kafka after each partition write, and the cache service consumes this to evict or refresh the affected keys.
+
+Summary aggregates for common dashboard metrics are precomputed by a scheduled Spark job running every 15 minutes and written to TimescaleDB. TimescaleDB is a PostgreSQL extension optimized for time-series data, and it serves the dashboard backend directly with sub-100-millisecond responses for tenant-scoped aggregate queries.
+
+Backups of the Iceberg catalog metadata and the TimescaleDB summaries run hourly using AWS Backup. Catalog metadata is replicated cross-region with a recovery point objective of 15 minutes. Full S3 object-level replication provides an additional layer of data durability. The recovery time objective for a full storage plane failure is 30 minutes for metadata and 4 hours for full data availability.
+
+Query Plane
+
+Customer analytical queries are executed by Trino, an open-source distributed SQL engine. Each pricing tier — Standard, Professional, and Enterprise — runs a dedicated Trino cluster to provide performance isolation. Enterprise cluster nodes are provisioned at r6i.xlarge, allowing larger working sets for complex joins and window functions.
+
+Query planning is enhanced by a cost-based optimizer that is calibrated nightly. The calibration job samples recent query history, measures actual execution statistics, and updates table statistics stored in the Glue catalog. This keeps the optimizer's cardinality estimates accurate as data volumes grow.
+
+The query proxy service sits in front of Trino and enforces per-tenant query concurrency limits, maximum query execution time (10 minutes), and circuit breakers that reject queries when the cluster utilization exceeds 90%. Long-running queries that exceed the time limit are terminated with an informative error; customers are directed to the asynchronous jobs endpoint for analytics that require more than 10 minutes.
+
+A Redis-backed result cache stores the outputs of deterministic queries — those with no volatile functions and no row-level security filters that vary by user — for a configurable TTL defined per tenant. Cache keys incorporate the query text, the table version identifier, and the tenant_id. A cache hit for a dashboard tile delivers the result in under 50 milliseconds.
+
+Control Plane
+
+The control plane is a Go-based service that manages the cross-cutting concerns of the entire platform: tenant provisioning, user management, role definitions, API key issuance, billing metering, audit log aggregation, and system health dashboards. It is the system of record for all configuration state.
+
+The control plane is backed by Aurora PostgreSQL with multi-AZ failover. The primary instance handles all writes; read replicas in the same region serve read-heavy operations such as user lookup and API key validation. The Aurora cluster is sized at db.r6g.xlarge with storage autoscaling enabled. A connection pool managed by PgBouncer keeps the number of database connections bounded regardless of the number of application pods.
+
+All write operations to the control plane produce an audit event containing the actor, the resource type and ID, the action, the before and after state, a timestamp, and a cryptographic hash of the event chain. Events are signed and appended to an immutable CloudWatch Logs stream. Customers with Enterprise contracts have read access to their own audit log stream and may export it to their SIEM.
+
+Authentication and Authorization
+
+Authentication uses OpenID Connect. Supported identity providers are Okta, Microsoft Azure Active Directory, and Google Workspace. Customers configure their identity provider through the control plane UI; the Apex service registers as an OIDC relying party and validates tokens against the provider's discovery endpoint. Employees and internal service accounts authenticate through Okta.
+
+Authorization is enforced by an Open Policy Agent sidecar co-deployed with every service that handles customer data. The OPA instance receives the JWT from the incoming request and evaluates the request against the current policy bundle, which includes three built-in roles (administrator, analyst, viewer) and any custom roles defined by the tenant. Policy bundles are distributed by a bundle server and refreshed every 60 seconds.
+
+JWTs issued to customer users are valid for 15 minutes. Refresh tokens are stored as HTTP-only cookies with a 30-day lifetime and are rotated on each use. API keys are long-lived bearer tokens scoped to one or more roles and revocable through the control plane API.
+
+Observability
+
+Every service emits structured JSON logs to standard output. The Fluent Bit DaemonSet on each node collects logs and ships them to Datadog, where they are indexed and searchable by service, tenant, severity, and correlation_id. Log retention is 90 days in Datadog. All logs containing customer data are tagged with the tenant_id and restricted to Apex staff with the data-access role in Datadog.
+
+Application metrics are collected by Prometheus and exposed on a standard /metrics endpoint. A regional Prometheus federation server aggregates metrics across all clusters and makes them available to Grafana dashboards and to the PagerDuty alerting integration. Alerts are tuned to the per-plane SLO targets to minimize noise.
+
+Distributed traces are instrumented with OpenTelemetry SDKs across all services. Traces are sampled at 10% for normal traffic and at 100% for requests that result in errors or exceed the 95th-percentile latency threshold. Trace data is shipped to Datadog APM. The trace context propagation header is W3C Trace Context, and all services are required to forward this header in outbound requests.
+
+Reliability Targets and Error Budgets
+
+The platform publishes formal SLOs in the customer-facing service agreement. The control plane targets 99.9% monthly availability, equivalent to 43.8 minutes of allowed downtime per month. The query plane targets 99.95% monthly availability, equivalent to 21.9 minutes per month. Availability is measured as the percentage of successful synthetic probes issued every 30 seconds from an external monitoring service.
+
+Error budgets are calculated monthly and reviewed at the reliability review on the first Wednesday of each month. When a plane's error budget is more than 50% consumed before the end of the month, non-critical deployments for that plane are frozen until the budget is restored or the month resets. When the budget is fully consumed, all deployments to the affected plane require VP of Engineering approval.
+
+Data Isolation and Tenant Boundaries
+
+Tenant data is strictly isolated at every layer. In the storage plane, each tenant's data resides in a dedicated S3 prefix within a shared bucket, with bucket policy conditions that reject cross-prefix access. In the query plane, Trino session properties are populated from the validated JWT and enforce row-level security policies that restrict each query to the requesting tenant's data. Cross-tenant queries are rejected at the planner level before any execution begins.
+
+The control plane performs a double authorization check: the OPA sidecar evaluates the tenant claim in the JWT, and the application layer independently validates that the requested resource belongs to the same tenant. This defense-in-depth approach ensures that a single misconfigured policy does not expose cross-tenant data.
+
+Deprecated Components
+
+The legacy Elasticsearch cluster used for full-text document search is scheduled for retirement in Q3 2026. No new integrations should be built against this component. The replacement is a Trino-based full-text search capability using the built-in full_text_search table function introduced in Trino 420. Migration documentation is available in the internal wiki.

@@ -1,0 +1,106 @@
+Apex Systems Financial Reporting Policy
+Effective January 1, 2026
+
+This policy defines the schedule, content, internal controls, and distribution standards for all financial reporting produced by Apex Systems. It applies to the Corporate Accounting team, the Financial Planning and Analysis team, the Revenue Operations team, and the Tax and Regulatory team. It also applies to any functional leader or department head who reviews, approves, or relies on financial data for decision-making.
+
+Accounting Framework and Standards
+
+Apex Systems prepares its consolidated financial statements in accordance with United States Generally Accepted Accounting Principles as issued by the Financial Accounting Standards Board. The company is a private entity and is not currently required to file periodic reports with the Securities and Exchange Commission. However, the company operates as if it were subject to SEC reporting standards in preparation for a future initial public offering or significant financing transaction. This includes maintaining internal controls, audit-committee oversight, and disclosure standards consistent with a registered reporting company.
+
+The independent external auditor is engaged annually through a competitive RFP process. The audit committee of the board of directors, which consists of at least two independent directors with financial expertise, selects the auditor and approves the annual engagement letter. The external auditor issues an audit opinion on the annual consolidated financial statements; a review opinion is issued for each quarter-end balance sheet and income statement, except the fourth quarter, which is covered by the annual audit.
+
+Financial statements include the consolidated balance sheet, the consolidated statement of operations, the consolidated statement of cash flows, the consolidated statement of changes in stockholders' equity, and the notes to the financial statements. The notes include, at minimum: summary of significant accounting policies, revenue disaggregation, stock-based compensation, lease obligations, commitments and contingencies, related-party transactions, and segment information.
+
+Monthly Accounting Close
+
+The monthly close cycle is designed to produce accurate, reviewed financial statements within five business days of the last calendar day of the month. Each step in the close process is tracked in the close management system with an owner and a due time.
+
+Business day 1: The accounting team reconciles all bank accounts, clears outstanding checks and deposits, and verifies that all cash transactions are recorded. The payroll team confirms that the most recent payroll is fully posted and reconciled to the general ledger.
+
+Business day 2: Accounts payable is closed for the prior month. Accruals are created for expenses incurred but not yet invoiced, based on contracts, purchase orders, and manager estimates. The most significant accruals — engineering infrastructure, marketing programs, and professional services — are reviewed by the finance business partner before posting.
+
+Business day 3: Revenue operations closes the revenue subledger. Deferred revenue schedules are updated for all new bookings, renewals, and cancellations. Usage-based revenue is calculated from metering data and reconciled to the billing system. Any discrepancies between the billing system and the revenue subledger exceeding $10,000 are flagged and investigated before the revenue numbers are finalized.
+
+Business day 4: Intercompany eliminations are applied for any transactions between Apex entities. Foreign currency remeasurement is applied to any balance sheet items denominated in currencies other than the functional currency. Stock-based compensation expense is calculated by the equity management platform and posted to the payroll accrual accounts.
+
+Business day 5: The Controller reviews the trial balance, compares it to the prior month and the plan, and investigates any movement that is unexplained by known transactions. The CFO and CEO receive the management review packet, which includes the income statement, balance sheet, cash flow statement, and a narrative commentary on key drivers.
+
+The close checklist is archived monthly in the document management system with all supporting workpapers. Audit trail documentation must be completed before the close is marked final; retrospective entries require Controller approval and are flagged in the external audit workpapers.
+
+Quarterly and Annual Reporting
+
+Quarterly financial statements are produced within 20 business days of each quarter end and distributed to the board of directors, lenders under any outstanding credit facilities, and major investors with information rights under their investment agreements. The quarterly package includes the income statement and balance sheet with prior-quarter and prior-year comparisons, a cash flow statement, a debt covenant compliance certificate, and a variance narrative prepared by FP&A.
+
+The annual audited financial statements are delivered to the board within 90 days of December 31. The annual package includes the audited consolidated financial statements with full notes, the management discussion and analysis prepared jointly by the CFO and CEO, the auditor's opinion letter, and the internal audit summary report.
+
+Material subsequent events — transactions or developments that occur between the balance sheet date and the financial statement issuance date and that are significant to users — are disclosed in a subsequent events note. The threshold for disclosure is a transaction or event that, if known, would influence a reasonable investor's or lender's assessment of the company's financial position.
+
+Revenue Recognition
+
+Apex recognizes revenue in accordance with ASC 606, Revenue from Contracts with Customers. The five-step model is applied to all customer contracts: (1) identify the contract, (2) identify the performance obligations, (3) determine the transaction price, (4) allocate the transaction price to performance obligations, and (5) recognize revenue when each obligation is satisfied.
+
+Subscription revenue is the primary revenue stream and represents the right to access the Apex platform over the contract term. Because access is continuous and the customer benefits ratably throughout the subscription period, subscription revenue is recognized on a straight-line basis from the date access is granted through the contract end date. Annual subscriptions are typically billed upfront, creating deferred revenue that is recognized ratably over 12 months.
+
+Professional services revenue represents implementation, configuration, and training services contracted separately from the platform subscription. Revenue is recognized as services are delivered using an input-based measure of progress, measured by hours incurred relative to total estimated hours. Significant deviations between estimated and actual hours are investigated by the project manager and revenue operations to determine whether the estimate should be updated.
+
+Usage-based revenue above a committed minimum is recognized in the period consumed. Metering data is extracted from the platform at month end, validated against the billing system, and recorded in the revenue subledger before close. Usage that exceeds the committed contractual minimum triggers an overage invoice within 15 days of month end.
+
+Contract modifications are evaluated to determine whether they constitute a termination of the existing contract combined with a new contract, a prospective change, or a cumulative catch-up adjustment. The Revenue Operations team consults with Finance on each modification that changes the total transaction price by more than $50,000.
+
+Deferred Revenue and Billings
+
+The deferred revenue balance represents amounts invoiced to customers for services not yet delivered. Deferred revenue is the single largest liability on the Apex balance sheet and is reviewed in detail at each quarter end by the external auditors.
+
+The deferred revenue subledger tracks each contract individually, with the original contract start date, the contract end date, the total transaction price, the cumulative amount recognized, and the remaining deferred balance. The subledger is reconciled to the general ledger daily; any reconciling item is investigated and resolved before the next business day.
+
+Billings — the total value of invoices issued in a period — is a key operating metric tracked separately from recognized revenue. Billings growth reflects new sales momentum and renewal health. The difference between billings and revenue in any period represents the change in deferred revenue. FP&A monitors the billings-to-revenue ratio monthly as a leading indicator of future revenue growth.
+
+Key Performance Indicators and Metrics
+
+Apex tracks both GAAP financial metrics and non-GAAP operating metrics. All metric definitions are documented in the metrics dictionary maintained by FP&A. Changes to any definition require CFO approval and must be disclosed in reporting materials with a note identifying the period in which the change took effect and the impact of the change on prior periods.
+
+GAAP metrics: total revenue, gross profit, gross margin percentage, operating expense by natural account, operating income (loss), net income (loss), and cash and cash equivalents.
+
+Non-GAAP operating metrics: annual recurring revenue (ARR), defined as the annualized value of all active subscription contracts as of the measurement date, excluding one-time fees and services. Net new ARR, the change in ARR from one period to the next. Gross dollar retention (GDR), the percentage of beginning ARR retained from existing customers excluding expansions, measured annually. Net dollar retention (NDR), the percentage of beginning ARR retained including expansions and contractions from existing customers, measured annually. Customer acquisition cost (CAC), total sales and marketing expense divided by the number of new customers acquired. Magic number, the net new ARR generated per dollar of sales and marketing spend in the prior period. Rule of 40, the sum of the trailing-12-month revenue growth rate and the EBITDA margin, indicating efficiency.
+
+Free cash flow is defined as cash from operations minus capital expenditures, including capitalized internal-use software development costs. Burn multiple is the net cash burned per dollar of net new ARR added, a measure of capital efficiency.
+
+Board Reporting
+
+The monthly board flash report is distributed on the eighth business day after month end. The flash report covers: month-end ARR and net new ARR versus plan, cash and ending runway at the current burn rate, headcount and open positions, key sales metrics including pipeline and bookings, and one or two commentary bullets on notable operational developments. The flash report is prepared by FP&A and reviewed by the CFO before distribution.
+
+The quarterly board management report is distributed at least five business days before the board meeting. It includes: the audited or reviewed financial statements, the CEO memo covering strategic priorities and key decisions, the FP&A operating review with variance commentary, the revenue operations report, and the engineering and product operations summary. Board members submit questions to the CFO at least 48 hours before the meeting to allow for preparation.
+
+FP&A also prepares an annual budget presentation for the December board meeting, a long-range model presented to the board at least every 18 months, and ad hoc financial analyses for M&A, financing, and strategic planning activities.
+
+Internal Controls
+
+Apex operates a structured internal control framework informed by the COSO framework and sized appropriately for a pre-IPO software company. The audit committee reviews the control framework annually and receives a control effectiveness report from the internal audit function.
+
+Segregation of duties: No single employee may initiate, approve, and record a financial transaction. Approval authority in the accounting system is enforced at the role level; engineers and support staff do not have access to financial systems. Journal entries require a preparer and a separate approver. Manual journal entries above $25,000 require the Controller's approval.
+
+Journal entry controls: all journal entries are logged with a preparer ID, a timestamp, and a supporting document reference. A management report of all manual journal entries is produced monthly and reviewed by the Controller. Recurring journal entries are documented in a recurring entry schedule and approved quarterly.
+
+Reconciliation controls: every balance sheet account is reconciled monthly to a subledger or external source. Reconciliations are signed off by the preparer and a second reviewer. Unreconciled items over $5,000 that are open for more than 30 days are escalated to the Controller.
+
+Access controls: access to financial systems, including the ERP, the billing system, and the equity management platform, is provisioned by the IT team based on role-based access control policies approved by Finance. Access is reviewed quarterly; access that is no longer appropriate for the current role is revoked within 5 business days of identification.
+
+Tax and Regulatory Compliance
+
+The Tax team, in coordination with external tax advisors, manages all tax compliance obligations across federal, state, local, and international jurisdictions.
+
+Federal income tax: Apex files a federal corporate income tax return annually. The federal return is prepared by an external Big Four accounting firm and reviewed by internal tax counsel before filing. Quarterly estimated tax payments are made if the company is profitable; the payment schedule is set by the external advisor.
+
+State and local income tax: Apex files income tax returns in every state where it has nexus, defined as either a physical presence (office or employees) or economic nexus based on revenue thresholds. The nexus study is updated annually. State tax payments are timed to avoid underpayment penalties.
+
+Sales and use tax: Apex's SaaS revenue is subject to sales tax in approximately 30 U.S. states with varying rules for software as a service. Avalara administers sales tax calculation, collection, and filing on behalf of Apex. Any customer that claims a tax exemption must provide a valid exemption certificate, which is archived in Avalara.
+
+International: Apex has legal entities in the United Kingdom, Canada, and Germany. Each entity files statutory financial statements and tax returns in its local jurisdiction, prepared by local advisors and consolidated into the parent company accounts.
+
+Transfer pricing: intercompany transactions between the U.S. parent and international subsidiaries are governed by a transfer pricing policy prepared by a specialized advisor and documented with a country-by-country report. The policy is reviewed and updated annually or when the intercompany transaction profile changes materially.
+
+Document Retention
+
+All financial records — general ledger entries, journal entry support, contracts, invoices, payroll records, tax filings, audit workpapers, and board materials — are retained for a minimum of seven years in the document management system. Tax records that relate to ongoing disputes or uncertain tax positions are retained until the matter is resolved plus the applicable statute of limitations.
+
+Records are stored with immutable audit trails, role-based access, and encryption at rest. Destruction of financial records before the retention period expires requires General Counsel approval. Physical documents, where applicable, are digitized and destroyed using a certified secure shredding service.

@@ -1,0 +1,108 @@
+Apex Systems Hiring Process
+Effective January 1, 2026
+
+This document describes the end-to-end hiring process at Apex Systems, from the decision to open a new role through the candidate's first day of employment. It applies to all hiring managers, the People Operations team, recruiters, and any employee who participates in interviews or hiring decisions. The goal of this process is to identify, assess, and hire candidates who are technically qualified, aligned with Apex Systems values, and positioned to contribute meaningfully to their team from day one.
+
+Headcount Planning and Role Authorization
+
+All new hire requests must originate from an approved headcount plan. Headcount plans are submitted by department leaders during the annual budgeting process each November and approved by the Chief Executive Officer and Chief Financial Officer before the start of the new fiscal year. Mid-cycle additions to approved headcount require a written business case submitted to the department head and CFO. The business case must include the role description, expected start date, compensation band, and the business impact of leaving the position unfilled.
+
+Once headcount is authorized, the hiring manager submits a Job Requisition Form to People Operations. The form captures the job title, reporting relationship, level, compensation band, preferred start date, target candidate profile, and any specific technical requirements. People Operations will acknowledge the requisition within two business days and assign a recruiter.
+
+Job Description Development
+
+The recruiter works with the hiring manager to develop a job description within five business days of requisition acknowledgment. Job descriptions must include the role title, department, reporting structure, a summary of the role, a list of core responsibilities, required qualifications, preferred qualifications, and the compensation range. Apex Systems posts salary ranges on all external job postings in compliance with applicable pay transparency laws.
+
+Job descriptions are reviewed by the hiring manager, the department head, and People Operations before posting. Engineering roles additionally require review by the relevant technical lead to confirm accuracy of technical requirements. People Operations maintains a library of base job description templates that may be adapted for each requisition.
+
+Job Posting and Candidate Sourcing
+
+Approved job descriptions are posted on the Apex Systems careers page, LinkedIn, and any relevant industry-specific job boards selected by the recruiter. Positions are posted for a minimum of ten business days before the recruiter presents a shortlist to the hiring manager, unless the hiring manager requests a faster timeline due to business urgency.
+
+Internal candidates are encouraged to apply. Any employee who has been in their current role for at least six months and has received a satisfactory performance rating in their most recent review is eligible to apply for open positions. Internal applicants are notified of their status within five business days of application. Referrals from current employees are tracked through the applicant tracking system, and referring employees are eligible for the referral bonus outlined in the compensation guide once the referred candidate completes ninety days of employment.
+
+Passive candidate sourcing is also permitted. Recruiters and hiring managers may reach out directly to candidates through LinkedIn and professional networks. All candidate communications must be routed through or documented in the applicant tracking system.
+
+Application Review and Recruiter Screen
+
+All applications are reviewed by the recruiter within five business days of receipt. Applications that meet minimum qualifications are moved to the review stage. The recruiter shares a shortlist of ten to fifteen candidates with the hiring manager, who selects candidates for the initial recruiter screen.
+
+The recruiter screen is a thirty-minute video or phone call conducted by the recruiter. The purpose is to confirm the candidate's interest in the role, validate basic qualifications, discuss compensation expectations, and assess communication and professionalism. The recruiter uses a standardized set of questions drawn from the role's competency framework. After each screen, the recruiter logs notes in the applicant tracking system and makes a pass or no-pass recommendation to the hiring manager.
+
+Candidates who do not pass the recruiter screen are notified within three business days by email. Candidates who pass are moved to the hiring manager screen.
+
+Hiring Manager Screen
+
+The hiring manager screen is a forty-five-minute video call between the candidate and the hiring manager. The purpose is to explore the candidate's background and experience in more depth, assess alignment with team needs, and give the candidate a clear picture of the role and team. The hiring manager should review the candidate's resume and the recruiter's notes before the call.
+
+Hiring managers are expected to ask consistent, competency-based questions for all candidates interviewing for the same role. People Operations maintains a question bank organized by competency and level that hiring managers must draw from. Follow-up or clarifying questions are permitted. Hypothetical or brain-teaser questions that are not grounded in real work scenarios are discouraged. Questions about protected characteristics including age, marital status, family plans, religion, national origin, and disability are prohibited.
+
+After the hiring manager screen, the hiring manager provides a written recommendation within twenty-four hours through the applicant tracking system. Candidates who advance proceed to the formal interview loop.
+
+Technical Interview
+
+For engineering, data, and product roles, a technical interview is required before the full panel interview loop. The technical interview is designed and administered by the relevant technical team. For software engineering roles, the technical interview consists of two parts: a sixty-minute coding exercise conducted via a shared coding environment, and a thirty-minute systems design or architecture discussion appropriate to the seniority level of the role.
+
+Technical interviewers must submit written feedback in the applicant tracking system within twenty-four hours of the interview. The feedback must address the specific technical competencies assessed, with a clear pass or no-pass recommendation. Technical feedback should be specific and evidence-based, referencing what the candidate said or did during the interview rather than general impressions.
+
+Candidates who do not pass the technical screen are notified within three business days. Candidates who pass are scheduled for the panel interview loop.
+
+Panel Interview Loop
+
+The panel interview loop consists of three to five interviews, each thirty to sixty minutes in length, conducted by a cross-functional group of interviewers. For each open role, the recruiter and hiring manager assemble an interview panel that includes at least one member from outside the immediate team. Panel members are assigned specific competency areas to assess based on a pre-defined interview guide.
+
+Competency areas typically assessed in the panel loop include: problem-solving and analytical thinking, collaboration and communication, role-specific domain knowledge, alignment with Apex Systems values, and relevant past experience and achievements. For senior or leadership roles, strategic thinking and people management competencies are added.
+
+Interview guides are prepared by the recruiter in advance and shared with panelists at least twenty-four hours before the scheduled interviews. Each panelist is responsible for reviewing the guide and the candidate's resume before conducting their interview. Panelists should not share their evaluations with each other before completing their own written feedback.
+
+Following all panel interviews, the recruiter schedules a debrief session within forty-eight hours. All panelists attend the debrief, led by the recruiter. Each panelist shares their feedback verbally, and the group discusses overall impressions. The hiring manager makes the final hiring decision, which must be documented in the applicant tracking system with a rationale. If the group cannot reach consensus, the hiring manager's judgment is final.
+
+Culture Fit and Values Assessment
+
+At least one interview in every panel loop is designated as a culture and values interview. This interview assesses whether the candidate's working style, motivations, and approach to interpersonal situations align with Apex Systems values. The interviewer uses behavioral questions and listens for evidence of intellectual curiosity, ownership, collaboration, transparency, and commitment to quality. The interview is not an assessment of social similarity or personal chemistry. Interviewers must evaluate candidates against Apex Systems values, not against their own preferences.
+
+Reference Checks
+
+References are checked before an offer is extended. The recruiter contacts a minimum of two professional references provided by the candidate. References must be former managers or senior colleagues who can speak to the candidate's work quality and professional conduct. The recruiter uses a structured reference check script that covers the candidate's strengths, areas for development, reliability, and whether the reference would re-hire the candidate if given the opportunity. Reference check notes are documented in the applicant tracking system.
+
+People Operations may also conduct employment verification through a third-party background check provider.
+
+Background Check
+
+All candidates who receive a conditional offer of employment must complete a background check before their start date. The background check is administered through Apex Systems' contracted background check provider and includes identity verification, employment history verification covering the past seven years, and a criminal history check conducted in accordance with applicable law.
+
+Candidates are notified in writing that a background check will be conducted as a condition of employment. If a background check returns adverse information, People Operations reviews the findings in consultation with Legal before making any employment decision. Any adverse action taken on the basis of background check results follows the pre-adverse and adverse action notice requirements under the Fair Credit Reporting Act and applicable state laws.
+
+Offer Letter and Compensation
+
+Once the hiring decision is made and the background check is cleared, People Operations prepares a written offer letter. The offer letter includes the job title, start date, reporting manager, compensation, equity grant if applicable, sign-on bonus if applicable, benefits summary, and employment classification. All offer letters are reviewed and signed by the Chief People Officer before being sent to the candidate.
+
+Compensation is determined based on the approved band for the role, the candidate's experience and qualifications relative to others in similar roles at Apex Systems, internal equity, and market data. The hiring manager proposes a specific compensation figure within the approved band, and People Operations reviews the proposal for internal equity before the offer is extended. Offers above the midpoint of a band require approval from the Chief People Officer.
+
+Verbal offers may be extended by the hiring manager or recruiter, but no employment commitment is binding until the written offer letter is signed by both the candidate and the Chief People Officer. Candidates are given five business days to consider the written offer. Extensions may be granted on request.
+
+Offer Acceptance and Pre-Boarding
+
+Once the candidate signs the offer letter, the recruiter initiates the pre-boarding process. Pre-boarding tasks are managed through the HRIS and include: submission of tax withholding documents, direct deposit enrollment, background check completion if not already done, I-9 employment eligibility verification scheduling, IT equipment selection, and system access provisioning requests.
+
+The hiring manager receives a new hire onboarding checklist at least one week before the start date. The checklist includes workspace setup, system access requirements, a thirty-sixty-ninety day onboarding plan, and the names of teammates, stakeholders, and key contacts the new hire should meet in their first month.
+
+Onboarding Timeline
+
+Day one through day five is orientation week. New hires attend a structured orientation program run by People Operations that covers Apex Systems mission, values, organizational structure, benefits enrollment, security policies, and required compliance training. New hires meet their manager, direct teammates, and key cross-functional partners during week one.
+
+Days six through thirty focus on role ramp-up. The new hire completes role-specific training, reviews key documents and processes, shadows team members, and begins contributing to lower-complexity work. The hiring manager schedules weekly one-on-ones during the first ninety days to provide feedback and support.
+
+Days thirty-one through sixty focus on independent contribution. The new hire takes ownership of defined workstreams or responsibilities with support available as needed. By the end of sixty days, the new hire should have a clear understanding of team priorities, key processes, and stakeholder relationships.
+
+Days sixty-one through ninety focus on full contribution. The new hire is expected to be operating independently within their defined scope. At the ninety-day mark, the manager conducts an informal check-in to assess progress, discuss any challenges, and confirm alignment on goals for the remainder of the performance year.
+
+Equal Opportunity and Non-Discrimination
+
+Apex Systems is an equal opportunity employer. All hiring decisions are made without regard to race, color, religion, sex, national origin, age, disability, genetic information, veteran status, sexual orientation, gender identity, or any other characteristic protected by applicable federal, state, or local law. Interviewers who observe conduct during the hiring process that may constitute discrimination should report it to People Operations immediately.
+
+Interview panelists are required to complete unconscious bias training before participating in hiring. The training is available through the learning management system and must be renewed annually.
+
+Record Retention
+
+Hiring documentation including job postings, applications, interview notes, evaluation forms, offer letters, and background check results must be retained for a minimum of three years after the position is filled or closed. Documentation is stored in the applicant tracking system and HRIS. Physical documents, if any, are stored in locked files maintained by People Operations.

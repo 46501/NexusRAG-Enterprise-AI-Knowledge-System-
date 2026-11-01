@@ -1,0 +1,98 @@
+Apex Systems Employee Handbook
+Effective January 1, 2026
+
+Welcome to Apex Systems. This handbook summarizes the policies, expectations, and benefits that apply to every full-time and part-time employee. It is not a contract of employment, and the company reserves the right to revise any policy at any time with reasonable notice. Employees receive written notice of material changes through the HR portal at least 14 days before the change takes effect. By continuing employment after notice of a change, employees acknowledge the updated policy.
+
+Mission and Values
+
+Apex Systems builds enterprise data infrastructure for regulated industries including financial services, healthcare, insurance, and the public sector. Our four core values define how we work and how we make decisions.
+
+Customer obsession means starting every conversation, design review, and postmortem with the customer experience. When a product decision has an ambiguous right answer, the team defaults to the option that reduces friction for the customer. Customer feedback is surfaced in weekly product reviews and acts as direct input into quarterly roadmap planning.
+
+Technical rigor means shipping code that is correct, observable, and maintainable. Engineers are expected to review each other's designs before implementation, write tests at every layer, and participate in on-call rotations for services they own. Cutting corners to hit a deadline is treated as a short-term decision with long-term costs that must be consciously acknowledged, documented, and tracked.
+
+Candor means sharing honest perspectives even when they are unpopular. Employees are expected to disagree and commit, speak up in meetings rather than relitigating decisions in private channels, and deliver feedback directly to the person who needs to hear it. Leaders are held to a higher standard of candor because they set the tone.
+
+Ownership means finishing what you started, following up without being asked, and treating company resources as if they were your own. Every employee has the authority to raise an issue and propose a solution regardless of title or tenure.
+
+Work Hours and Location
+
+Core collaboration hours are 10:00 to 16:00 in each employee's local time zone. These hours represent the window during which employees are expected to be available for meetings, reviews, and urgent conversations. Outside of core hours, employees may structure their time around personal obligations as long as customer commitments, on-call responsibilities, and deadlines are met.
+
+Apex operates on a hybrid schedule. Engineers, designers, and product managers are expected in the office on Tuesday and Thursday each week. Sales, customer success, and go-to-market roles are expected in the office Monday through Thursday. Employees who live more than 50 miles from the nearest Apex office are classified as fully remote and are not subject to the in-office requirement.
+
+Fully remote arrangements for roles that carry an office requirement must be requested in writing and require VP approval and a documented business case. Requests are reviewed within 10 business days. Approved remote arrangements are revisited annually.
+
+Onboarding
+
+New hires complete a structured 30-60-90 day plan developed by HR in collaboration with the hiring manager before the employee's start date. The plan is shared with the new hire on day one and updated collaboratively throughout the first quarter.
+
+During week one, new hires complete security awareness training, data handling compliance modules, and role-specific access provisioning. They are introduced to their buddy — a volunteer colleague outside of the immediate team — who provides an informal guide to working at Apex.
+
+By day 30, each new hire should have a working understanding of the product, have met every member of their immediate team, and have shipped one measurable deliverable, however small. By day 60, they should be operating independently on their core responsibilities with periodic check-ins. By day 90, they should be contributing at the level expected for their role and level.
+
+HR schedules a formal 90-day check-in with the HR Business Partner for the department. The check-in covers performance against the 30-60-90 plan, integration into the team, and any concerns the employee or manager has not yet raised formally. Feedback from new hires is aggregated quarterly to identify onboarding process improvements.
+
+Performance Reviews
+
+Formal reviews occur twice per year: a mid-year review in March and an annual review in September. The September review is the primary cycle for compensation decisions and promotion approvals. The March review is developmental; it does not carry compensation changes but may trigger an early promotion if the case is exceptional.
+
+The review process begins three weeks before the review meeting. Employees complete a self-evaluation covering accomplishments against their goals, demonstration of core values, and growth opportunities. Managers solicit feedback from four to eight peer reviewers and one or two cross-functional partners identified by the employee and the manager jointly. Peer feedback is collected through the Lattice platform and is confidential to the manager; summaries, not verbatim quotes, are shared in the review.
+
+Managers write a calibrated narrative that incorporates self-evaluation, peer feedback, and the manager's direct observations. The narrative is reviewed by the manager's manager and, for Director and above roles, by the HR Business Partner before delivery. Calibration sessions across teams at the same level ensure ratings are consistent.
+
+Ratings follow a five-point scale: exceptional, exceeds expectations, meets expectations, developing, and unsatisfactory. The expected distribution for a healthy, well-hired team is roughly 10% exceptional, 25% exceeds expectations, 55% meets expectations, 8% developing, and 2% unsatisfactory. Managers whose teams deviate significantly from this distribution are asked to explain the deviation at calibration.
+
+Performance improvement plans are initiated by HR when an employee receives an unsatisfactory rating or fails to improve from a developing rating after two consecutive review cycles. A PIP specifies measurable goals, a support plan, and a timeline of 60 to 90 days. Completion of a PIP does not guarantee continued employment but does demonstrate good-faith commitment from both parties.
+
+Professional Development
+
+Every employee receives an annual learning and development budget of $2,000, effective on their hire anniversary date. The budget may be applied to external conferences, online courses, in-person training, books, professional certifications, or executive coaching. Manager approval is required for individual expenses above $500. The budget does not carry over from year to year and cannot be cashed out.
+
+Apex sponsors internal knowledge sharing through Friday Tech Talks, a 45-minute session hosted by a volunteer employee or external speaker every Friday at noon Pacific. Recordings are posted to the internal learning library. The company holds an annual Engineering Summit in Q3, which all engineers and product managers are expected to attend regardless of location.
+
+Employees pursuing advanced degrees relevant to their role may apply for tuition reimbursement of up to $5,250 per year, the IRS excludable maximum. Applications are reviewed by the HR Business Partner and require evidence of enrollment and a grade of B or better for reimbursement.
+
+Code of Conduct
+
+Apex is committed to a workplace free from harassment, discrimination, and retaliation. These behaviors are grounds for immediate termination regardless of seniority. Protected characteristics include race, color, religion, sex, national origin, age, disability, genetic information, sexual orientation, gender identity, and veteran status.
+
+Apex maintains an anonymous reporting channel, EthicsPoint, operated by a third-party vendor. Reports are reviewed by the Head of HR and the General Counsel. All complaints are investigated within five business days by an HR Business Partner not associated with the reporting chain. The outcome of the investigation is communicated to the reporting party to the extent permitted by law.
+
+Employees who witness misconduct are encouraged to report it. Bystander inaction, particularly by people managers, is treated as a contributing factor in misconduct investigations.
+
+Conflicts of interest must be disclosed to the HR Business Partner. Common conflicts include ownership stakes in competitor or customer companies, outside board seats, and employment of immediate family members. Disclosed conflicts are reviewed and mitigated, not automatically disqualifying.
+
+Equipment and IT
+
+Apex provides a company laptop, external monitor, keyboard, and mouse. Employees select their preferred laptop at hire from three options: MacBook Pro 14-inch (Apple silicon), ThinkPad X1 Carbon, or Dell XPS 15. Peripherals are refreshed on a four-year cycle. Additional equipment requests are reviewed by IT with manager approval.
+
+Personal use of company equipment is permitted in moderation, provided it does not introduce security risk. Software installed outside of the IT-approved catalog requires a security review, completed by submitting a request through the IT portal. Unapproved software discovered on company devices is removed without notice.
+
+Loss or damage must be reported to the IT Help Desk within 24 hours. Damage attributable to negligence may be charged to the employee at the depreciated value of the equipment. Theft requires a police report filed within 24 hours.
+
+Employees accessing Apex systems from personal devices must enroll the device in mobile device management and use only approved applications to access company data. Unenrolled personal devices are blocked from accessing internal systems.
+
+Confidentiality and Data Handling
+
+All employees sign a confidentiality and invention assignment agreement at hire. The agreement covers customer data, technical designs, business plans, financial information, and any information designated as confidential by a manager or the legal team.
+
+Customer data may only be accessed from company-managed devices and through approved channels. Screenshots, exports, or copies of customer data to personal devices or unauthorized cloud storage are strictly prohibited. Production database access requires a separate access request and is logged and audited. Queries to production data must be reviewed by a peer and documented with a business justification.
+
+Violations of data handling policy are reported to the Chief Information Security Officer and are subject to disciplinary action up to and including termination. Violations that may constitute a breach of customer data trigger the incident response plan and may require regulatory notification.
+
+Attendance and Absence
+
+Unplanned absences must be reported to the direct manager before the start of the workday via Slack or email. If the manager is unreachable, the team channel should be notified. Three consecutive unexplained absences are treated as voluntary job abandonment, and the employment relationship is considered terminated.
+
+Employees who anticipate a recurring pattern of lateness or absence due to a medical condition, disability, or family care obligation should contact the HR Business Partner to discuss an accommodation or an adjusted schedule before the pattern becomes a performance issue.
+
+Termination and Resignation
+
+Employees are asked to provide two weeks of written notice delivered to their manager and HR. Apex may accept notice and elect to end employment sooner with compensation through the notice period, or Apex may ask the employee to remain active through the full notice period depending on business need. Senior and technical roles may be asked to provide additional transition documentation.
+
+HR schedules an exit interview with the HR Business Partner on the final day of employment or via video call for remote employees. The exit interview covers departure reasons, feedback about the team and management experience, and transition status. Company equipment, physical badges, and credentials are collected or remotely wiped during the offboarding session.
+
+Final pay, including any accrued and unused PTO, is disbursed in accordance with applicable state law, typically on the next standard pay date or sooner if required. Employees with outstanding expense reports should submit them before their final day to ensure reimbursement.
+
+Policy questions should be directed to the HR Business Partner assigned to each department. A directory of HR Business Partners by department is published on the HR portal.

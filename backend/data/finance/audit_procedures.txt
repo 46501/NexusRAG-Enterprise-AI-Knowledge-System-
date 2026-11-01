@@ -1,0 +1,88 @@
+Apex Systems Audit Procedures
+Effective January 1, 2026
+
+This document describes the internal audit function, audit committee governance, control testing methodology, findings management, and the relationship with the external auditor at Apex Systems. It is intended for the Internal Audit team, the Audit Committee, the Chief Financial Officer, department heads who own controls under audit, and the external audit engagement team. The goal of the audit function at Apex Systems is to provide independent assurance that internal controls are operating effectively, that financial reporting is accurate, and that regulatory and policy compliance is maintained.
+
+Internal Audit Function
+
+Apex Systems maintains an Internal Audit function that reports directly to the Audit Committee of the Board of Directors. This reporting structure is intentional and essential to the independence of the function. While the Chief Financial Officer provides day-to-day administrative support to the Internal Audit team, the Audit Committee hires, evaluates, and terminates the Head of Internal Audit. The Audit Committee approves the annual internal audit plan and receives all audit findings.
+
+The Internal Audit team has unrestricted access to all financial records, systems, personnel, and physical locations required to perform its work. Management may not restrict access to audit evidence or information unless the restriction is approved in advance by the Audit Committee Chair. Any attempt to impede, limit, or influence audit work must be reported by the Head of Internal Audit to the Audit Committee immediately.
+
+The Internal Audit team consists of the Head of Internal Audit, who holds a Certified Internal Auditor designation, and a team of staff auditors. Staff auditors hold or are pursuing professional certifications appropriate to their area of specialization. The team is staffed to complete the annual audit plan with no more than fifteen percent reliance on co-sourced resources from an external firm. When co-sourcing is used, the selected firm must not be the same firm serving as the external auditor to preserve independence.
+
+Audit Committee Charter
+
+The Audit Committee of the Board of Directors is established by and operates pursuant to the Audit Committee Charter adopted by the full Board. The Charter is reviewed annually and updated as needed. The key provisions of the Charter are summarized here; the full Charter is maintained in the board governance system.
+
+Composition: The Audit Committee consists of at least three independent directors. Each member must meet the independence standards required by applicable securities laws and exchange listing standards, as if Apex Systems were a public company, in anticipation of a future public offering. At least one member must qualify as a financial expert, defined as a person with professional experience in public accounting, financial reporting under GAAP, or oversight of financial reporting at a public or large private company. The full Board appoints Audit Committee members annually.
+
+Meetings: The Audit Committee meets at least quarterly. Meetings include time with the Head of Internal Audit and the lead external audit partner without management present. The CFO and Controller attend Audit Committee meetings by invitation and present materials on financial reporting and control matters. Meeting minutes are taken and approved at the following meeting.
+
+Responsibilities: The Audit Committee is responsible for: overseeing the integrity of financial reporting; reviewing and approving the annual financial statements before publication; selecting, compensating, and overseeing the external auditor; reviewing the scope and results of external audit work; overseeing the internal audit function including approving the annual audit plan; reviewing significant accounting policies and estimates; overseeing the company's risk management framework; and reviewing and investigating concerns reported through the whistleblower hotline.
+
+Annual Internal Audit Plan
+
+The Internal Audit team prepares an annual audit plan each fall covering the following fiscal year. The plan is based on a risk assessment that considers: the inherent risk of each auditable entity based on financial materiality, complexity, regulatory exposure, and rate of change; the results of prior audits and the status of previously identified findings; input from the Audit Committee, CFO, and department heads on emerging risks; and external developments including new accounting standards, regulatory changes, and industry risk trends.
+
+The risk assessment produces a ranked list of auditable entities. The annual plan allocates available audit resources to the highest-ranked entities. The plan is presented to the Audit Committee in November for approval before the start of the new fiscal year. Approved plans include the audit scope, the timing of each audit engagement, the estimated hours and resources, and the expected deliverable for each engagement.
+
+Mid-year adjustments to the plan require Audit Committee approval. Unplanned audits may be commissioned by the Audit Committee or CFO at any time.
+
+Audit Engagement Process
+
+Each internal audit engagement follows a standard methodology:
+
+Planning Phase: The audit team develops a planning memo that documents the scope and objectives of the audit, the key risks being addressed, the control framework being evaluated, the data sources and systems to be reviewed, the audit procedures to be performed, and the timeline. The planning memo is reviewed by the Head of Internal Audit and shared with the relevant business area management as a courtesy before fieldwork begins. Management input may be requested but management may not modify the scope of audit objectives.
+
+Fieldwork Phase: Auditors execute the procedures defined in the planning memo. Procedures include walkthroughs with process owners, review of policy and procedure documentation, review of system access and configuration, transactional testing using statistical or risk-based sample selection, analytical procedures, and reconciliation testing. All audit evidence is documented in the working paper files and retained for seven years. Auditors record observations throughout fieldwork, including preliminary findings identified during testing.
+
+Reporting Phase: After fieldwork is complete, the audit team prepares a draft audit report. The report includes an executive summary, background on the audit scope, the overall audit opinion (defined below), and a description of each finding with a risk rating, root cause analysis, and a recommended management action. Draft reports are provided to the business area management team for management response. Management has ten business days to provide a written response to each finding that either accepts the finding and commits to a remediation action and timeline or disputes the finding with supporting evidence. The audit team considers management's response and may amend the finding if the evidence supports it.
+
+Final Report: The final audit report incorporates management responses and is issued to the Audit Committee, the CFO, and the relevant business area head. The Head of Internal Audit presents key findings to the Audit Committee at the next scheduled meeting.
+
+Control Testing Methodology
+
+Apex Systems uses a risk-based approach to control testing. Controls are classified as key controls or non-key controls. Key controls are those whose failure could result in a material misstatement in financial reporting, a significant operational disruption, or a regulatory compliance failure. Non-key controls are compensating or supplementary controls that reduce risk but are not individually critical.
+
+Key controls are tested at least annually. For automated controls implemented in systems, testing includes inspection of system configuration, review of change management records to confirm the control has not been modified, and end-to-end transaction testing. For manual controls, testing includes re-performance or observation of the control in operation and inspection of evidence produced by the control.
+
+Sample sizes for transactional testing follow a risk-based protocol. For controls that operate daily, the standard sample size is twenty-five items. For controls that operate weekly, the standard sample size is fifteen items. For controls that operate monthly, the standard sample is twelve items. For controls that operate quarterly, the full population is tested. Sample sizes may be increased if the initial sample produces exceptions.
+
+An exception is any test result that indicates a control failure. Every exception is documented and assessed for severity. A single exception in a manual control does not necessarily constitute a control deficiency; the auditor must assess whether the exception represents an isolated error or a systematic failure. Multiple exceptions in the same control indicate a deficiency and must be reported as a finding.
+
+Findings Classification
+
+All internal audit findings are assigned a risk rating that determines the urgency of remediation and the level of management attention required.
+
+Critical: A finding that indicates the absence or complete failure of a key control, presents an immediate risk of material financial misstatement, or indicates a material compliance violation. Critical findings are escalated immediately to the CFO and Audit Committee Chair and must have a remediation plan within fifteen business days. Critical findings that have not been remediated within sixty days are re-escalated to the full Audit Committee.
+
+High: A finding that indicates significant weakness in a key control that does not rise to the level of critical, or a pattern of exceptions in a key control. High findings must have a remediation plan within thirty business days and must be remediated within ninety days.
+
+Medium: A finding that indicates weakness in a non-key control, a minor exception pattern in a key control, or a policy compliance gap with limited financial or operational risk. Medium findings must be remediated within one hundred eighty days.
+
+Low: An observation or best-practice recommendation that does not represent a control deficiency. Low findings are tracked but do not have a mandatory remediation timeline. They are reviewed with management annually.
+
+Findings are recorded in the audit findings tracker and reviewed quarterly by the Internal Audit team and the relevant business area management. Findings that are past their remediation deadline are escalated to the department head and CFO. Repeat findings — the same finding appearing in two consecutive audits — are automatically elevated one severity level.
+
+Remediation Tracking
+
+Management is responsible for remediating all findings within the agreed timelines. The Internal Audit team tracks remediation status in the audit findings tracker. Each finding is assigned a named owner in management who is responsible for the remediation action.
+
+Remediation evidence is submitted by management through the audit findings tracker. The Internal Audit team reviews the evidence and validates remediation within ten business days of submission. Validation may include re-testing the affected control to confirm it is now operating effectively.
+
+Validated remediations are marked closed in the audit findings tracker. Findings where evidence is submitted but not sufficient to validate remediation are returned to management with a request for additional evidence. The deadline for the finding is not extended during the review period.
+
+The remediation status report is presented to the Audit Committee at each quarterly meeting, summarizing open findings by severity, age, and business area.
+
+External Auditor Relationship
+
+The external auditor provides an independent audit opinion on the annual consolidated financial statements and review opinions on each of the quarterly financial statements (except Q4, which is covered by the annual audit). The external auditor is selected and overseen by the Audit Committee, not management.
+
+Auditor Selection and Independence: The external auditor is subject to a competitive RFP process every five years. The lead audit partner rotates every five years. The Audit Committee evaluates the independence of the auditor annually by reviewing the auditor's independence letter and any non-audit services provided to the company. Non-audit services by the external auditor are subject to pre-approval by the Audit Committee. Prohibited non-audit services include bookkeeping, financial information systems design and implementation, human resources functions, and management functions.
+
+Coordination with Internal Audit: The Internal Audit team and the external audit team coordinate their work to reduce duplication and optimize coverage. In the fourth quarter of each year, the Head of Internal Audit and the lead external audit partner meet to discuss the annual audit plan for both teams. The external auditor may place reliance on internal audit work where the work meets their professional standards, which reduces the extent of external audit procedures required on those areas.
+
+Audit Committee Communications: The external auditor communicates directly with the Audit Committee without management present at each quarterly Audit Committee meeting. Communications include: required auditor communications under applicable auditing standards, the status of the audit, significant accounting policies and estimates reviewed during the audit, any disagreements with management, and any control deficiencies identified during audit procedures.
+
+Management Representation Letter: At the conclusion of the annual audit, management provides the external auditor with a signed representation letter confirming the completeness and accuracy of financial information provided, the absence of undisclosed subsequent events, compliance with legal and regulatory requirements, and other representations required by auditing standards. The representation letter is signed by the CEO and CFO. Any proposed representation that management believes it cannot make accurately must be raised with the Audit Committee before the letter is signed.

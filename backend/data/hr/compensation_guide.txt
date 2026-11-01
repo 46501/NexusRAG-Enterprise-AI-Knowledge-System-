@@ -1,0 +1,110 @@
+Apex Systems Compensation Guide
+Effective January 1, 2026
+
+This guide explains how Apex Systems structures base pay, variable compensation, equity, and benefits for all full-time employees. It is distributed at hire, republished annually after the September compensation review, and updated mid-year if material changes are made. Managers are encouraged to walk through this guide with new team members during the first month of employment.
+
+Compensation Philosophy
+
+Apex targets the 65th percentile of base salary for our peer group, defined as venture-backed enterprise software companies with between 200 and 2,000 employees and annual recurring revenue between $50 million and $500 million, primarily based in the United States. Total target compensation — including base salary, target annual bonus, and the annualized Black-Scholes value of equity grants — is positioned at the 75th percentile of the same peer group.
+
+Pay is benchmarked twice per year using Radford Global Technology Survey data, with a supplemental reference to Levels.fyi for engineering roles to capture real-world market movement in technical talent. When survey data and market anecdotes diverge by more than 10% at a given level, HR initiates an ad hoc market review before the next scheduled calibration.
+
+The philosophy is grounded in the belief that compensating people well relative to the market reduces voluntary attrition, eliminates a significant source of distraction, and allows the company to attract and retain people who would otherwise join larger competitors.
+
+Career Levels and Pay Bands
+
+Apex operates a single unified level framework that applies across all functions — engineering, product, design, sales, finance, HR, legal, and operations. The seven levels and their approximate base salary ranges for Tier 1 locations are:
+
+L1 Associate: $70,000 to $90,000. Entry-level roles. Typically 0 to 2 years of professional experience. Supervised closely with structured deliverables.
+
+L2 Specialist: $90,000 to $120,000. Independently executes well-defined tasks. Typically 2 to 4 years of experience. Contributes to team planning and improves their own work quality without being asked.
+
+L3 Senior: $120,000 to $160,000. Drives outcomes for a defined scope of work with limited oversight. Mentors L1 and L2 colleagues informally. Typically 4 to 8 years of experience. This is the career level where most employees spend the majority of their tenure.
+
+L4 Staff: $160,000 to $210,000. Owns complex cross-team problems and drives alignment across peers. Influences roadmap and architecture. Typically requires significant domain expertise and strong cross-functional communication.
+
+L5 Principal: $210,000 to $280,000. Sets technical or functional direction for a broad domain. Operates with VP-level influence and visibility. Expected to develop L3 and L4 talent. Fewer than 5% of employees reach this level.
+
+L6 Director: $250,000 to $350,000. Manages teams or functions, sets strategy, represents the domain to senior leadership. Accountable for team performance, hiring, and culture.
+
+L7 Vice President: $350,000 and above. Leads a major function or business unit. Member of the senior leadership team. Compensation for L7 is individually negotiated with CEO approval and CFO review.
+
+Each band has a published minimum, midpoint, and maximum. The midpoint represents the market-competitive rate for a fully proficient, high-performing employee at that level. Employees newly promoted typically enter between the minimum and the midpoint. Employees who have been at the midpoint or above for two or more years without promotion are reviewed by HR to determine whether the band needs to be updated or whether a promotion is overdue.
+
+Geographic Differentials
+
+Base salary is adjusted based on the employee's primary work location on the first day of each calendar year. Employees who relocate must notify HR within 30 days; the new geographic differential applies to their compensation at the next pay cycle after notification.
+
+Tier 1 locations, set at 100% of the published band, include: San Francisco Bay Area, New York City metropolitan area, and Seattle metropolitan area.
+
+Tier 2 locations, set at 95% of the published band, include: Boston, Washington DC metropolitan area, Los Angeles, San Diego, Chicago, Austin, Denver, and Miami.
+
+Tier 3 locations, set at 90% of the published band, cover all other U.S. locations including fully remote employees outside Tier 1 and Tier 2 cities. Employees in Tier 3 cities still participate in the same level framework and bonus and equity programs.
+
+International employees are compensated using local market benchmarks and are not subject to the U.S. geographic differential table.
+
+Variable Pay — Performance Bonus
+
+Non-sales, non-executive employees at L1 through L5 are eligible for an annual performance bonus with an on-target value of 10% of base salary. L6 Directors have a target bonus of 20%. L7 Vice Presidents have a target of 30%, as individually negotiated.
+
+Bonus payouts are calculated as the product of a company performance multiplier and an individual performance multiplier. The company multiplier ranges from 0 to 1.5 based on achievement of the annual plan; achievement below 70% of plan results in a 0 multiplier. The individual multiplier ranges from 0 to 1.5 based on the employee's September performance rating: exceptional earns 1.5, exceeds expectations earns 1.2, meets expectations earns 1.0, developing earns 0.5, and unsatisfactory earns 0. The two multipliers are applied to the target bonus amount, capping total bonus at 200% of target.
+
+Bonuses are paid in March of the following year. To be eligible, an employee must be active on February 28 of the payment year and must have been employed for at least six months of the preceding performance year. Employees who were on approved leave for part of the year receive a prorated bonus based on months worked.
+
+Sales Compensation
+
+Sales roles — Account Executive, Sales Development Representative, Sales Engineer, and Customer Success Manager — operate on individual sales compensation plans issued at the start of each fiscal year or at hire. Plans specify the base salary, on-target variable, quota, and accelerator and decelerator structure. Standard structures are either 50/50 base-to-variable for pure quota-carrying roles or 60/40 for roles with a mix of quota and relationship responsibilities.
+
+Commissions are calculated monthly against booked, signed, and invoiced revenue that meets qualification criteria defined in the plan. Accelerators apply at 100%, 120%, and 150% of quota attainment. Revenue booked above 150% of quarterly quota earns at 175% of the standard commission rate. Decelerators apply below 50% attainment in a given quarter, resulting in a 50% commission rate. The Finance and Revenue Operations teams administer commission calculations and publish results in Spiff by the fifth business day after month end.
+
+Plan disputes must be raised with the Revenue Operations team within 15 days of statement publication. Disputes filed after this window are reviewed at the company's discretion.
+
+Equity
+
+All full-time employees receive a stock option grant at hire. Options are priced at the fair market value established by the most recent 409A valuation conducted by a third-party qualified appraiser. Grants vest over four years: 25% vest after the first year of service (the one-year cliff), and the remaining 75% vest monthly over the following 36 months at a rate of 1/48th of the total grant per month.
+
+New-hire grant sizes by level for Tier 1 locations, as a percentage of options representing the fully diluted equity:
+L1 and L2: 0.01% to 0.04%
+L3 Senior: 0.05% to 0.10%
+L4 Staff: 0.10% to 0.20%
+L5 Principal: 0.20% to 0.40%
+L6 Director: 0.30% to 0.60%
+L7 Vice President: individually negotiated, typically 0.5% to 1.5%
+
+Refresh grants are awarded each September to employees in good standing, based on performance and tenure. Target refresh amounts equal approximately 25% of the annualized new-hire grant for the employee's current level. Refresh grants are subject to the same four-year vesting schedule with a one-year cliff. There is no limit on the number of refresh grants an employee may receive.
+
+Employees have 90 days following their termination date to exercise vested options. Unvested options are forfeited upon separation. Employees who resign with more than four years of service and at least 12 months remaining on their final refresh grant may request an extension of the exercise window to 12 months; this requires CEO approval.
+
+Merit Increases and Promotions
+
+Base salary increases are processed in the September compensation cycle for all eligible employees. Increases are effective October 1. To be eligible for a merit increase, an employee must have been in their current role for at least six months and must have received a performance rating of developing or better. Employees rated developing typically receive no merit increase.
+
+Typical merit increase ranges by rating: exceptional — 8% to 12%; exceeds expectations — 5% to 8%; meets expectations — 3% to 5%; developing — 0%.
+
+Promotions carry a market adjustment separate from the merit increase. The promotion adjustment brings the employee's salary to at least the minimum of the new band. If the employee's current salary already exceeds the new band minimum, the promotion still carries a minimum increase of 8%. Promotions and merit increases are both reflected in the October 1 paycheck.
+
+Benefits
+
+Medical: Apex covers 100% of the employee-only premium and 70% of the dependent premium for a Blue Cross Blue Shield PPO plan and an HDHP with HSA option. Apex contributes $1,000 annually to the HSA for employee-only enrollment and $2,000 for family enrollment.
+
+Dental: Delta Dental PPO covers 100% of preventive care, 80% of basic restorative work, and 50% of major restorative work. Apex covers 100% of the employee premium and 70% of dependent premiums.
+
+Vision: VSP Signature plan. Apex covers 100% of the employee premium and 70% of dependent premiums. Annual exam, lenses, and frames or contacts are covered.
+
+Life and disability: Apex provides term life insurance equal to 2x annual base salary at no cost to the employee. Supplemental life insurance up to 5x salary is available for purchase. Short-term disability covers 60% of base salary for up to 12 weeks. Long-term disability covers 60% of base salary after the short-term period ends and is provided at no cost.
+
+Retirement: The 401(k) plan is administered through Fidelity. Apex matches 100% of employee contributions up to 4% of base salary. The company match vests immediately. Employees may contribute up to the IRS annual limit. Apex does not offer pension plans or deferred compensation arrangements.
+
+Additional benefits: A monthly wellness stipend of $75 may be applied to gym memberships, fitness apps, or other wellness-related expenses; receipts are submitted through ADP. A pre-tax commuter benefit covers up to $300 per month in transit or parking expenses. Apex funds full access to the Carrot platform for fertility support, egg freezing, adoption assistance, and surrogacy services. An employee assistance program provides six free counseling sessions per year and 24-hour crisis support.
+
+Payroll and Administration
+
+Employees are paid semi-monthly, on the 15th and the last business day of each calendar month. When the 15th falls on a weekend or holiday, pay is issued on the preceding business day. Paystubs, W-2 forms, and tax election forms are available in the ADP Self-Service portal. Direct deposit is mandatory for all regular employees; accounts must be established in ADP before the first pay date.
+
+Changes to withholding elections, direct deposit accounts, or benefit enrollments must be submitted through ADP or the HR portal. Mid-year benefit changes are permitted only within 30 days of a qualifying life event such as marriage, birth, or loss of other coverage.
+
+Questions about payroll errors, deductions, garnishments, or year-end tax forms should be directed to the payroll team through the HR portal. Urgent payroll corrections are resolved within two business days; non-urgent adjustments appear on the next regular pay date.
+
+Compensation Confidentiality
+
+Compensation information is treated as confidential between the employee, their manager, HR, and the finance team. Employees are discouraged from sharing specific compensation details with colleagues, not because Apex prohibits it — federal law protects the right to discuss wages — but because comparison without full context often creates misunderstanding. Retaliation against any employee for discussing compensation is prohibited and will be treated as a violation of the code of conduct.

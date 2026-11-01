@@ -1,0 +1,106 @@
+Apex Systems Engineering Security Guidelines
+Effective January 1, 2026
+
+These guidelines define the security practices required of every engineer at Apex Systems. Compliance is mandatory. Security is not the responsibility of the Security team alone — every engineer is expected to understand the risks relevant to their work, apply secure practices consistently, and report concerns promptly. The guidelines are reviewed and updated annually by the Security Engineering team in collaboration with the General Counsel and Chief Technology Officer.
+
+Access Control and Least Privilege
+
+All access to production systems, cloud infrastructure, internal tools, and sensitive data must follow the principle of least privilege. Employees and service accounts are granted only the access necessary to perform their defined job functions. Access is not granted speculatively or "just in case."
+
+Access to production environments requires approval from the employee's engineering manager. Access requests are submitted through the Identity and Access Management system and reviewed within two business days. Approvals are time-limited: production access grants expire after ninety days and must be renewed. Access for contractors and temporary workers expires automatically at the end of the engagement.
+
+Shared credentials are prohibited. Each engineer must have a unique account for every system they access. Service accounts used by automated systems must be distinct from human user accounts and must follow the naming convention defined in the infrastructure runbook. Service account credentials must be stored in the secrets manager, not in code repositories, configuration files, or wikis.
+
+Privileged access — including root access, database administrative access, cloud account root credentials, and access to security tooling — requires a second approval from the Security Engineering team and is audited monthly. Privileged sessions must be conducted through a bastion host or privileged access workstation. All privileged session activity is logged.
+
+Access is revoked immediately upon employee departure, role change, or project reassignment that no longer requires it. People Operations notifies the Identity and Access Management team on the day of an employee departure. The IAM team completes access revocation within four hours of notification. Engineering managers are responsible for initiating access review when a team member changes roles.
+
+Quarterly access reviews are conducted for all production and privileged systems. The IAM team generates access reports for each engineering manager, who must certify that all listed access is still required. Certifications are due within ten business days of the report being issued.
+
+Credential Management
+
+Passwords must meet the following minimum requirements: fourteen characters in length, combination of uppercase letters, lowercase letters, numbers, and symbols. Passwords may not be reused within the previous twenty-four password changes. Passwords must not be shared. The company-provided password manager is the required tool for storing and generating passwords.
+
+Multi-factor authentication is required for all systems without exception. Hardware security keys are required for access to production cloud accounts, the code repository, and the secrets manager. Time-based one-time password authenticators are acceptable for other systems where hardware keys are not supported. SMS-based two-factor authentication is not permitted for any production system access.
+
+API keys and tokens are credentials and must be treated as such. They must be stored in the secrets manager. They must not be committed to code repositories under any circumstances, including test repositories and forks. If a credential is accidentally committed, it must be treated as compromised: rotate it immediately and report the exposure to the Security Engineering team. The git history must be cleaned using the approved remediation process.
+
+Secrets rotation is required on the following schedule: API keys for external services every ninety days, database credentials every thirty days, service account tokens every sixty days. Rotation must not cause service disruption; engineers must implement rotation in a backward-compatible manner using the secrets manager's versioning features. The Security team monitors for credentials not rotated within the required window and will raise a finding.
+
+SSH keys used for server access must be at least 4096-bit RSA or use Ed25519. Private keys must be passphrase-protected. Public keys are registered through the IAM system. Personal SSH keys must not be shared and must be rotated annually or immediately upon suspected compromise.
+
+Secure Development Practices
+
+Security must be considered from the design phase, not added at the end. Before beginning development on any feature that handles authentication, authorization, sensitive data, or external integrations, engineers must review the design with the Security Engineering team. For features classified as high-risk per the security risk classification matrix, a formal threat model must be completed before coding begins.
+
+Code review is a required gate before any code merges to the main branch. Every pull request must be reviewed by at least one engineer who is not the author. Pull requests that touch authentication logic, authorization checks, cryptography, session management, data access controls, input validation, or external API integrations require review by a member of the Security Engineering team or a designated security champion on the team.
+
+Security Code Review Checklist: Reviewers must verify the following for all pull requests:
+
+Input validation: All data entering the system from external sources — user input, API calls, file uploads, webhooks — must be validated and sanitized. Validation should fail closed: reject anything that does not conform to the expected format, type, and range.
+
+Authentication and authorization checks: Every endpoint and function that accesses sensitive data or performs privileged operations must verify that the requester is authenticated and authorized. Authorization checks must be performed server-side. Client-side enforcement alone is not acceptable.
+
+SQL and query injection: Parameterized queries or prepared statements must be used for all database queries. String concatenation for query construction is prohibited.
+
+Output encoding: Data rendered in HTML must be encoded to prevent cross-site scripting. Use framework-provided escaping functions. Do not construct HTML strings by concatenation.
+
+Cryptography: Do not implement custom cryptographic algorithms. Use vetted libraries. AES-256 is required for symmetric encryption. RSA-2048 or ECDSA with P-256 is the minimum for asymmetric encryption. SHA-256 or stronger is required for hashing. MD5 and SHA-1 are prohibited in security contexts.
+
+Secrets in code: No credentials, API keys, tokens, passwords, or private keys may appear in source code, configuration files, or commit messages.
+
+Error handling: Error messages returned to clients must not include stack traces, internal system paths, database error messages, or other internal details that would assist an attacker.
+
+Dependency management: New dependencies must be reviewed for known vulnerabilities before being added. Use the approved vulnerability scanning tool to check before adding a new library. Dependencies must be pinned to specific versions. License compatibility with Apex Systems' commercial use must be verified.
+
+OWASP Top Ten Awareness
+
+Engineers are expected to understand and mitigate the OWASP Top Ten vulnerability categories in their work:
+
+Broken Access Control: Ensure that authorization logic correctly enforces role-based and object-level access. Test that users cannot access resources or perform actions outside their permitted scope.
+
+Cryptographic Failures: Encrypt sensitive data at rest and in transit. Use TLS 1.2 or higher for all network communications. Do not store passwords in plaintext; use bcrypt or Argon2 with appropriate cost parameters.
+
+Injection: Apply parameterized queries, input validation, and output encoding to prevent SQL, command, LDAP, and other injection attacks.
+
+Insecure Design: Threat model new features before implementation. Design systems to fail safely and to enforce security boundaries at the architecture level.
+
+Security Misconfiguration: Harden deployments by disabling unnecessary features, removing default credentials, and enforcing secure defaults. Cloud storage buckets must not be publicly accessible unless explicitly required and approved. Infrastructure configuration is reviewed in code review.
+
+Vulnerable and Outdated Components: Keep dependencies up to date. Critical and high-severity CVEs in dependencies must be remediated within fourteen days of disclosure. Medium-severity CVEs must be remediated within sixty days.
+
+Identification and Authentication Failures: Implement rate limiting on authentication endpoints. Enforce MFA. Use secure session management practices including server-side session invalidation on logout.
+
+Software and Data Integrity Failures: Validate integrity of software artifacts in the build pipeline. Use code signing for published artifacts. Verify integrity of third-party data before processing.
+
+Security Logging and Monitoring Failures: Log authentication events, access to sensitive data, administrative actions, and security-relevant errors. Logs must be immutable and retained for at least one year. Security event logs are forwarded to the SIEM.
+
+Server-Side Request Forgery: Validate and restrict URLs in server-side requests. Do not allow user-controlled input to directly specify the destination of server-side HTTP requests without validation against an allowlist.
+
+Vulnerability Disclosure
+
+Apex Systems operates a responsible disclosure program. External security researchers who discover vulnerabilities in Apex Systems products may report them through the dedicated security disclosure email address published on the company website. Reports are acknowledged within two business days.
+
+Internally discovered vulnerabilities are reported to the Security Engineering team through the security findings tracker. Engineers who discover a potential vulnerability in any production system, internal tool, or third-party component must report it to the Security Engineering team within twenty-four hours. Do not attempt to exploit a vulnerability beyond what is needed to confirm its existence.
+
+The Security Engineering team triages reported vulnerabilities and assigns a CVSS score and remediation priority. Critical vulnerabilities (CVSS 9.0 and above) require immediate escalation to the CTO and must have a remediation plan within twenty-four hours. High vulnerabilities (CVSS 7.0 to 8.9) must have a remediation plan within seven days. Medium vulnerabilities must be remediated within thirty days. Remediation is tracked in the security findings tracker.
+
+Penetration Testing
+
+Apex Systems conducts penetration testing at least once per year. The annual penetration test covers the customer-facing application, the API layer, the authentication and authorization system, and the cloud infrastructure. The test is conducted by an independent third-party security firm selected through the procurement process.
+
+In addition to the annual external test, internal red team exercises are conducted by the Security Engineering team on a quarterly basis, targeting specific high-risk components or recently launched features. Engineers may be engaged by the Security Engineering team to support red team exercises.
+
+All penetration test findings are reviewed by the CTO and the engineering leadership team. Critical and high findings must be remediated before the next production release cycle. All findings are tracked in the security findings tracker with named owners and target remediation dates.
+
+Security Incident Reporting
+
+Any actual or suspected security incident — including unauthorized access, data exposure, credential compromise, malware, phishing attempts that captured credentials, or suspicious system behavior — must be reported to the Security Engineering team immediately. Do not investigate security incidents independently. Preserve evidence by not modifying or deleting affected systems or logs before reporting.
+
+For confirmed security incidents, the incident response process (see the Incident Response Runbook) applies with Security Engineering leading the technical response. Incidents involving customer data require notification to the General Counsel within one hour of confirmation. Regulatory notification obligations are assessed by the Legal team.
+
+Security Training
+
+All engineers must complete annual security awareness training. Training covers phishing recognition, secure coding practices, credential hygiene, and incident reporting procedures. New engineers must complete security training within their first thirty days. Completion is tracked in the learning management system.
+
+Engineers who work on authentication, cryptography, or data privacy systems are required to complete role-specific security training in addition to the general annual training. Security Engineering publishes the list of roles subject to additional training requirements at the beginning of each year.

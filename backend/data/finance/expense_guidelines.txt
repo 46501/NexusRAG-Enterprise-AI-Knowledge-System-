@@ -1,0 +1,94 @@
+Apex Systems Expense and Travel Guidelines
+Effective January 1, 2026
+
+These guidelines govern how Apex Systems employees incur and report business expenses. They apply to all full-time and part-time employees, contractors with an active expense profile, and board members traveling on Apex business. Questions not covered in this document should be directed to the finance business partner for the employee's department before the expense is incurred.
+
+Expense Management System
+
+All expenses must be submitted through the Navan platform, which is available as a web application and a mobile app. Navan is the single system of record for expense reporting. Expenses submitted through any other channel are not eligible for reimbursement.
+
+Expenses must be submitted within 30 calendar days of the transaction date. Expenses submitted between 31 and 60 days after the transaction require a written explanation submitted alongside the report; Finance reviews these on a case-by-case basis. Expenses submitted more than 60 days after the transaction date are not reimbursable under any circumstances without prior written approval from the VP of Finance obtained before the expense was incurred.
+
+Receipts are required for any individual transaction of $25 or more. Receipts must be itemized for restaurant and catering expenses — a credit card slip showing only the total is not sufficient. Digital receipts, photos of paper receipts, and PDF attachments are all accepted in Navan. Navan's SmartScan feature can extract the merchant, date, and amount automatically but should be reviewed for accuracy before submission.
+
+Each expense report must include a business purpose that identifies the customer, project, or internal meeting that justified the expense. A business purpose of "team lunch" or "travel" is not sufficient. An acceptable business purpose is "lunch with engineering team during Q1 planning offsite, 8 attendees" or "airfare to San Francisco for contract negotiation meeting with Redwood Capital."
+
+Reimbursable Expense Categories
+
+Travel: airfare, train tickets, rideshare, taxis, airport shuttles, standard rental cars, parking at customer sites, and lodging. Travel costs must be booked through Navan to benefit from pre-negotiated corporate rates. Booking outside Navan is permitted only when the Navan rate is demonstrably higher than a market rate on the same day; the employee must document the comparison in the expense report.
+
+Meals: meals consumed while traveling away from the employee's primary work location, meals during customer-facing visits including prospect and customer meetings, meals during interviews with candidates, and working meals during all-day internal planning sessions. Each meal expense must list all attendees and their affiliations.
+
+Customer entertainment: client dinners, customer events, sporting events, and other hospitality provided to customers or prospects in the context of a business relationship. Anti-bribery policies of customer organizations must be reviewed before incurring entertainment expenses on their behalf; some government and healthcare customers prohibit receiving gifts or hospitality entirely. A list of all attendees and their affiliations is required.
+
+Software and subscriptions: tools directly required for the employee's work that are not already available through the centralized software catalog managed by IT. All software purchases require prior approval from the IT Help Desk before purchase. Submitting an expense for software that was not pre-approved will result in the expense being rejected and an IT review of whether the tool should be centrally licensed.
+
+Professional development: conference registration fees, online course fees, certification exam fees, professional membership dues, and books. These expenses count against the annual $2,000 per-employee learning and development budget. Once the annual budget is exhausted, additional professional development expenses are not reimbursable.
+
+Home office: new remote employees receive a one-time home office stipend of $1,000, which may be spent on office furniture, monitors, keyboards, or other productivity equipment. Ongoing remote employees receive a quarterly stipend of $150, deposited directly to payroll without requiring a receipt. The one-time stipend is available only within 90 days of the employee's start date.
+
+Air Travel Policy
+
+Economy class (coach) is required for all flights with a total flight time of six hours or less, measured from gate to gate on the ticketed itinerary. For flights between six and nine hours, premium economy is permitted where available. For flights with a total flight time exceeding nine hours, or for any international overnight flight that immediately precedes a customer meeting or significant work commitment scheduled before noon local time, business class is permitted. First class is not reimbursable under any circumstances, regardless of traveler level.
+
+Flights must be booked at least 14 days in advance whenever the travel date is known. If last-minute booking is required due to a customer emergency, the business purpose must describe the emergency and name the customer. Last-minute bookings that exceed the advance-purchase price by more than $300 require manager approval before purchase.
+
+Flight changes and cancellations: the cost of changing or cancelling a flight is reimbursable if the reason is business-related. Changes or cancellations due to personal scheduling conflicts are not reimbursable. If a change results in travel credits, those credits must be used for future Apex business travel.
+
+Lounge access: airline lounge day passes purchased during travel are reimbursable up to $50 per visit when the employee is on a business trip lasting more than 8 hours of total travel time. Annual lounge memberships are not reimbursable.
+
+Lodging Policy
+
+Hotel accommodations must be booked through Navan to apply corporate rates. Per-city nightly rate ceilings are published in the Navan travel profile and are updated semi-annually based on market rates. Major U.S. city ceilings as of January 2026: San Francisco and New York — $350, Boston and Chicago — $300, Austin and Denver — $250, all other U.S. cities — $200. All ceilings are inclusive of taxes and mandatory fees.
+
+For cities not listed in the Navan travel profile, the ceiling is $350 per night including all taxes and fees. If a conference hotel or customer event venue exceeds the ceiling, the excess is reimbursable with manager approval, provided the business case for staying at that specific property is documented.
+
+Non-reimbursable lodging charges: in-room movies, video streaming services, minibar, spa services, and room service for non-meal occasions. Laundry service is reimbursable for trips exceeding five consecutive nights away from the primary work location. Resort fees and destination fees are reimbursable when they are unavoidable for a standard room booking.
+
+Airbnb and similar short-term rental services are permitted in locations where hotel availability is limited or for group travel where a rental property is demonstrably more cost-effective than separate hotel rooms. Group bookings exceeding $2,000 require finance business partner approval before booking.
+
+Meal and Per Diem Policy
+
+While traveling, employees choose between two reimbursement methods for each trip: actual cost or per diem. The choice must be made per trip and applied consistently throughout that trip.
+
+Actual cost: receipts required for each meal over $25. Reasonable gratuities up to 20% are reimbursable. The following caps apply per meal: breakfast — $25, lunch — $40, dinner — $75. These caps do not apply when the employee is hosting a customer, candidate, or external partner, in which case the customer entertainment per-attendee limits apply.
+
+Per diem: a fixed daily allowance that covers all meals and incidentals without receipts. Per diem rates: U.S. destinations — $75 per day; Canada, Western Europe, Japan, Australia — $100 per day; all other international destinations — $90 per day. Per diem is not available for travel of less than 24 hours that does not include an overnight stay.
+
+Business meals with customers or candidates: reimbursable at up to $100 per attendee. A meal with a customer or candidate that costs more than $100 per attendee requires VP-level pre-approval and must be documented with a list of attendees, their titles, and their employers.
+
+Alcohol: Reasonable alcohol consumed as part of a business meal is reimbursable when local law and the customer's anti-bribery policy permit. A general rule of thumb is one to two drinks per person; substantially higher amounts may be questioned in audit. Alcohol purchased at a bar without an accompanying food order is not reimbursable.
+
+Ground Transportation Policy
+
+Rideshare services (Uber, Lyft), taxis, and airport shuttles are reimbursable for travel between the airport, hotel, and work site during a business trip, and for travel to customer or partner offices. UberXL, Lyft XL, or premium tiers are permitted for groups of four or more; otherwise, standard tiers only.
+
+Rental cars: the standard rental class is intermediate or equivalent. SUV, luxury, and sports classes require pre-approval from the manager. Rental cars should be used only when public transit or rideshare is not available or practical. The Apex corporate card provides secondary insurance coverage; primary collision coverage can be declined at the rental counter unless the rental is in a country where the card coverage does not apply.
+
+Personal vehicle: mileage for business use of a personal vehicle is reimbursed at the IRS standard mileage rate, which is updated in the Navan profile at the beginning of each year. Commuting between home and a fixed work location is not reimbursable. Parking at the employee's regular office is covered by the commuter benefit, not expense reimbursement.
+
+Non-Reimbursable Expenses
+
+The following expenses are explicitly excluded from reimbursement regardless of business context: personal clothing or personal care items, traffic violations and parking fines, airline or hotel loyalty status-optimization routing (e.g., deliberately taking a longer route to earn miles), purchase of travel or entertainment for spouses, partners, or family members except at company-sponsored events, personal entertainment subscriptions, home internet or phone upgrades beyond business use, and expenses incurred while on personal vacation even if travel is combined with a business trip.
+
+For combined personal and business trips, only the incremental cost of the business portion is reimbursable. For example, if an employee is already traveling to a personal vacation destination and adds a customer meeting, only the transportation to the customer meeting from the vacation location is reimbursable, not the cost of the trip itself.
+
+Corporate Card Program
+
+Employees in roles that involve travel more than twice per quarter are eligible for an Apex corporate card issued through Navan. Cards are Mastercard corporate liability cards; charges are billed to Apex, not the employee. Corporate cardholders must submit receipts in Navan within 7 days of each transaction. Statements reconcile at month end; unreconciled transactions are escalated to the cardholder's manager.
+
+Corporate cards may not be used for personal purchases. Charges that cannot be supported with a business receipt are the personal liability of the cardholder and are deducted from the employee's paycheck with written notice. Cards are suspended automatically for repeated late reconciliation. Card privileges are revoked on the last day of employment.
+
+Exceptions and Dispute Resolution
+
+Requests for exceptions to these guidelines must be submitted in Navan as a pre-approval request, ideally before the expense is incurred. The finance business partner reviews exception requests within 3 business days. Exceptions that are outside the finance business partner's authority are escalated to the VP of Finance.
+
+Denied expense reimbursements may be appealed in writing to the VP of Finance within 10 business days of the denial. The appeal must include the original expense report, the denial reason, and the employee's explanation of why the expense should be reimbursed. The VP of Finance's decision is final.
+
+Audit and Compliance
+
+Finance conducts a random audit of 5% of submitted expense reports each month, selected by the audit management system. Reports selected for audit require the employee to provide original receipts and additional context within 5 business days. Failure to respond to an audit request results in the expense being disallowed and potentially recovered through payroll deduction.
+
+All expense reports for employees who are departing the company are fully audited before final payment is processed. Departing employees should submit any outstanding expenses at least 5 business days before their last day.
+
+Fraudulent expense submissions — including falsified receipts, misrepresented business purposes, personal expenses disguised as business expenses, and duplicate submissions — are grounds for immediate termination and may result in civil or criminal action to recover funds.

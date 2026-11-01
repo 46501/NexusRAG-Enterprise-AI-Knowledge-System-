@@ -1,0 +1,115 @@
+Apex Systems Incident Response Runbook
+Effective January 1, 2026
+
+This document defines the incident management process for Apex Systems production systems. It covers severity classification, the on-call rotation, escalation procedures, communication requirements, postmortem standards, and SLA targets. All members of the Engineering organization are expected to be familiar with this runbook. On-call engineers are required to review it before taking their first shift.
+
+Definition of a Production Incident
+
+A production incident is any unplanned event that causes or risks causing degradation or unavailability of a customer-facing system, loss or corruption of customer data, a breach of security controls, or a violation of a contractual or regulatory SLA. Incidents do not include planned maintenance, feature flags, or phased rollouts that behave as expected. All incidents must be logged in PagerDuty and tracked to resolution.
+
+Severity Levels
+
+All incidents are classified into one of four severity levels. Classification is made by the incident commander based on observed and reasonably anticipated customer impact. The severity level determines response urgency, required communications, and escalation thresholds.
+
+P0 — Critical: Complete outage of a core customer-facing service, sustained for more than two minutes. Examples include the API returning 5xx errors for all requests, inability for any customer to authenticate, data loss or corruption affecting multiple customers, or a confirmed security breach involving customer data. A P0 requires an incident commander and a communications lead to be assigned immediately. The incident commander must page the on-call infrastructure lead and engineering manager. The CEO and CTO must be notified within fifteen minutes of P0 declaration. Customer-facing communication must be posted to the status page within thirty minutes. SLA target for P0 resolution is four hours. If not resolved within two hours, executive escalation is mandatory.
+
+P1 — High: Significant degradation of a core customer-facing service, or a complete outage of a non-core service. Examples include elevated error rates above five percent on a customer-facing API, a payment processing failure affecting a subset of customers, latency degradation above three times the normal p99 baseline sustained for more than five minutes, or a security event with potential customer data exposure. A P1 requires an incident commander. Engineering management must be notified within thirty minutes of P1 declaration. A status page update must be posted within one hour. SLA target for P1 resolution is eight hours.
+
+P2 — Medium: Partial or intermittent degradation of non-critical functionality, with no confirmed customer impact or with impact limited to a small subset of users. Examples include elevated error rates on internal APIs, latency degradation above two times baseline on secondary services, or a failed deployment that did not reach production. P2 incidents do not require a dedicated incident commander but must be assigned to a named engineer responsible for investigation and resolution. SLA target for P2 resolution is twenty-four hours.
+
+P3 — Low: Minor issues that do not affect customers and have a known workaround. Examples include non-critical monitoring alerts, cosmetic bugs in internal tooling, or log pipeline delays. P3 incidents are tracked in the issue tracker and resolved during normal business hours. SLA target for P3 resolution is seventy-two hours.
+
+Severity Escalation: Severity levels may be upgraded at any time if impact grows. Any engineer may escalate a severity level. Downgrades require agreement from the incident commander and, for P0 incidents, approval from the on-call engineering manager.
+
+On-Call Rotation
+
+Apex Systems maintains a twenty-four-by-seven on-call rotation staffed by engineers from the Infrastructure, Backend, and Platform teams. The on-call schedule is published in PagerDuty at least two weeks in advance and managed by the Engineering Operations team.
+
+Primary On-Call Engineer: The primary on-call engineer is the first responder for all production alerts. They must acknowledge PagerDuty pages within five minutes. If the primary on-call engineer is unresponsive after five minutes, PagerDuty automatically escalates to the secondary on-call engineer.
+
+Secondary On-Call Engineer: The secondary on-call engineer serves as backup to the primary. They should be available to join an incident within ten minutes of being paged. The secondary should also monitor the primary's response to P0 and P1 incidents and be prepared to assist without being explicitly asked.
+
+On-Call Engineering Manager: An engineering manager is on call alongside the primary and secondary engineers. The on-call manager is paged automatically for all P0 incidents and must be manually paged by the incident commander for P1 incidents. The on-call manager is responsible for executive escalation, resource coordination, and approving decisions that require management authority.
+
+On-Call Handoff: At the end of each on-call shift, the outgoing engineer completes a written handoff in the designated Slack channel. The handoff includes a summary of any active incidents, any ongoing investigations, recent deployments, known system instabilities, and any context that the incoming engineer needs to start their shift informed. Handoffs are required even if the shift was uneventful.
+
+On-Call Compensation: Engineers receive on-call compensation as described in the engineering compensation supplement. On-call engineers may not be scheduled for mandatory in-person meetings or travel during an on-call week. Managers are responsible for ensuring on-call schedules are coordinated with team calendars.
+
+Incident Response Process
+
+Step 1 — Detection: Incidents are detected through automated alerting in Prometheus and PagerDuty, through customer support tickets escalated by the Support team, through observations by engineers or internal users, or through security monitoring tools. All detection sources route alerts to PagerDuty.
+
+Step 2 — Acknowledgment: The primary on-call engineer acknowledges the alert in PagerDuty within five minutes. Acknowledgment signals that a human is aware of the alert and actively investigating. Failure to acknowledge triggers escalation to the secondary.
+
+Step 3 — Initial Triage: The responding engineer performs an initial triage to assess the scope and severity of the issue. Triage should take no more than ten minutes. The engineer checks relevant dashboards in Grafana, reviews recent deployments in the deployment log, examines error rates and latency metrics, and reviews recent changes in infrastructure configuration. Based on the triage, the engineer assigns an initial severity level and opens an incident in PagerDuty.
+
+Step 4 — Incident Declaration: For P0 and P1 incidents, the responding engineer declares an official incident by posting a message in the #incidents Slack channel using the standard incident declaration template and creating an incident document in the shared incident log. The incident document is a running record of timeline, hypotheses, actions taken, and current status.
+
+Step 5 — Role Assignment: For P0 incidents, roles must be assigned within ten minutes of declaration. The Incident Commander owns the overall response, coordinates the team, makes decisions, and provides status updates. The Incident Commander does not do hands-on technical work. The Technical Lead owns the technical investigation and remediation. The Communications Lead owns internal and external communications including the status page. For P1 incidents, one person may hold multiple roles if team size requires it.
+
+Step 6 — Investigation and Mitigation: The technical lead and supporting engineers investigate root cause while simultaneously pursuing mitigations that reduce or eliminate customer impact. Mitigation takes priority over root cause analysis. Common mitigations include rolling back a recent deployment, disabling a feature flag, routing traffic away from a degraded service, increasing capacity, or failing over to a backup system. All actions taken during an incident must be logged in the incident document with a timestamp and the name of the engineer who took the action.
+
+Step 7 — Resolution: An incident is resolved when customer impact has been eliminated or reduced to an acceptable level and the system is stable. The incident commander declares resolution and posts a resolution message in #incidents. The status page is updated to reflect resolution. Post-resolution monitoring continues for at least one hour after resolution to confirm stability.
+
+Step 8 — Post-Incident Review: All P0 and P1 incidents require a postmortem. P2 incidents may require a postmortem at the discretion of the engineering manager.
+
+Escalation Process
+
+The on-call engineer should escalate proactively rather than waiting until it is too late. The following situations always require immediate escalation to the on-call engineering manager: any P0 incident, a P1 incident that has not been mitigated within two hours, any incident involving customer data exposure or security compromise, any incident requiring changes to production infrastructure that the on-call engineer is not authorized to make independently, or any incident where the on-call engineer is uncertain about the severity or impact.
+
+The on-call manager should escalate to the CTO and CEO for: any P0 incident (within fifteen minutes of declaration), any confirmed customer data breach, any incident that is likely to result in an SLA violation with a customer contract, and any incident that requires communication to regulators or law enforcement.
+
+Communication Templates
+
+Status Page Update — Initial:
+Headline: Investigating [brief description of impact]
+Body: We are aware of an issue affecting [service/feature]. Our team is actively investigating. We will provide an update within [timeframe]. We apologize for the inconvenience.
+
+Status Page Update — Progress:
+Headline: Update: [brief description of current status]
+Body: We have identified [root cause or probable cause if known]. We are [current action being taken]. Current impact: [describe]. Expected resolution: [timeframe or "we will update in X minutes"].
+
+Status Page Update — Resolved:
+Headline: Resolved: [brief description of issue]
+Body: The issue affecting [service/feature] has been resolved as of [time UTC]. The root cause was [brief description]. We will share a full postmortem [within X days / link]. We apologize for the disruption.
+
+Slack Incident Declaration Template:
+:red_circle: INCIDENT DECLARED — [P0/P1]
+Service: [affected service]
+Impact: [describe customer impact]
+Status: Investigating
+Incident Commander: [@name]
+Technical Lead: [@name]
+Comms Lead: [@name]
+Incident Doc: [link]
+
+Postmortem Template
+
+All P0 and P1 postmortems must be completed and published within five business days of incident resolution. The postmortem is written by the technical lead or incident commander with contributions from all participants. Postmortems are blameless: they identify systemic causes, process gaps, and tooling failures. They do not assign personal fault.
+
+Postmortem sections:
+
+Incident Summary: One to three sentences describing what happened, when, and the customer impact.
+
+Timeline: A chronological log of events including detection, escalations, actions taken, and resolution. Each entry includes a timestamp in UTC and the name of the engineer or system responsible for the entry.
+
+Root Cause Analysis: A description of the technical root cause or causes. Use the five-whys technique to trace from the immediate cause back to the underlying systemic factor. Avoid stopping at the first proximate cause.
+
+Customer Impact: Quantified description of impact including number of affected customers or requests, duration of degradation, and whether any SLAs were breached.
+
+What Went Well: A list of things that worked as intended during the incident response. This section is not an excuse for what went wrong — it identifies practices and tools to preserve.
+
+What Could Be Improved: A list of specific gaps identified during the response. Be concrete.
+
+Action Items: A numbered list of specific, assigned action items with a named owner and a target completion date. Each action item should address one of the items identified in the previous section. Action items are tracked in Jira and reviewed at the weekly engineering sync.
+
+Postmortems are shared with the full Engineering organization and summarized for the customer-facing status page if the incident was customer-visible. Postmortems are stored in the shared incident log and reviewed quarterly by the Engineering leadership team.
+
+SLA Summary
+
+P0: Acknowledge in 5 minutes, status page update in 30 minutes, resolution target 4 hours, executive notification in 15 minutes.
+P1: Acknowledge in 5 minutes, status page update in 60 minutes, resolution target 8 hours, manager notification in 30 minutes.
+P2: Acknowledge in 30 minutes, resolution target 24 hours.
+P3: Acknowledge in 2 hours during business hours, resolution target 72 hours.
+
+Repeated SLA breaches for the same service or component are treated as systemic reliability risks and escalated to engineering leadership for remediation planning.

@@ -1,0 +1,169 @@
+Apex Systems Health and Benefits Guide
+Effective January 1, 2026
+
+This guide describes the health and welfare benefits available to eligible Apex Systems employees. Benefits eligibility begins on the first day of the month following your hire date, unless your hire date falls on the first of the month, in which case coverage begins on your hire date. Dependents eligible for coverage include your legal spouse or domestic partner, and your children up to age twenty-six regardless of student or marital status. Benefits enrollment is managed through the company's benefits administration portal. This document provides plan summaries; refer to the Summary Plan Descriptions for complete coverage details, exclusions, and limitations.
+
+Medical Plans
+
+Apex Systems offers two medical plan options: the Preferred Provider Organization plan and the High Deductible Health Plan. Both plans are administered through the company's carrier network. Employees must elect one plan during open enrollment or within thirty days of a qualifying life event.
+
+Preferred Provider Organization Plan
+
+The PPO plan provides broad access to in-network and out-of-network providers. In-network services are available through the carrier's national provider network. Employees are not required to select a primary care physician and do not need a referral to see a specialist.
+
+In-network deductible: $500 per individual, $1,000 per family. Out-of-pocket maximum: $3,500 per individual, $7,000 per family. After the out-of-pocket maximum is reached, the plan pays one hundred percent of covered in-network services for the remainder of the plan year.
+
+In-network cost-sharing: Primary care visits are subject to a $25 copay after the deductible is met. Specialist visits are subject to a $50 copay after the deductible is met. Preventive care services including annual physicals, immunizations, and cancer screenings are covered at one hundred percent with no deductible requirement, in compliance with the Affordable Care Act preventive care mandate. Emergency room visits are subject to a $150 copay. Urgent care visits are subject to a $40 copay. Inpatient hospital services are covered at eighty percent after the deductible. Outpatient surgery is covered at eighty percent after the deductible.
+
+Prescription drug coverage under the PPO: Tier 1 generic drugs are $10 per thirty-day supply. Tier 2 preferred brand drugs are $35 per thirty-day supply. Tier 3 non-preferred brand drugs are $70 per thirty-day supply. Specialty drugs are subject to twenty percent coinsurance with a $150 maximum per prescription. A ninety-day supply is available through the mail-order pharmacy program at two and a half times the thirty-day copay.
+
+Out-of-network coverage under the PPO is available but subject to higher cost-sharing. Out-of-network deductible: $1,500 per individual, $3,000 per family. Out-of-network coinsurance: sixty percent paid by the plan, forty percent paid by the employee, after the deductible. Out-of-network out-of-pocket maximum: $6,000 per individual, $12,000 per family.
+
+Monthly premium contributions for the PPO:
+Employee only: Employee pays $85, Company pays $520.
+Employee plus spouse or domestic partner: Employee pays $215, Company pays $890.
+Employee plus children: Employee pays $185, Company pays $810.
+Employee plus family: Employee pays $310, Company pays $1,150.
+
+High Deductible Health Plan
+
+The HDHP is a lower-premium plan with higher deductibles that qualifies as an HSA-eligible health plan under IRS rules. Because the HDHP carries significantly lower monthly premiums than the PPO, it is designed to be paired with a Health Savings Account. Employees who are generally healthy, have low expected medical utilization, or who want to build tax-advantaged savings for future healthcare costs often find the HDHP to be the more financially efficient choice when total annual cost — premiums plus out-of-pocket spending — is considered.
+
+Deductibles and Out-of-Pocket Maximums
+
+The HDHP has a higher deductible than the PPO, meaning employees pay the full cost of most services until the deductible is met. The in-network deductible is $1,500 per individual and $3,000 per family. For family coverage, the family deductible is an aggregate deductible: any combination of family members' expenses counts toward the single $3,000 threshold, and the plan begins paying once that combined total is reached. This differs from plans with embedded individual deductibles, where each family member must satisfy their own deductible independently.
+
+The in-network out-of-pocket maximum is $4,000 per individual and $8,000 per family. This is the most any covered individual or family will pay in a plan year for in-network covered services. After the out-of-pocket maximum is reached, the plan pays one hundred percent of covered in-network services for the remainder of the plan year. Out-of-pocket accumulation includes deductible payments, coinsurance, and copays, but not premiums.
+
+Preventive care is covered at one hundred percent before the deductible under the HDHP, consistent with ACA requirements. This means annual physicals, immunizations, and cancer screenings do not require the deductible to be met first. All other covered services — including office visits, specialist visits, diagnostic tests, and most prescriptions — apply to the deductible before the plan contributes.
+
+In-Network Cost-Sharing After Deductible
+
+Once the deductible is satisfied, all covered in-network services are paid at eighty percent by the plan and twenty percent by the employee (coinsurance), until the out-of-pocket maximum is reached. The HDHP does not use fixed copays for office visits or specialist visits. Every service is subject to coinsurance only. Emergency room visits are covered at eighty percent coinsurance after the deductible. Inpatient hospital stays and outpatient surgery are also covered at eighty percent coinsurance after the deductible.
+
+Prescription Drug Coverage Under the HDHP
+
+All prescriptions are subject to the deductible — there are no pre-deductible copays for medications, with the exception of preventive medications designated by the carrier. After the deductible is met, cost-sharing mirrors the PPO: Tier 1 generic drugs are $10 per thirty-day supply, Tier 2 preferred brand drugs are $35, Tier 3 non-preferred brand drugs are $70, and specialty drugs are subject to twenty percent coinsurance with a $150 per-prescription maximum. Preventive medications on the carrier's designated preventive drug list are available at the Tier 1 or Tier 2 copay even before the deductible is met.
+
+Monthly Premium Contributions for the HDHP
+
+Employee only: Employee pays $30, Company pays $390.
+Employee plus spouse or domestic partner: Employee pays $90, Company pays $680.
+Employee plus children: Employee pays $75, Company pays $625.
+Employee plus family: Employee pays $145, Company pays $920.
+
+Health Savings Account
+
+The HDHP is designed to be used in combination with a Health Savings Account. The HSA is a personal, tax-advantaged savings account that can only be opened and contributed to while enrolled in an IRS-qualifying high-deductible health plan. Employees enrolled in the Apex Systems HDHP are automatically eligible to open and fund an HSA.
+
+The HSA provides three distinct tax advantages, sometimes called the triple tax benefit. First, contributions made through payroll deductions are pre-tax, reducing your taxable income for the year. Second, funds in the HSA grow tax-free — any interest or investment returns accumulate without being taxed. Third, withdrawals for qualified medical expenses are tax-free at any time. Together, these three benefits make the HSA one of the most tax-efficient savings vehicles available.
+
+IRS contribution limits for 2026: $4,300 for individual coverage, $8,550 for family coverage. Employees age fifty-five and older may make an additional $1,000 catch-up contribution, for a total of $5,300 (individual) or $9,550 (family). These limits include both employee and employer contributions combined.
+
+Apex Systems makes an annual employer contribution to the HSA of $500 for employees with individual HDHP coverage and $1,000 for employees with family HDHP coverage. This contribution is deposited in January of the plan year. Employees who enroll in the HDHP mid-year due to a qualifying life event or as a new hire receive a prorated employer contribution based on the number of months remaining in the plan year.
+
+Employees may contribute up to the IRS annual limit themselves, subject to the combined employee-plus-employer cap. After accounting for the Apex Systems employer HSA contribution, an employee with individual coverage has $3,800 of personal contribution room remaining in 2026 ($4,300 IRS limit minus the $500 employer contribution). An employee with family coverage has $7,550 remaining ($8,550 minus $1,000).
+
+HSA funds roll over from year to year without limit or forfeiture. There is no use-it-or-lose-it requirement. Balances can accumulate across years and be invested once the account balance exceeds a threshold set by the HSA administrator. Many employees use the HSA as a long-term healthcare savings vehicle, paying current medical expenses out of pocket while allowing HSA balances to grow for future use, including healthcare costs in retirement.
+
+The HSA is owned by the employee, not by Apex Systems. If you leave the company, the full balance of your HSA belongs to you and may be used for qualified medical expenses at any time. After age sixty-five, HSA funds may be withdrawn for any purpose without penalty, though withdrawals for non-medical expenses are subject to ordinary income tax at that point, similar to a traditional IRA.
+
+Employees enrolled in the HDHP may not also contribute to a Healthcare Flexible Spending Account. The two accounts are not compatible under IRS rules. Employees who want to use pre-tax dollars for dependent care expenses may still contribute to a Dependent Care FSA regardless of their medical plan election.
+
+HDHP with HSA versus PPO: Choosing the Right Plan
+
+The right plan depends on your expected healthcare usage, your financial situation, and your tolerance for variable out-of-pocket costs.
+
+The HDHP is recommended for employees who are generally healthy and anticipate low to moderate medical utilization in the coming year. HDHP premiums are approximately 40% lower than PPO premiums — an employee-only enrollee pays $30 per month on the HDHP versus $85 on the PPO, a saving of $660 per year. Add the $500 employer HSA contribution, and a healthy employee who incurs minimal medical expenses in a given year comes out meaningfully ahead on the HDHP even before making any personal HSA contributions. Employees who are building toward long-term financial security benefit from the HSA's ability to accumulate and invest balances over time.
+
+The PPO tends to be the better choice for employees with predictable, significant healthcare needs. If you or a covered dependent regularly sees specialists, takes ongoing brand-name medications, or anticipates a planned procedure, the PPO's lower deductible ($500 individual versus $1,500), fixed copays, and richer prescription coverage reduce out-of-pocket exposure for those known expenses. The PPO also has an embedded individual deductible structure for family plans, which provides more predictability when only one family member has high utilization.
+
+To compare the two plans, consider your prior year's healthcare spending and estimate your likely costs for the coming year. Calculate total annual cost under each plan as: (monthly premium contribution times twelve) plus expected out-of-pocket medical and prescription costs. For many employees who are healthy, the HDHP total will be lower even after accounting for the higher deductible, particularly when the employer HSA contribution offsets initial out-of-pocket expenses. People Operations is available to assist with plan comparison questions during open enrollment.
+
+Flexible Spending Account
+
+Employees enrolled in the PPO or who are not enrolled in any medical plan may contribute to a Healthcare Flexible Spending Account. The FSA allows pre-tax contributions used for qualified medical, dental, and vision expenses not covered by insurance. The 2026 FSA contribution limit is $3,300. The FSA has a use-it-or-lose-it structure with a rollover provision: up to $640 of unused FSA funds may roll over to the following plan year. Unused amounts above the rollover limit are forfeited.
+
+A separate Dependent Care FSA is available to all employees regardless of medical plan enrollment. The Dependent Care FSA allows pre-tax contributions for eligible childcare and dependent care expenses. The 2026 contribution limit is $5,000 per household ($2,500 if married filing separately). Eligible expenses include daycare, before and after school care, and adult day programs for eligible dependents.
+
+Dental Plan
+
+Apex Systems offers dental coverage through a dental preferred provider organization network. The dental plan year runs from January 1 through December 31.
+
+Annual deductible: $50 per individual, $150 per family. Annual maximum benefit: $2,000 per covered person. Orthodontia lifetime maximum: $2,000 per covered person (adults and children).
+
+Coverage tiers:
+Preventive services (cleanings, exams, X-rays): covered at one hundred percent, no deductible. Routine services (basic fillings, extractions, simple oral surgery): covered at eighty percent after deductible. Major services (crowns, bridges, dentures, root canals, periodontal surgery): covered at fifty percent after deductible. Orthodontia: covered at fifty percent up to the lifetime maximum; waiting period of twelve months applies.
+
+Monthly premium contributions for dental:
+Employee only: Employee pays $8, Company pays $42.
+Employee plus spouse or domestic partner: Employee pays $18, Company pays $76.
+Employee plus children: Employee pays $22, Company pays $88.
+Employee plus family: Employee pays $32, Company pays $118.
+
+Vision Plan
+
+Apex Systems offers vision coverage through a vision care network. The plan covers routine eye exams and an allowance for eyeglass frames, lenses, or contact lenses.
+
+In-network benefits:
+Annual eye exam: covered at one hundred percent with no copay, once per plan year. Eyeglass frames: $200 allowance, once per plan year. Single vision, bifocal, or trifocal lenses: covered at one hundred percent after $25 copay, once per plan year. Contact lens fitting and evaluation: covered at one hundred percent after $25 copay. Contact lenses in lieu of glasses: $200 allowance per plan year.
+
+Out-of-network reimbursement is available at reduced benefit levels: eye exam up to $50, frames up to $75, lenses up to $50 per pair.
+
+Monthly premium contributions for vision:
+Employee only: Employee pays $4, Company pays $12.
+Employee plus spouse or domestic partner: Employee pays $9, Company pays $22.
+Employee plus children: Employee pays $8, Company pays $20.
+Employee plus family: Employee pays $14, Company pays $34.
+
+Mental Health and Employee Assistance Program
+
+Apex Systems provides a comprehensive Employee Assistance Program at no cost to all employees and their household members regardless of medical plan enrollment. The EAP offers confidential counseling and support services.
+
+EAP services include: up to eight free counseling sessions per issue per year with a licensed therapist, financial counseling and planning services, legal consultations for personal matters, work-life balance coaching, crisis counseling available twenty-four hours a day seven days a week, and referral services for substance abuse treatment, childcare, elder care, and other personal needs.
+
+All EAP services are confidential. Apex Systems does not receive information about individual utilization of EAP services except aggregate usage reports.
+
+In addition to the EAP, mental health and substance use disorder services are covered under both medical plans at parity with medical and surgical benefits, as required by the Mental Health Parity and Addiction Equity Act. In-network mental health visits are subject to the same deductible and coinsurance as other medical services under the applicable plan.
+
+Employees may also access a mental health digital platform included at no additional cost, which provides on-demand therapy, coaching, and mental wellness resources including guided meditation, sleep tools, and stress management programs.
+
+Life Insurance and AD&D
+
+Basic life insurance and accidental death and dismemberment insurance are provided at no cost to all eligible employees. The basic life benefit is two times annual base salary, up to a maximum of $500,000. The AD&D benefit is equal to the life insurance benefit.
+
+Employees may purchase supplemental life insurance in increments of $10,000 up to eight times annual base salary or $1,000,000, whichever is less. Guaranteed issue is available for supplemental coverage up to $300,000 during the initial enrollment period without evidence of insurability. Coverage above the guaranteed issue amount requires evidence of insurability through medical underwriting.
+
+Supplemental life insurance for a spouse or domestic partner is available in increments of $10,000 up to $150,000. Dependent child life insurance is available at $10,000 per child. Premiums for supplemental coverage are paid by the employee through post-tax payroll deductions.
+
+Short-Term and Long-Term Disability
+
+Short-term disability insurance is provided at no cost to all eligible employees. The STD benefit replaces sixty percent of weekly base salary, up to a maximum of $2,500 per week. Benefits begin after a seven-calendar-day elimination period. The maximum benefit duration under STD is twelve weeks.
+
+Long-term disability insurance is provided at no cost to all eligible employees. The LTD benefit replaces sixty percent of monthly base salary, up to a maximum of $12,000 per month. Benefits begin after the STD benefit period ends or after a ninety-day elimination period, whichever is later. LTD benefits continue until age sixty-five, return to work, or death, subject to the plan's definition of disability and own-occupation provisions.
+
+Employees may purchase supplemental STD or LTD coverage to increase the benefit percentage. Details are available in the benefits portal.
+
+Wellness Stipend
+
+Each employee receives an annual wellness stipend of $600, paid as a taxable benefit in the first payroll of February. The wellness stipend may be used for any health and wellness purpose, including gym memberships, fitness equipment, fitness classes, ergonomic home office equipment, nutritional counseling, or any other expense the employee identifies as supporting their physical or mental wellness. No receipts or documentation are required; the stipend is provided as a flat annual payment.
+
+Gym and Fitness Reimbursement
+
+In addition to the wellness stipend, Apex Systems reimburses the cost of a gym membership, fitness studio membership, or digital fitness subscription up to $50 per month ($600 per year). Employees submit receipts through the expense management system under the fitness reimbursement category. Reimbursement is processed with the regular monthly expense cycle. This benefit is separate from and in addition to the wellness stipend.
+
+Open Enrollment
+
+Open enrollment takes place each year during November, typically for a two-week period. During open enrollment, employees may make changes to their medical, dental, and vision elections, adjust FSA contribution amounts, and enroll in or change supplemental life or disability coverage without a qualifying life event. Changes made during open enrollment take effect January 1 of the following plan year.
+
+Outside of open enrollment, benefit elections may only be changed within thirty days of a qualifying life event. Qualifying life events include: marriage or divorce, birth or adoption of a child, death of a dependent, loss of coverage under another plan, a dependent losing eligibility, or a change in employment status that affects benefits eligibility. Documentation of the qualifying life event must be submitted to People Operations within thirty days of the event. Retroactive changes are not permitted after the thirty-day window.
+
+Benefits are elected through the benefits administration portal. Employees who do not make an election during open enrollment are automatically re-enrolled in their prior year elections for medical, dental, and vision coverage at the new premium rates. FSA elections do not roll over automatically; employees must make a new FSA election each year.
+
+Employees who wish to waive medical coverage must complete a waiver form each plan year. Employees who waive medical coverage receive a monthly wellness contribution of $75 added to their paycheck in lieu of the employer medical contribution.
+
+People Operations conducts a benefits information session during open enrollment each year and maintains a benefits FAQ on the company intranet. Questions about plan details, eligibility, or claims issues should be directed to People Operations or to the carrier's member services line.
+
+COBRA Continuation Coverage
+
+Employees and covered dependents who lose eligibility for Apex Systems benefits due to a qualifying event — including termination of employment, reduction in hours, divorce, or a dependent aging off the plan — are eligible to continue coverage under COBRA for up to eighteen or thirty-six months depending on the qualifying event. COBRA premiums are the full cost of coverage plus a two percent administrative fee. COBRA election notices are sent by the benefits administrator within fourteen days of the qualifying event.
