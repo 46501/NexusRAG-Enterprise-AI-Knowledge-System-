@@ -32,6 +32,10 @@ export function useQuery() {
         const res = await api.post('/query', { query, stream: false })
         appendMessage({ role: 'assistant', content: res.data.answer, sources: res.data.sources ?? [] })
       } catch (err) {
+        if (err.response?.status === 401) {
+          window.location.href = '/login'
+          return
+        }
         const msg = err.response?.data?.detail ?? 'An error occurred while processing your request.'
         appendMessage({ role: 'assistant', content: msg, sources: [] })
       } finally {
@@ -51,6 +55,10 @@ export function useQuery() {
       })
 
       if (!res.ok) {
+        if (res.status === 401) {
+          window.location.href = '/login'
+          return
+        }
         let errDetail = 'Request failed'
         try {
           const err = await res.json()

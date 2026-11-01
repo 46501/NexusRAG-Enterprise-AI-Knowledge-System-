@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 
 from app.api.dependencies import get_current_user
-from app.db.models import User
+from app.db.models import RoleEnum, User
 from app.schemas.query import QueryRequest, QueryResponse
 from app.services.query_service import run_query, run_query_stream, _CITATION_RE
 from app.utils.logger import get_logger
@@ -19,6 +19,12 @@ async def query(
     body: QueryRequest,
     current_user: User = Depends(get_current_user),
 ):
+    if body.department and current_user.role not in (RoleEnum.admin, RoleEnum.demo_admin):
+        if body.department.lower() != current_user.role.value.lower():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this department. Please contact your administrator if you need access.",
+            )
     if not body.stream:
         try:
             result = await run_query(body.query, current_user.role, body.top_k)

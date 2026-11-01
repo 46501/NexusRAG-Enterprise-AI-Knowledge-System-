@@ -295,3 +295,4 @@ export default function CitationDrawer({ isOpen, onClose, sources = [], activeIn
     </div>
   )
 }
+

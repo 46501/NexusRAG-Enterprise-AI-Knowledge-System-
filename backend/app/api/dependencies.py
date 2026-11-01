@@ -27,6 +27,9 @@ async def get_current_user(
 def require_role(*roles: RoleEnum):
     async def _check(current_user: User = Depends(get_current_user)) -> User:
         if current_user.role not in roles:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient role")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this department. Please contact your administrator if you need access.",
+            )
         return current_user
     return _check

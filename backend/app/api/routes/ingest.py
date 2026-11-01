@@ -35,7 +35,7 @@ async def ingest_document(
             detail="File exceeds 20 MB limit",
         )
 
-    if current_user.role == RoleEnum.admin:
+    if current_user.role in (RoleEnum.admin, RoleEnum.demo_admin):
         if not department or department not in _DEPT_VALUES:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -43,6 +43,11 @@ async def ingest_document(
             )
         role_access = department
     else:
+        if department and department.lower() != current_user.role.value.lower():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this department. Please contact your administrator if you need access.",
+            )
         role_access = current_user.role.value
 
     _TEMP_DIR.mkdir(parents=True, exist_ok=True)

@@ -515,6 +515,29 @@ export default function LandingPage() {
 
   async function handleEnter(dept) {
     setError(null);
+
+    // 1. If already authenticated: navigate according to department RBAC
+    if (user) {
+      if (user.role === "admin" || user.role === "demo_admin") {
+        if (dept.key === "admin") {
+          navigate(user.role === "admin" ? "/admin-panel" : "/demo-admin");
+        } else {
+          navigate(`/chat/${dept.key}`);
+        }
+        return;
+      }
+
+      if (user.role.toLowerCase() === dept.key.toLowerCase()) {
+        navigate("/chat");
+        return;
+      }
+
+      // Authenticated user attempting to access unauthorized department -> Access Denied (DO NOT logout)
+      navigate(`/chat/${dept.key}`, { state: { targetDepartment: dept.key } });
+      return;
+    }
+
+    // 2. Unauthenticated visitor -> Quick demo login
     setLoading(dept.email);
     try {
       await logout();
