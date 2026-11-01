@@ -64,3 +64,39 @@ html.light .chat-scroll,
 html.light .doc-scroll {
   scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }
+
+@media print {
+  /* Hide non-printable navigation, buttons, inputs */
+  header,
+  nav,
+  aside,
+  button,
+  form,
+  .no-print {
+    display: none !important;
+  }
+
+  body, html {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .chat-scroll {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .citation-chip {
+    border: 1px solid #475569 !important;
+    color: #0f172a !important;
+    background: #f1f5f9 !important;
+  }
+}
+

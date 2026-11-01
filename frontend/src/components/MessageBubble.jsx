@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import SourceCard from './SourceCard'
 import { useTheme } from '../context/ThemeContext'
+import { copyToClipboard, formatSingleMessageBrief } from '../utils/exportUtils'
 
 const DEPT_BG = {
   hr: '#7c3aed',
@@ -35,12 +37,15 @@ export default function MessageBubble({
   sources,
   streaming,
   suggestedQuestions,
+  precedingUserQuery,
   onOpenCitation,
   onSelectSuggestion,
 }) {
   const { isDark } = useTheme()
   const isUser = role === 'user'
   const userBg = DEPT_BG[userRole] ?? '#374151'
+  const [copied, setCopied] = useState(false)
+  const [copiedBrief, setCopiedBrief] = useState(false)
 
   // Extract follow-up questions from content or props
   let cleanContent = content || ''
@@ -87,6 +92,23 @@ export default function MessageBubble({
     }
   }
 
+  async function handleCopyAnswer() {
+    const success = await copyToClipboard(cleanContent)
+    if (success) {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  async function handleCopyBrief() {
+    const brief = formatSingleMessageBrief(cleanContent, precedingUserQuery, sources, null, userRole)
+    const success = await copyToClipboard(brief)
+    if (success) {
+      setCopiedBrief(true)
+      setTimeout(() => setCopiedBrief(false), 2000)
+    }
+  }
+
   return (
     <div
       className={`flex flex-col gap-2 ${isUser ? 'items-end' : 'items-start'}`}
@@ -128,6 +150,41 @@ export default function MessageBubble({
               onClick={() => onOpenCitation && onOpenCitation(s.index, sources)}
             />
           ))}
+        </div>
+      )}
+
+      {/* Quick Action Toolbar (Copy & Share Brief) */}
+      {!isUser && !streaming && cleanContent && (
+        <div className="no-print flex items-center gap-2 mt-0.5 max-w-[78%]">
+          <button
+            type="button"
+            onClick={handleCopyAnswer}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all opacity-60 hover:opacity-100 cursor-pointer"
+            style={{
+              background: isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9',
+              border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+              color: isDark ? 'rgba(255,255,255,0.75)' : '#475569',
+            }}
+            title="Copy clean answer text"
+          >
+            <span>{copied ? '✓' : '📋'}</span>
+            <span>{copied ? 'Copied' : 'Copy'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCopyBrief}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all opacity-60 hover:opacity-100 cursor-pointer"
+            style={{
+              background: isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9',
+              border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+              color: isDark ? 'rgba(255,255,255,0.75)' : '#475569',
+            }}
+            title="Copy executive brief with verified sources for Slack / Teams"
+          >
+            <span>{copiedBrief ? '✓' : '🏛️'}</span>
+            <span>{copiedBrief ? 'Brief Copied!' : 'Share Brief'}</span>
+          </button>
         </div>
       )}
 

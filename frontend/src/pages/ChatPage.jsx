@@ -8,6 +8,7 @@ import Chat from '../components/Chat'
 import BackHomeButton from '../components/BackHomeButton'
 import ThemeToggle from '../components/ThemeToggle'
 import CitationDrawer from '../components/CitationDrawer'
+import ExportModal from '../components/ExportModal'
 import api from '../services/api'
 
 const DEPT = {
@@ -43,6 +44,7 @@ export default function ChatPage() {
   const [docsLoading, setDocsLoading] = useState(true)
   const [selectedDoc, setSelectedDoc] = useState(null)
   const [activeCitation, setActiveCitation] = useState({ isOpen: false, index: 1, sources: [] })
+  const [exportOpen, setExportOpen] = useState(false)
 
   const d = DEPT[user?.role]
   const suggestions = SUGGESTIONS[user?.role] ?? []
@@ -101,23 +103,44 @@ export default function ChatPage() {
               </div>
             )}
             {messages.length > 0 && (
-              <button
-                type="button"
-                onClick={clearMessages}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer hover:opacity-100 opacity-80"
-                style={{
-                  background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9',
-                  border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
-                  color: isDark ? 'rgba(255,255,255,0.85)' : '#334155',
-                }}
-                title="Start a fresh conversation thread"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                <span>New Chat</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={clearMessages}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer hover:opacity-100 opacity-80"
+                  style={{
+                    background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9',
+                    border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
+                    color: isDark ? 'rgba(255,255,255,0.85)' : '#334155',
+                  }}
+                  title="Start a fresh conversation thread"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span>New Chat</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setExportOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer hover:opacity-100 opacity-80"
+                  style={{
+                    background: isDark ? 'rgba(99,102,241,0.12)' : '#eef2ff',
+                    border: isDark ? '1px solid rgba(99,102,241,0.30)' : '1px solid #c7d2fe',
+                    color: isDark ? '#c7d2fe' : '#4f46e5',
+                  }}
+                  title="Export session as PDF, Markdown, or Slack brief (0 MB RAM)"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>Export & Share</span>
+                </button>
+              </div>
             )}
             {/* Mobile docs toggle */}
             <button
@@ -207,6 +230,21 @@ export default function ChatPage() {
               </div>
             ) : (
               <>
+                {/* Print-Only Corporate Briefing Header */}
+                <div className="hidden print-only mb-8 pb-4 border-b-2 border-slate-900">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h1 className="text-xl font-bold text-slate-900 tracking-tight">NexusRAG Enterprise Knowledge Briefing</h1>
+                      <p className="text-xs text-slate-500 uppercase tracking-widest mt-0.5">Verified Corporate Knowledge Documentation</p>
+                    </div>
+                    <div className="text-right text-xs text-slate-600">
+                      <p className="font-semibold text-slate-900">{DEPT_NAMES[user?.role] || user?.role} Department</p>
+                      <p>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                      <p className="text-[10px] text-amber-800 font-bold uppercase mt-0.5">CONFIDENTIAL // INTERNAL ONLY</p>
+                    </div>
+                  </div>
+                </div>
+
                 {messages.map((msg, i) => (
                   msg.role === 'assistant' && !msg.content ? null :
                   <MessageBubble
@@ -217,6 +255,7 @@ export default function ChatPage() {
                     sources={msg.sources}
                     streaming={msg.streaming}
                     suggestedQuestions={msg.suggestedQuestions}
+                    precedingUserQuery={i > 0 && messages[i - 1]?.role === 'user' ? messages[i - 1].content : null}
                     onOpenCitation={(idx, srcList) => setActiveCitation({ isOpen: true, index: idx, sources: srcList || [] })}
                     onSelectSuggestion={(q) => sendQuery(q, true)}
                   />
@@ -342,6 +381,15 @@ export default function ChatPage() {
         onClose={() => setActiveCitation((prev) => ({ ...prev, isOpen: false }))}
         sources={activeCitation.sources}
         activeIndex={activeCitation.index}
+      />
+
+      {/* Corporate Export & Share Modal (0 MB RAM) */}
+      <ExportModal
+        isOpen={exportOpen}
+        onClose={() => setExportOpen(false)}
+        messages={messages}
+        user={user}
+        department={user?.role}
       />
 
     </div>
