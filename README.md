@@ -1,5 +1,17 @@
 # Enterprise RAG with RBAC and Hybrid Search
 
+> **Live Deployment:**
+> - **Frontend (Vercel):** [https://nexus-rag-enterprise-ai-knowledge-s.vercel.app](https://nexus-rag-enterprise-ai-knowledge-s.vercel.app/)
+> - **Backend (Render):** [https://nexusrag-enterprise-ai-knowledge-system.onrender.com](https://nexusrag-enterprise-ai-knowledge-system.onrender.com/health)
+>
+> **Demo Accounts:**
+> | Role | Email | Password |
+> |---|---|---|
+> | **Admin** | `admin@example.com` | `admin-demo-2026` |
+> | **HR** | `hr@demo.com` | `hr-demo-2026` |
+> | **Engineering** | `engineering@demo.com` | `eng-demo-2026` |
+> | **Finance** | `finance@demo.com` | `fin-demo-2026` |
+
 A retrieval-augmented generation system modeling a role-restricted enterprise knowledge base split across three departments: HR, Engineering, and Finance. Each user role can only retrieve documents tagged for their department. RBAC is enforced at the Qdrant query layer, not in application code after retrieval, so restricted chunks never enter the LLM context. Retrieval uses a hybrid pipeline: dense embeddings fused with BM25 sparse scores via Reciprocal Rank Fusion, followed by a cross-encoder reranker. Answers stream back token by token via SSE.
 
 ---
