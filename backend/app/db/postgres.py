@@ -11,6 +11,10 @@ _settings = get_settings()
 
 engine = create_async_engine(
     _settings.database_url,
+    connect_args={
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
+    },
     pool_size=5,
     max_overflow=10,
     pool_pre_ping=True,
