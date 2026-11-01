@@ -863,7 +863,7 @@ export default function LandingPage() {
           boxSizing: "border-box",
         }}
       >
-        <p style={{ fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", margin: "0 0 56px 0" }}>
+        <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.75)", margin: "0 0 56px 0" }}>
           How it works
         </p>
         <div className="how-it-works-grid">
@@ -898,7 +898,7 @@ export default function LandingPage() {
           boxSizing: "border-box",
         }}
       >
-        <p style={{ fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", margin: "0 0 48px 0" }}>
+        <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.75)", margin: "0 0 48px 0" }}>
           Built on
         </p>
         <div className="built-on-grid">
