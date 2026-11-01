@@ -612,29 +612,6 @@ export default function LandingPage() {
 
               <button
                 type="button"
-                onClick={() => {
-                  const dest = user.role === "admin" ? "/admin-panel" : user.role === "demo_admin" ? "/demo-admin" : "/chat";
-                  navigate(dest);
-                }}
-                style={{
-                  background: "#7c3aed",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "6px 14px",
-                  fontSize: "0.78rem",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "background 0.15s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#6d28d9")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#7c3aed")}
-              >
-                Go to Workspace &rarr;
-              </button>
-
-              <button
-                type="button"
                 onClick={async () => {
                   await logout();
                   navigate("/login");
