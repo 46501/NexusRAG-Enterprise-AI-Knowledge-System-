@@ -23,13 +23,31 @@ export function useQuery() {
     })
   }
 
+  function clearMessages() {
+    setMessages([])
+    setThinking(false)
+    pendingTokensRef.current = []
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current)
+      rafIdRef.current = null
+    }
+  }
+
   async function sendQuery(query, stream = true) {
+    const history = messages
+      .filter((m) => m.content && (m.role === 'user' || m.role === 'assistant'))
+      .slice(-6)
+      .map((m) => ({
+        role: m.role,
+        content: m.content.split('---FOLLOW_UPS---')[0].trim(),
+      }))
+
     appendMessage({ role: 'user', content: query })
     setThinking(true)
 
     if (!stream) {
       try {
-        const res = await api.post('/query', { query, stream: false })
+        const res = await api.post('/query', { query, stream: false, history })
         appendMessage({
           role: 'assistant',
           content: res.data.answer,
@@ -56,7 +74,7 @@ export function useQuery() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, stream: true }),
+        body: JSON.stringify({ query, stream: true, history }),
       })
 
       if (!res.ok) {
@@ -135,5 +153,5 @@ export function useQuery() {
     }
   }
 
-  return { messages, thinking, sendQuery }
+  return { messages, thinking, sendQuery, clearMessages }
 }

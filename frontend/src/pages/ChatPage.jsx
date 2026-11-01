@@ -35,7 +35,7 @@ function fmtDate(iso) {
 export default function ChatPage() {
   const { user, logout } = useAuth()
   const { isDark } = useTheme()
-  const { messages, thinking, sendQuery } = useQuery()
+  const { messages, thinking, sendQuery, clearMessages } = useQuery()
   const bottomRef = useRef(null)
   const messagesRef = useRef(null)
   const [docsOpen, setDocsOpen] = useState(false)
@@ -99,6 +99,25 @@ export default function ChatPage() {
                   {DEPT_NAMES[user?.role] ?? user?.role}
                 </span>
               </div>
+            )}
+            {messages.length > 0 && (
+              <button
+                type="button"
+                onClick={clearMessages}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer hover:opacity-100 opacity-80"
+                style={{
+                  background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9',
+                  border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
+                  color: isDark ? 'rgba(255,255,255,0.85)' : '#334155',
+                }}
+                title="Start a fresh conversation thread"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>New Chat</span>
+              </button>
             )}
             {/* Mobile docs toggle */}
             <button

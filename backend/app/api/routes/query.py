@@ -26,9 +26,10 @@ async def query(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to access this department. Please contact your administrator if you need access.",
             )
+    history_dicts = [m.model_dump() for m in body.history] if body.history else None
     if not body.stream:
         try:
-            result = await run_query(body.query, current_user.role, body.top_k)
+            result = await run_query(body.query, current_user.role, body.top_k, history=history_dicts)
         except Exception:
             logger.exception("Query route error user=%s", current_user.id)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Query failed")
@@ -39,7 +40,7 @@ async def query(
         )
 
     try:
-        stream, sources = await run_query_stream(body.query, current_user.role, body.top_k)
+        stream, sources = await run_query_stream(body.query, current_user.role, body.top_k, history=history_dicts)
     except Exception:
         logger.exception("Stream query route error user=%s", current_user.id)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Query failed")

@@ -55,6 +55,29 @@ def parse_answer_and_follow_ups(raw_text: str) -> tuple[str, list[str]]:
     return raw_text, []
 
 
+def _format_history_contents(
+    history: list[dict] | None, prompt_text: str
+) -> list[types.Content]:
+    contents: list[types.Content] = []
+    if history:
+        for msg in history[-6:]:
+            role = "user" if msg.get("role") == "user" else "model"
+            raw_text = msg.get("content", "")
+            text = raw_text.split("---FOLLOW_UPS---")[0].strip()
+            if not text:
+                continue
+            if contents and contents[-1].role == role:
+                contents[-1].parts.append(types.Part.from_text(text=text))
+            else:
+                contents.append(types.Content(role=role, parts=[types.Part.from_text(text=text)]))
+
+    if contents and contents[-1].role == "user":
+        contents[-1].parts.append(types.Part.from_text(text=prompt_text))
+    else:
+        contents.append(types.Content(role="user", parts=[types.Part.from_text(text=prompt_text)]))
+    return contents
+
+
 def load_generator() -> None:
     global _client
     if not _s.gemini_api_key:
@@ -99,7 +122,9 @@ def _extract_sources(chunks: list[dict]) -> list[dict]:
     return sources
 
 
-async def generate(query: str, chunks: list[dict]) -> dict:
+async def generate(
+    query: str, chunks: list[dict], history: list[dict] | None = None
+) -> dict:
     client = get_client()
 
     if not chunks:
@@ -110,9 +135,10 @@ async def generate(query: str, chunks: list[dict]) -> dict:
             max_output_tokens=256,
         )
         try:
+            contents = _format_history_contents(history, query)
             response = await client.aio.models.generate_content(
                 model=_s.gemini_model,
-                contents=query,
+                contents=contents,
                 config=config,
             )
             answer = response.text or _FALLBACK
@@ -143,9 +169,10 @@ async def generate(query: str, chunks: list[dict]) -> dict:
     )
 
     try:
+        contents = _format_history_contents(history, prompt)
         response = await client.aio.models.generate_content(
             model=_s.gemini_model,
-            contents=prompt,
+            contents=contents,
             config=config,
         )
         answer = response.text or _FALLBACK
@@ -168,7 +195,9 @@ async def generate(query: str, chunks: list[dict]) -> dict:
         raise
 
 
-async def generate_stream(query: str, chunks: list[dict]) -> AsyncIterator[str]:
+async def generate_stream(
+    query: str, chunks: list[dict], history: list[dict] | None = None
+) -> AsyncIterator[str]:
     client = get_client()
 
     if not chunks:
@@ -179,9 +208,10 @@ async def generate_stream(query: str, chunks: list[dict]) -> AsyncIterator[str]:
             max_output_tokens=256,
         )
         try:
+            contents = _format_history_contents(history, query)
             stream = await client.aio.models.generate_content_stream(
                 model=_s.gemini_model,
-                contents=query,
+                contents=contents,
                 config=config,
             )
             async for chunk in stream:
@@ -214,9 +244,10 @@ async def generate_stream(query: str, chunks: list[dict]) -> AsyncIterator[str]:
     )
 
     try:
+        contents = _format_history_contents(history, prompt)
         stream = await client.aio.models.generate_content_stream(
             model=_s.gemini_model,
-            contents=prompt,
+            contents=contents,
             config=config,
         )
         async for chunk in stream:

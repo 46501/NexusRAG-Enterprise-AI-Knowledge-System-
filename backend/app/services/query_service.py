@@ -63,23 +63,70 @@ def _preprocess_query(query: str) -> str:
     return stripped
 
 
+_FOLLOW_UP_PRONOUNS_RE = re.compile(
+    r"\b(it|its|this|that|these|those|they|them|their|he|him|she|her|the same)\b",
+    re.IGNORECASE,
+)
+
+_FOLLOW_UP_STARTERS_RE = re.compile(
+    r"^\s*(and|also|what about|how about|who approves|who is eligible|can (?:i|we|it|they)|is (?:there|it)|how do i apply|how to apply|why|when does it|where do i|what if)\b",
+    re.IGNORECASE,
+)
+
+
+def _is_follow_up_query(query: str) -> bool:
+    q = query.strip()
+    if len(q.split()) <= 4:
+        return True
+    if _FOLLOW_UP_STARTERS_RE.search(q):
+        return True
+    if _FOLLOW_UP_PRONOUNS_RE.search(q):
+        return True
+    return False
+
+
+def _extract_recent_topic(history: list[dict] | None) -> str | None:
+    if not history:
+        return None
+    for msg in reversed(history):
+        if msg.get("role") == "user":
+            content = msg.get("content", "").strip()
+            if content and not _is_greeting(content):
+                return _preprocess_query(content)
+    return None
+
+
+def _build_retrieval_query(query: str, history: list[dict] | None) -> str:
+    cleaned = _preprocess_query(query)
+    if not history:
+        return cleaned
+    if _is_follow_up_query(cleaned):
+        prior_topic = _extract_recent_topic(history)
+        if prior_topic and prior_topic.lower() not in cleaned.lower():
+            logger.info("Contextual retrieval query enriched: %r + topic %r", cleaned[:50], prior_topic[:50])
+            return f"{cleaned} ({prior_topic})"
+    return cleaned
+
+
 @traceable(name="run_query", run_type="chain")
-async def run_query(query: str, role: RoleEnum, top_k: int) -> dict:
+async def run_query(
+    query: str, role: RoleEnum, top_k: int, history: list[dict] | None = None
+) -> dict:
     if _is_greeting(query):
         logger.info("Greeting detected, skipping retrieval query=%r", query[:60])
-        result = await generate(query, [])
+        result = await generate(query, [], history=history)
         result["sources"] = []
         return result
 
     allowed_roles = get_allowed_collections(role)
-    retrieval_query = _preprocess_query(query)
+    retrieval_query = _build_retrieval_query(query, history)
 
     try:
         async with _state.get_semaphore():
             logger.info("RAG query start role=%s query=%r retrieval_query=%r", role, query[:60], retrieval_query[:60])
             fused = await hybrid_search(retrieval_query, allowed_roles, top_k=top_k * 3)
             ranked = _normalize_rerank_scores(rerank(retrieval_query, fused, top_k=top_k))
-            result = await generate(query, ranked)
+            result = await generate(query, ranked, history=history)
     except Exception:
         logger.exception("RAG query failed role=%s query=%r", role, query[:60])
         raise
@@ -94,14 +141,14 @@ async def run_query(query: str, role: RoleEnum, top_k: int) -> dict:
 
 @traceable(name="run_query_stream", run_type="chain")
 async def run_query_stream(
-    query: str, role: RoleEnum, top_k: int
+    query: str, role: RoleEnum, top_k: int, history: list[dict] | None = None
 ) -> tuple[AsyncIterator[str], list[dict]]:
     if _is_greeting(query):
         logger.info("Greeting detected, skipping retrieval query=%r", query[:60])
-        return generate_stream(query, []), []
+        return generate_stream(query, [], history=history), []
 
     allowed_roles = get_allowed_collections(role)
-    retrieval_query = _preprocess_query(query)
+    retrieval_query = _build_retrieval_query(query, history)
 
     try:
         async with _state.get_semaphore():
@@ -124,4 +171,4 @@ async def run_query_stream(
         for i, c in enumerate(ranked)
     ]
 
-    return generate_stream(query, ranked), sources
+    return generate_stream(query, ranked, history=history), sources
