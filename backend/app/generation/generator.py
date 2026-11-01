@@ -75,6 +75,7 @@ def _extract_sources(chunks: list[dict]) -> list[dict]:
             "department": meta.get("role_access", "unknown"),
             "chunk_id": chunk.get("id"),
             "rerank_score": chunk.get("rerank_score"),
+            "text": chunk.get("text", ""),
         })
     return sources
 

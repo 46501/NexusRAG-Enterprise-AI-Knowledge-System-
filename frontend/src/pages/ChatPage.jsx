@@ -7,6 +7,7 @@ import ThinkingIndicator from '../components/ThinkingIndicator'
 import Chat from '../components/Chat'
 import BackHomeButton from '../components/BackHomeButton'
 import ThemeToggle from '../components/ThemeToggle'
+import CitationDrawer from '../components/CitationDrawer'
 import api from '../services/api'
 
 const DEPT = {
@@ -41,6 +42,7 @@ export default function ChatPage() {
   const [docs, setDocs] = useState([])
   const [docsLoading, setDocsLoading] = useState(true)
   const [selectedDoc, setSelectedDoc] = useState(null)
+  const [activeCitation, setActiveCitation] = useState({ isOpen: false, index: 1, sources: [] })
 
   const d = DEPT[user?.role]
   const suggestions = SUGGESTIONS[user?.role] ?? []
@@ -195,6 +197,7 @@ export default function ChatPage() {
                     userRole={user?.role}
                     sources={msg.sources}
                     streaming={msg.streaming}
+                    onOpenCitation={(idx, srcList) => setActiveCitation({ isOpen: true, index: idx, sources: srcList || [] })}
                   />
                 ))}
                 {thinking && <ThinkingIndicator />}
@@ -311,6 +314,14 @@ export default function ChatPage() {
           </button>
         </div>
       </aside>
+
+      {/* Interactive Citation Inspector Drawer */}
+      <CitationDrawer
+        isOpen={activeCitation.isOpen}
+        onClose={() => setActiveCitation((prev) => ({ ...prev, isOpen: false }))}
+        sources={activeCitation.sources}
+        activeIndex={activeCitation.index}
+      />
 
     </div>
   )

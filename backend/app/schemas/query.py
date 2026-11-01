@@ -11,8 +11,9 @@ class SourceSchema(BaseModel):
     index: int
     source: str
     department: str
-    chunk_id: str | None
-    rerank_score: float | None
+    chunk_id: str | None = None
+    rerank_score: float | None = None
+    text: str | None = None
 
 
 class QueryResponse(BaseModel):

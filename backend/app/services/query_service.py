@@ -119,6 +119,7 @@ async def run_query_stream(
             "department": c.get("metadata", {}).get("role_access", "unknown"),
             "chunk_id": c.get("id"),
             "rerank_score": c.get("rerank_score"),
+            "text": c.get("text", ""),
         }
         for i, c in enumerate(ranked)
     ]
