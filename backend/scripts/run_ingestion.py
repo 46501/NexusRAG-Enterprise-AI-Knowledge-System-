@@ -18,19 +18,7 @@ import os
 logger = get_logger(__name__)
 _s = get_settings()
 
-_raw = os.getenv("DATABASE_URL")
-if _raw:
-    if _raw.startswith("postgres://"):
-        _SYNC_DB_URL = _raw.replace("postgres://", "postgresql+psycopg2://", 1)
-    elif _raw.startswith("postgresql://") and not _raw.startswith("postgresql+psycopg2://"):
-        _SYNC_DB_URL = _raw.replace("postgresql://", "postgresql+psycopg2://", 1)
-    else:
-        _SYNC_DB_URL = _raw
-else:
-    _SYNC_DB_URL = (
-        f"postgresql+psycopg2://{_s.postgres_user}:{_s.postgres_password}"
-        f"@{_s.postgres_host}:{_s.postgres_port}/{_s.postgres_db}"
-    )
+_SYNC_DB_URL = _s.database_url.replace("+asyncpg", "+psycopg2")
 
 DEPARTMENT_MAP = {
     "hr": "hr",
