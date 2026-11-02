@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import SourceCard from './SourceCard'
 import FeedbackModal from './FeedbackModal'
 import { useTheme } from '../context/ThemeContext'
@@ -113,6 +113,78 @@ export default function MessageBubble({
       setCopiedBrief(true)
       setTimeout(() => setCopiedBrief(false), 2000)
     }
+  }
+
+  const [isSpeaking, setIsSpeaking] = useState(false)
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel()
+      }
+    }
+  }, [])
+
+  function cleanTextForSpeech(raw) {
+    if (!raw) return ''
+    return raw
+      .replace(/\[\d+\]/g, '')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/#{1,6}\s+/g, '')
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/---FOLLOW_UPS[\s\S]*$/i, '')
+      .replace(/Suggested Follow-ups:[\s\S]*$/i, '')
+      .replace(/\n+/g, ' ')
+      .trim()
+  }
+
+  function handleToggleSpeech() {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      alert('Audio speech readout is not supported by your browser.')
+      return
+    }
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+      return
+    }
+
+    window.speechSynthesis.cancel()
+
+    const textToRead = cleanTextForSpeech(cleanContent)
+    if (!textToRead) return
+
+    const utterance = new SpeechSynthesisUtterance(textToRead)
+    utterance.rate = 1.02
+    utterance.pitch = 1.0
+
+    const voices = window.speechSynthesis.getVoices()
+    const naturalVoice = voices.find(
+      (v) =>
+        (v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Daniel') || v.name.includes('Karen'))) ||
+        v.lang === 'en-US'
+    ) || voices.find((v) => v.lang.startsWith('en'))
+
+    if (naturalVoice) {
+      utterance.voice = naturalVoice
+    }
+
+    utterance.onend = () => {
+      setIsSpeaking(false)
+    }
+
+    utterance.onerror = (e) => {
+      if (e.error !== 'canceled' && e.error !== 'interrupted') {
+        console.warn('Speech synthesis error:', e)
+      }
+      setIsSpeaking(false)
+    }
+
+    setIsSpeaking(true)
+    window.speechSynthesis.speak(utterance)
   }
 
   async function handleThumbsUp() {
@@ -245,6 +317,29 @@ export default function MessageBubble({
           >
             <span>{copiedBrief ? '✓' : '🏛️'}</span>
             <span>{copiedBrief ? 'Brief Copied!' : 'Share Brief'}</span>
+          </button>
+
+          {/* Audio Read Aloud Button */}
+          <button
+            type="button"
+            onClick={handleToggleSpeech}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer opacity-70 hover:opacity-100"
+            style={{
+              background: isSpeaking
+                ? isDark ? 'rgba(99, 102, 241, 0.25)' : '#e0e7ff'
+                : isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9',
+              border: isSpeaking
+                ? isDark ? '1px solid #818cf8' : '1px solid #6366f1'
+                : isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+              color: isSpeaking
+                ? isDark ? '#c7d2fe' : '#4338ca'
+                : isDark ? 'rgba(255,255,255,0.75)' : '#475569',
+              boxShadow: isSpeaking ? '0 0 10px rgba(99, 102, 241, 0.3)' : 'none',
+            }}
+            title={isSpeaking ? 'Stop reading aloud' : 'Listen to executive audio briefing'}
+          >
+            <span>{isSpeaking ? '⏹' : '🔊'}</span>
+            <span>{isSpeaking ? 'Stop' : 'Listen'}</span>
           </button>
 
           <span className="opacity-25 text-xs mx-0.5">|</span>
