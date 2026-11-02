@@ -29,3 +29,4 @@ class QueryResponse(BaseModel):
     answer: str
     sources: list[SourceSchema]
     suggested_questions: list[str] = []
+    confidence_score: float | None = None

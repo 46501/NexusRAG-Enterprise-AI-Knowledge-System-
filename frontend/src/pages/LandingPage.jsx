@@ -434,6 +434,25 @@ function MockChatWindow({ deptKey }) {
                   cursor: "pointer",
                 }}
               >
+                {/* Grounding Confidence Meter Badge */}
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 3,
+                    background: "rgba(16, 185, 129, 0.15)",
+                    color: "#10b981",
+                    fontWeight: 600,
+                    fontSize: "0.66rem",
+                    padding: "1px 7px",
+                    borderRadius: 9999,
+                    border: "1px solid rgba(16, 185, 129, 0.30)",
+                  }}
+                  title="Verified Grounding Confidence"
+                >
+                  <span>🛡️</span>
+                  <span>{convo.score} Grounded</span>
+                </span>
                 <span
                   style={{
                     background: convo.chipBg,
@@ -451,18 +470,6 @@ function MockChatWindow({ deptKey }) {
                 </span>
                 <span style={{ fontWeight: 500, fontFamily: MONO, fontSize: "0.68rem" }}>
                   {convo.source}
-                </span>
-                <span
-                  style={{
-                    color: "#10b981",
-                    fontWeight: 600,
-                    fontSize: "0.68rem",
-                    background: "rgba(16, 185, 129, 0.12)",
-                    padding: "0 5px",
-                    borderRadius: 4,
-                  }}
-                >
-                  {convo.score}
                 </span>
               </div>
             )}

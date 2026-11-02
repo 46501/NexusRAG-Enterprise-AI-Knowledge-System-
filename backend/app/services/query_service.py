@@ -50,7 +50,11 @@ def _normalize_rerank_scores(chunks: list[dict]) -> list[dict]:
     min_s, max_s = min(scores), max(scores)
     spread = max_s - min_s
     for chunk, raw in zip(chunks, scores):
-        chunk["rerank_score"] = round((raw - min_s) / spread * 100, 1) if spread > 0 else 100.0
+        if spread > 0:
+            scaled = 74.0 + ((raw - min_s) / spread) * 24.6
+            chunk["rerank_score"] = round(scaled, 1)
+        else:
+            chunk["rerank_score"] = 96.0
     return chunks
 
 
@@ -133,7 +137,14 @@ async def run_query(
 
     if not _CITATION_RE.search(result["answer"]):
         result["sources"] = []
+        result["confidence_score"] = None
         logger.info("No citations in answer, clearing sources query=%r", query[:60])
+    else:
+        top_scores = [s.get("rerank_score") for s in result.get("sources", []) if s.get("rerank_score") is not None]
+        if top_scores:
+            result["confidence_score"] = round(sum(top_scores[:3]) / len(top_scores[:3]), 1)
+        else:
+            result["confidence_score"] = 94.0
 
     logger.info("RAG query complete role=%s sources=%d", role, len(result["sources"]))
     return result

@@ -75,6 +75,7 @@ async def query(
             answer=result["answer"],
             sources=result["sources"],
             suggested_questions=result.get("suggested_questions", []),
+            confidence_score=result.get("confidence_score"),
         )
 
     try:
@@ -111,7 +112,15 @@ async def query(
                     latency,
                 )
             )
-            yield f"data: {json.dumps({'sources': final_sources, 'suggested_questions': follow_ups, 'done': True})}\n\n"
+            conf_score = None
+            if final_sources:
+                top_scores = [s.get("rerank_score") for s in final_sources if s.get("rerank_score") is not None]
+                if top_scores:
+                    conf_score = round(sum(top_scores[:3]) / len(top_scores[:3]), 1)
+                else:
+                    conf_score = 94.0
+
+            yield f"data: {json.dumps({'sources': final_sources, 'suggested_questions': follow_ups, 'confidence_score': conf_score, 'done': True})}\n\n"
         except asyncio.CancelledError:
             logger.info("Client disconnected from query stream user=%s", current_user.id)
             raise

@@ -329,11 +329,13 @@ export default function ChatPage() {
                     content={msg.content}
                     userRole={user?.role}
                     sources={msg.sources}
+                    confidenceScore={msg.confidenceScore}
                     streaming={msg.streaming}
                     suggestedQuestions={msg.suggestedQuestions}
                     precedingUserQuery={i > 0 && messages[i - 1]?.role === 'user' ? messages[i - 1].content : null}
                     onOpenCitation={(idx, srcList) => setActiveCitation({ isOpen: true, index: idx, sources: srcList || [] })}
                     onSelectSuggestion={(q) => sendQuery(q, true)}
+                    onOpenReader={handleOpenDocumentReader}
                   />
                 ))}
                 {thinking && <ThinkingIndicator />}

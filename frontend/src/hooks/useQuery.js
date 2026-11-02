@@ -53,6 +53,7 @@ export function useQuery() {
           content: res.data.answer,
           sources: res.data.sources ?? [],
           suggestedQuestions: res.data.suggested_questions ?? [],
+          confidenceScore: res.data.confidence_score ?? null,
         })
       } catch (err) {
         if (err.response?.status === 401) {
@@ -130,6 +131,7 @@ export function useQuery() {
               updateLastAssistant({
                 sources: payload.sources ?? [],
                 suggestedQuestions: payload.suggested_questions ?? [],
+                confidenceScore: payload.confidence_score ?? null,
                 streaming: false,
               })
             }

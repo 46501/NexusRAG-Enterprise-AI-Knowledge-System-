@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import SourceCard from './SourceCard'
 import FeedbackModal from './FeedbackModal'
+import GroundingConfidenceBadge from './GroundingConfidenceBadge'
 import { useTheme } from '../context/ThemeContext'
 import { copyToClipboard, formatSingleMessageBrief } from '../utils/exportUtils'
 import { submitFeedback } from '../services/feedback'
@@ -37,11 +38,13 @@ export default function MessageBubble({
   content,
   userRole,
   sources,
+  confidenceScore,
   streaming,
   suggestedQuestions,
   precedingUserQuery,
   onOpenCitation,
   onSelectSuggestion,
+  onOpenReader,
 }) {
   const { isDark } = useTheme()
   const isUser = role === 'user'
@@ -270,19 +273,31 @@ export default function MessageBubble({
         }
       </div>
 
-      {/* Sources Bar */}
-      {unique.length > 0 && (
-        <div className="flex gap-1.5 flex-wrap max-w-[78%] items-center">
-          <span className="text-[10px] font-semibold uppercase tracking-wider mr-1 opacity-50">
-            Sources:
-          </span>
-          {unique.map((s) => (
-            <SourceCard
-              key={s.chunk_id || s.index}
-              source={s}
-              onClick={() => onOpenCitation && onOpenCitation(s.index, sources)}
-            />
-          ))}
+      {/* Grounding Confidence & Sources Bar */}
+      {!isUser && !streaming && ((sources && sources.length > 0) || confidenceScore != null) && (
+        <div className="flex gap-2 flex-wrap max-w-[85%] items-center mt-1">
+          <GroundingConfidenceBadge
+            confidenceScore={confidenceScore}
+            sources={sources}
+            department={userRole}
+            onOpenCitation={onOpenCitation}
+            onOpenReader={onOpenReader}
+          />
+
+          {unique.length > 0 && (
+            <div className="flex gap-1.5 flex-wrap items-center">
+              <span className="text-[10px] font-semibold uppercase tracking-wider opacity-40 ml-1">
+                Sources:
+              </span>
+              {unique.map((s) => (
+                <SourceCard
+                  key={s.chunk_id || s.index}
+                  source={s}
+                  onClick={() => onOpenCitation && onOpenCitation(s.index, sources)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
