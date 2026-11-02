@@ -24,7 +24,7 @@ function toBoldHtml(text, isDark) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/\*\*(.*?)\*\*/gs, `<strong style="font-weight:600;color:${strongColor}">$1</strong>`)
-    .replace(/\[(\d+)\]/g, `<button type="button" data-citation="$1" class="citation-chip cursor-pointer" title="Inspect source [$1]" style="display:inline-flex;align-items:center;justify-content:center;padding:1px 6px;margin:0 2px;font-size:11px;font-weight:700;line-height:1.2;border-radius:6px;background:${citationBg};color:${citationColor};border:1px solid ${citationBorder};vertical-align:baseline;transition:transform 0.15s ease;">[$1]</button>`)
+    .replace(/\[(\d+)\]/g, `<button type="button" data-citation="$1" class="citation-chip cursor-pointer" title="Inspect source [$1]" style="display:inline-flex;align-items:center;justify-content:center;padding:2px 7px;margin:0 2px;font-size:11px;font-weight:600;line-height:1.2;border-radius:9999px;background:${citationBg};color:${citationColor};border:1px solid ${citationBorder};box-shadow:0 1px 2px rgba(0,0,0,0.05);vertical-align:middle;transition:all 0.15s ease;">[$1]</button>`)
 
   return escaped
     .split(/\n\n+/)
@@ -166,18 +166,29 @@ export default function MessageBubble({
     >
       <div
         onClick={handleContentClick}
-        className="max-w-[78%] text-sm"
+        className="max-w-[82%] text-sm"
         style={{
-          padding: '18px 20px',
-          lineHeight: 1.6,
-          borderRadius: isUser ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
+          padding: isUser ? '12px 18px' : '15px 20px',
+          lineHeight: 1.62,
+          borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+          letterSpacing: '-0.005em',
           ...(isUser
-            ? { background: userBg, color: '#fff', whiteSpace: 'pre-wrap' }
+            ? {
+                background: userBg,
+                color: '#fff',
+                whiteSpace: 'pre-wrap',
+                boxShadow: `0 4px 14px ${userBg}40`,
+                fontWeight: 450,
+              }
             : {
-                background: isDark ? 'rgba(255,255,255,0.06)' : '#ffffff',
-                color: isDark ? 'rgba(255,255,255,0.85)' : '#0f172a',
-                border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
-                boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)',
+                background: isDark
+                  ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.03) 100%)'
+                  : '#ffffff',
+                color: isDark ? 'rgba(255,255,255,0.92)' : '#0f172a',
+                border: isDark ? '1px solid rgba(255,255,255,0.09)' : '1px solid #e2e8f0',
+                boxShadow: isDark
+                  ? '0 6px 20px -4px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)'
+                  : '0 4px 14px -2px rgba(15,23,42,0.05), 0 1px 2px rgba(0,0,0,0.02)',
               })
         }}
       >

@@ -17,30 +17,40 @@ export default function SourceCard({ source, onClick }) {
       onClick={onClick}
       className="inline-flex items-center gap-1.5 shrink-0 px-2.5 py-1 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
       style={{
-        background: isDark ? 'rgba(255,255,255,0.06)' : '#ffffff',
-        border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
+        background: isDark
+          ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)'
+          : '#ffffff',
+        border: isDark ? '1px solid rgba(255,255,255,0.14)' : '1px solid #cbd5e1',
         borderRadius: 9999,
-        boxShadow: isDark ? 'none' : '0 1px 2px rgba(0,0,0,0.03)',
+        boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.2)' : '0 1px 3px rgba(0,0,0,0.04)',
         fontFamily: 'inherit',
       }}
       title={`Click to inspect passage from ${source.source}`}
     >
-      <span className="text-[10px] font-bold opacity-75">
+      <span className="text-[10px] font-semibold opacity-60">
         [{source.index}]
       </span>
       {d && (
         <span
-          className="text-[10px] font-medium px-1.5 py-px"
+          className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5"
           style={{ background: d.bg, color: d.text, border: `1px solid ${d.border}`, borderRadius: 9999 }}
         >
           {source.department}
         </span>
       )}
-      <span className="text-[11px] font-medium truncate max-w-[120px]" style={{ color: isDark ? 'rgba(255,255,255,0.80)' : '#334155' }}>
+      <span className="text-[11px] font-medium truncate max-w-[130px]" style={{ color: isDark ? 'rgba(255,255,255,0.85)' : '#334155' }}>
         {source.source}
       </span>
       {pct != null && (
-        <span className="text-[11px] tabular-nums font-medium" style={{ color: isDark ? 'rgba(255,255,255,0.40)' : '#64748b' }}>{pct}%</span>
+        <span
+          className="text-[10px] tabular-nums font-semibold px-1 rounded"
+          style={{
+            background: 'rgba(16,185,129,0.12)',
+            color: '#10b981',
+          }}
+        >
+          {pct}%
+        </span>
       )}
     </button>
   )

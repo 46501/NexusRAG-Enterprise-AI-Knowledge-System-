@@ -80,25 +80,36 @@ export default function ChatPage() {
         className="flex flex-col min-w-0 overflow-hidden"
         style={{ flex: 1, borderRight: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e2e8f0' }}
       >
-        {/* Header */}
+        {/* Header (macOS Titlebar Style) */}
         <header
           className="flex-shrink-0 flex items-center justify-between px-4 sm:px-5 py-2.5 sm:py-3 z-10 transition-colors"
           style={{
-            background: isDark ? 'rgba(10,10,10,0.85)' : 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(8px)',
-            borderBottom: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e2e8f0'
+            background: isDark ? 'rgba(15, 17, 26, 0.82)' : 'rgba(255, 255, 255, 0.85)',
+            backdropFilter: 'blur(16px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+            borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0'
           }}
         >
           <div className="flex items-center gap-3">
+            {/* macOS Window Controls */}
+            <div className="hidden sm:flex items-center gap-1.5 mr-1 select-none">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] border border-[#e0443e]/80 inline-block shadow-xs" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] border border-[#dea123]/80 inline-block shadow-xs" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] border border-[#1aab29]/80 inline-block shadow-xs" />
+            </div>
+
             <BackHomeButton />
             {d && (
               <div className="flex items-center gap-2">
                 <span
                   className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ background: d.dot, boxShadow: `0 0 6px ${d.dot}` }}
+                  style={{ background: d.dot, boxShadow: `0 0 8px ${d.dot}` }}
                 />
-                <span className="text-sm font-semibold" style={{ color: isDark ? '#fff' : '#0f172a', letterSpacing: '-0.01em' }}>
+                <span className="text-sm font-semibold tracking-tight" style={{ color: isDark ? '#fff' : '#0f172a' }}>
                   {DEPT_NAMES[user?.role] ?? user?.role}
+                </span>
+                <span className="hidden md:inline text-[11px] font-medium opacity-40">
+                  Workspace
                 </span>
               </div>
             )}
@@ -267,15 +278,16 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* Input */}
+        {/* Floating Input Area (macOS Floating Capsule Style) */}
         <div
-          className="flex-shrink-0 px-5 py-3.5 transition-colors"
+          className="flex-shrink-0 px-4 sm:px-6 pt-2 pb-5 transition-colors relative z-10"
           style={{
-            background: isDark ? 'rgba(10,10,10,0.90)' : 'rgba(255,255,255,0.90)',
-            borderTop: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e2e8f0'
+            background: isDark
+              ? 'linear-gradient(to top, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.7) 70%, transparent 100%)'
+              : 'linear-gradient(to top, rgba(248, 250, 252, 0.95) 0%, rgba(248, 250, 252, 0.7) 70%, transparent 100%)',
           }}
         >
-          <div className="max-w-[700px] mx-auto">
+          <div className="max-w-[720px] mx-auto">
             <Chat onSend={sendQuery} disabled={thinking} userRole={user?.role} />
           </div>
         </div>

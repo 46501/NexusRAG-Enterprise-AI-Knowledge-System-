@@ -33,3 +33,4 @@ class FeedbackListResponse(BaseModel):
     feedbacks: list[FeedbackItemResponse]
     total: int
     unresolved_count: int
+

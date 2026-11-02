@@ -213,75 +213,144 @@ function MockChatWindow({ deptKey }) {
   return (
     <div
       style={{
-        background: isDark ? "#0d0d0d" : "#ffffff",
-        border: isDark ? "1px solid rgba(255,255,255,0.25)" : "1px solid #e2e8f0",
-        boxShadow: isDark ? "none" : "0 10px 25px -5px rgba(0,0,0,0.06), 0 8px 10px -6px rgba(0,0,0,0.03)",
-        borderRadius: 12,
+        background: isDark
+          ? "linear-gradient(135deg, rgba(20, 22, 33, 0.88) 0%, rgba(14, 16, 24, 0.80) 100%)"
+          : "linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.88) 100%)",
+        backdropFilter: "blur(24px) saturate(180%)",
+        WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        border: isDark ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(0, 0, 0, 0.08)",
+        boxShadow: isDark
+          ? "0 28px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.12)"
+          : "0 24px 48px -10px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
+        borderRadius: 20,
         overflow: "hidden",
         fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
-        height: 404,
+        height: 420,
+        position: "relative",
       }}
     >
-      {/* header */}
+      {/* ── macOS Titlebar / Header ── */}
       <div
         style={{
-          padding: "10px 16px",
-          borderBottom: isDark ? "1px solid rgba(255,255,255,0.07)" : "1px solid #e2e8f0",
+          padding: "12px 16px",
+          borderBottom: isDark ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(0, 0, 0, 0.06)",
           display: "flex",
           alignItems: "center",
-          gap: 8,
+          justifyContent: "space-between",
           flexShrink: 0,
-          background: `${convo.accent}18`,
-          transition: "background 0.3s, opacity 0.22s",
-          opacity,
+          background: isDark ? "rgba(255, 255, 255, 0.02)" : "rgba(255, 255, 255, 0.5)",
+          position: "relative",
         }}
       >
-        <span
-          style={{
-            width: 7,
-            height: 7,
-            borderRadius: "50%",
-            background: convo.accent,
-            display: "inline-block",
-            boxShadow: `0 0 5px ${convo.accent}`,
-            flexShrink: 0,
-          }}
-        />
-        <span
-          style={{
-            fontSize: "0.7rem",
-            fontWeight: 600,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: isDark ? "rgba(255,255,255,0.65)" : "#334155",
-          }}
-        >
-          {convo.name}
-        </span>
-        <span
-          style={{
-            marginLeft: "auto",
-            fontSize: "0.58rem",
-            fontWeight: 500,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: isDark ? "rgba(255,255,255,0.2)" : "#94a3b8",
-          }}
-        >
-          Preview
-        </span>
-      </div>
+        {/* Left: macOS Traffic Lights */}
+        <div style={{ display: "flex", alignItems: "center", gap: 7, width: 72 }}>
+          <span
+            style={{
+              width: 11,
+              height: 11,
+              borderRadius: "50%",
+              background: "#ff5f56",
+              border: "1px solid rgba(224, 68, 62, 0.8)",
+              boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.4)",
+              display: "inline-block",
+            }}
+          />
+          <span
+            style={{
+              width: 11,
+              height: 11,
+              borderRadius: "50%",
+              background: "#ffbd2e",
+              border: "1px solid rgba(222, 161, 35, 0.8)",
+              boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.4)",
+              display: "inline-block",
+            }}
+          />
+          <span
+            style={{
+              width: 11,
+              height: 11,
+              borderRadius: "50%",
+              background: "#27c93f",
+              border: "1px solid rgba(26, 171, 41, 0.8)",
+              boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.4)",
+              display: "inline-block",
+            }}
+          />
+        </div>
 
-      {/* messages — flex:1 so they fill the remaining height, fade at bottom */}
-      <div style={{ position: "relative", flex: 1, overflow: "hidden" }}>
+        {/* Center: Department Indicator & Name */}
         <div
           style={{
-            padding: "16px",
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            transition: "opacity 0.22s",
+            opacity,
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: convo.accent,
+              boxShadow: `0 0 8px ${convo.accent}`,
+              display: "inline-block",
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              fontSize: "0.78rem",
+              fontWeight: 600,
+              letterSpacing: "-0.01em",
+              color: isDark ? "#ffffff" : "#0f172a",
+            }}
+          >
+            {convo.name}
+          </span>
+          <span
+            style={{
+              fontSize: "0.68rem",
+              fontWeight: 500,
+              color: isDark ? "rgba(255, 255, 255, 0.35)" : "#64748b",
+            }}
+          >
+            Workspace
+          </span>
+        </div>
+
+        {/* Right: Minimal Subtle Preview Pill */}
+        <div style={{ display: "flex", justifyContent: "flex-end", width: 72 }}>
+          <span
+            style={{
+              fontSize: "0.58rem",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              padding: "2px 7px",
+              borderRadius: 9999,
+              background: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.04)",
+              border: isDark ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(0, 0, 0, 0.06)",
+              color: isDark ? "rgba(255, 255, 255, 0.35)" : "#94a3b8",
+            }}
+          >
+            Preview
+          </span>
+        </div>
+      </div>
+
+      {/* ── Messages Container ── */}
+      <div style={{ position: "relative", flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div
+          style={{
+            padding: "16px 18px",
             display: "flex",
             flexDirection: "column",
-            gap: 12,
+            gap: 14,
             height: "100%",
             boxSizing: "border-box",
             overflowY: "hidden",
@@ -290,34 +359,43 @@ function MockChatWindow({ deptKey }) {
             opacity,
           }}
         >
+          {/* User Message (macOS Bubble) */}
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <div
               style={{
-                background: convo.bubbleAccent,
-                color: "#fff",
-                padding: "8px 14px",
-                borderRadius: "14px 4px 14px 14px",
-                fontSize: "0.8rem",
-                maxWidth: "75%",
+                background: `linear-gradient(135deg, ${convo.bubbleAccent} 0%, ${convo.accent} 100%)`,
+                color: "#ffffff",
+                padding: "9px 15px",
+                borderRadius: "18px 18px 4px 18px",
+                fontSize: "0.82rem",
+                maxWidth: "78%",
                 lineHeight: 1.5,
+                fontWeight: 500,
+                boxShadow: `0 4px 14px ${convo.bubbleAccent}35`,
+                letterSpacing: "-0.01em",
               }}
             >
               {convo.question}
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+          {/* Assistant Response (macOS Clean Glass Card) */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 9, alignItems: "flex-start" }}>
             <div
               style={{
-                background: isDark ? "rgba(255,255,255,0.05)" : "#f8fafc",
-                border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e2e8f0",
-                color: isDark ? "rgba(255,255,255,0.82)" : "#0f172a",
-                padding: "10px 14px",
-                borderRadius: "4px 14px 14px 14px",
-                fontSize: "0.8rem",
-                maxWidth: "88%",
-                lineHeight: 1.6,
-                minHeight: 20,
+                background: isDark ? "rgba(255, 255, 255, 0.05)" : "#ffffff",
+                border: isDark ? "1px solid rgba(255, 255, 255, 0.09)" : "1px solid #e2e8f0",
+                color: isDark ? "rgba(255, 255, 255, 0.90)" : "#0f172a",
+                padding: "12px 16px",
+                borderRadius: "18px 18px 18px 4px",
+                fontSize: "0.82rem",
+                maxWidth: "92%",
+                lineHeight: 1.62,
+                minHeight: 24,
+                boxShadow: isDark
+                  ? "0 4px 16px rgba(0, 0, 0, 0.2)"
+                  : "0 2px 8px rgba(0, 0, 0, 0.04)",
+                letterSpacing: "-0.005em",
               }}
             >
               {displayed || " "}
@@ -326,30 +404,34 @@ function MockChatWindow({ deptKey }) {
                   style={{
                     display: "inline-block",
                     width: 2,
-                    height: "0.9em",
-                    background: isDark ? "rgba(255,255,255,0.5)" : "#64748b",
-                    marginLeft: 2,
+                    height: "1em",
+                    background: convo.accent,
+                    marginLeft: 3,
                     verticalAlign: "text-bottom",
                     animation: "blink 0.8s step-end infinite",
+                    borderRadius: 1,
                   }}
                 />
               )}
             </div>
 
+            {/* Polished macOS Tag Citation Chip */}
             {done && (
               <div
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
-                  padding: "3px 10px",
-                  border: isDark ? "1px solid rgba(255,255,255,0.10)" : "1px solid #e2e8f0",
-                  background: isDark ? "rgba(255,255,255,0.04)" : "#ffffff",
+                  gap: 7,
+                  padding: "4px 10px 4px 6px",
+                  border: isDark ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid #e2e8f0",
+                  background: isDark ? "rgba(255, 255, 255, 0.06)" : "#ffffff",
+                  backdropFilter: "blur(12px)",
                   borderRadius: 9999,
-                  fontSize: "0.7rem",
-                  color: isDark ? "rgba(255,255,255,0.5)" : "#475569",
-                  animation: "fadeIn 0.35s ease",
-                  boxShadow: isDark ? "none" : "0 1px 2px rgba(0,0,0,0.04)",
+                  fontSize: "0.72rem",
+                  color: isDark ? "rgba(255, 255, 255, 0.7)" : "#475569",
+                  animation: "fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+                  boxShadow: isDark ? "0 2px 8px rgba(0, 0, 0, 0.2)" : "0 1px 3px rgba(0, 0, 0, 0.05)",
+                  cursor: "pointer",
                 }}
               >
                 <span
@@ -358,55 +440,109 @@ function MockChatWindow({ deptKey }) {
                     color: convo.chipText,
                     border: `1px solid ${convo.chipBorder}`,
                     borderRadius: 9999,
-                    padding: "1px 6px",
-                    fontSize: "0.65rem",
-                    fontWeight: 500,
+                    padding: "1px 7px",
+                    fontSize: "0.64rem",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
                   }}
                 >
                   {convo.label}
                 </span>
-                {convo.source}
-                <span style={{ color: isDark ? "rgba(255,255,255,0.25)" : "#94a3b8" }}>{convo.score}</span>
+                <span style={{ fontWeight: 500, fontFamily: MONO, fontSize: "0.68rem" }}>
+                  {convo.source}
+                </span>
+                <span
+                  style={{
+                    color: "#10b981",
+                    fontWeight: 600,
+                    fontSize: "0.68rem",
+                    background: "rgba(16, 185, 129, 0.12)",
+                    padding: "0 5px",
+                    borderRadius: 4,
+                  }}
+                >
+                  {convo.score}
+                </span>
               </div>
             )}
           </div>
         </div>
 
-        {/* fade-out gradient so text doesn't hard-clip */}
+        {/* Fade gradient mask */}
         <div
           style={{
             position: "absolute",
             bottom: 0,
             left: 0,
             right: 0,
-            height: 64,
-            background: isDark ? "linear-gradient(to bottom, transparent, #0d0d0d)" : "linear-gradient(to bottom, transparent, #ffffff)",
+            height: 48,
+            background: isDark
+              ? "linear-gradient(to bottom, transparent, rgba(15, 17, 26, 0.95))"
+              : "linear-gradient(to bottom, transparent, rgba(248, 250, 252, 0.95))",
             pointerEvents: "none",
           }}
         />
       </div>
 
-      {/* grayed input — signals non-interactive */}
+      {/* ── Modern Floating macOS Input Area ── */}
       <div
         style={{
-          padding: "10px 14px",
-          borderTop: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid #e2e8f0",
+          padding: "10px 14px 14px 14px",
           flexShrink: 0,
-          opacity: 0.6,
+          position: "relative",
+          zIndex: 10,
         }}
       >
         <div
           style={{
-            padding: "7px 12px",
-            background: isDark ? "rgba(255,255,255,0.04)" : "#f8fafc",
-            border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e2e8f0",
-            borderRadius: 8,
-            fontSize: "0.75rem",
-            color: isDark ? "rgba(255,255,255,0.2)" : "#94a3b8",
-            cursor: "default",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "8px 10px 8px 16px",
+            background: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.95)",
+            border: isDark ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid #cbd5e1",
+            borderRadius: 16,
+            boxShadow: isDark
+              ? "0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08)"
+              : "0 4px 16px rgba(0, 0, 0, 0.05), inset 0 1px 0 #ffffff",
+            transition: "all 0.2s ease",
           }}
         >
-          {convo.label === "hr" ? "Ask about HR policies…" : convo.label === "engineering" ? "Ask about Engineering docs…" : "Ask about Finance docs…"}
+          <span
+            style={{
+              fontSize: "0.78rem",
+              color: isDark ? "rgba(255, 255, 255, 0.35)" : "#94a3b8",
+              cursor: "default",
+              userSelect: "none",
+            }}
+          >
+            {convo.label === "hr"
+              ? "Ask anything about HR documents…"
+              : convo.label === "engineering"
+              ? "Ask anything about Engineering docs…"
+              : "Ask anything about Finance docs…"}
+          </span>
+
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              background: `linear-gradient(135deg, ${convo.bubbleAccent} 0%, ${convo.accent} 100%)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#ffffff",
+              boxShadow: `0 2px 6px ${convo.bubbleAccent}40`,
+              cursor: "default",
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5"></line>
+              <polyline points="5 12 12 5 19 12"></polyline>
+            </svg>
+          </div>
         </div>
       </div>
 
