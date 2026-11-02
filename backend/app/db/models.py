@@ -117,3 +117,29 @@ class EvalResult(Base):
 
     def __repr__(self) -> str:
         return f"<EvalResult run_id={self.run_id} metric={self.metric_name} score={self.score:.4f}>"
+
+
+class QueryLog(Base):
+    __tablename__ = "query_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    user_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    department: Mapped[RoleEnum] = mapped_column(SAEnum(RoleEnum), nullable=False, index=True)
+    query_text: Mapped[str] = mapped_column(String(1000), nullable=False)
+    sources_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    top_source: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    latency_ms: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )
+
+    def __repr__(self) -> str:
+        return f"<QueryLog id={self.id} dept={self.department} query={self.query_text[:30]}>"

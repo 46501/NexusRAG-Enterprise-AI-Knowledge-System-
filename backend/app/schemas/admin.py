@@ -49,3 +49,49 @@ class EvalResultResponse(BaseModel):
 class EvalRunStartResponse(BaseModel):
     status: str
     started_at: datetime
+
+
+class DepartmentAnalytics(BaseModel):
+    department: str
+    documents_count: int
+    chunks_count: int
+    users_count: int
+    queries_count: int
+    avg_latency_ms: float
+
+
+class SystemOverview(BaseModel):
+    total_documents: int
+    total_chunks: int
+    total_users: int
+    active_users: int
+    total_queries: int
+    avg_latency_ms: float
+    grounding_rate_pct: float
+
+
+class QueryLogItem(BaseModel):
+    id: str
+    user_email: str
+    department: str
+    query_text: str
+    sources_count: int
+    top_source: str | None = None
+    latency_ms: float
+    created_at: str
+
+
+class TopFaqItem(BaseModel):
+    query: str
+    department: str
+    count: int
+
+
+class AnalyticsResponse(BaseModel):
+    overview: SystemOverview
+    departments: list[DepartmentAnalytics]
+    recent_queries: list[QueryLogItem]
+    top_faqs: list[TopFaqItem]
+    unanswered_queries: list[QueryLogItem]
+    rag_eval_scores: dict[str, float]
+    system_health: dict

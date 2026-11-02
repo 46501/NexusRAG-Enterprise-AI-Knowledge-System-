@@ -7,6 +7,7 @@ from app.api.dependencies import get_current_user
 from app.db.models import RoleEnum, User
 from app.db.postgres import get_db
 from app.schemas.admin import (
+    AnalyticsResponse,
     DocumentListResponse,
     DocumentResponse,
     EvalResultResponse,
@@ -17,6 +18,7 @@ from app.schemas.admin import (
 from app.services.admin_service import (
     ServerUnderLoadError,
     delete_document,
+    get_admin_analytics,
     get_eval_results,
     list_documents,
     list_users,
@@ -120,3 +122,19 @@ async def post_eval_run(_: User = Depends(_require_admin)):
     except RuntimeError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
     return EvalRunStartResponse(**result)
+
+
+@router.get("/analytics", response_model=AnalyticsResponse)
+async def get_analytics(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(_require_admin),
+):
+    try:
+        data = await get_admin_analytics(db)
+        return AnalyticsResponse(**data)
+    except Exception:
+        logger.exception("Failed to load admin analytics")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to load analytics dashboard data",
+        )

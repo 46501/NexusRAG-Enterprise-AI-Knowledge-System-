@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import BackHomeButton from '../components/BackHomeButton'
 import ThemeToggle from '../components/ThemeToggle'
+import AnalyticsTab from '../components/AnalyticsTab'
 import api from '../services/api'
 
 const DEPARTMENTS = ['hr', 'engineering', 'finance']
@@ -137,6 +138,7 @@ function fmtTs(iso) {
 }
 
 const TABS = [
+  { key: 'analytics', label: 'Analytics' },
   { key: 'documents', label: 'Documents' },
   { key: 'users', label: 'Users' },
   { key: 'eval', label: 'Eval' },
@@ -146,7 +148,11 @@ export default function AdminPage() {
   const { user, logout } = useAuth()
   const { isDark } = useTheme()
   const isDemoAdmin = user?.role === 'demo_admin'
-  const [tab, setTab] = useState('documents')
+  const [tab, setTab] = useState('analytics')
+
+  const [analytics, setAnalytics] = useState(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsError, setAnalyticsError] = useState(null)
 
   const [docs, setDocs] = useState(null)
   const [docsLoading, setDocsLoading] = useState(false)
@@ -173,10 +179,24 @@ export default function AdminPage() {
   const [evalBaselineAt, setEvalBaselineAt] = useState(null)
 
   useEffect(() => {
+    if (tab === 'analytics' && analytics === null) fetchAnalytics()
     if (tab === 'documents' && docs === null) fetchDocs()
     if (tab === 'users' && users === null) fetchUsers()
     if (tab === 'eval' && evalResults === null) fetchEval()
   }, [tab])
+
+  async function fetchAnalytics() {
+    setAnalyticsLoading(true)
+    setAnalyticsError(null)
+    try {
+      const res = await api.get('/admin/analytics')
+      setAnalytics(res.data)
+    } catch (err) {
+      setAnalyticsError(err.response?.data?.detail ?? 'Failed to load analytics.')
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!evalPolling) return
@@ -346,6 +366,15 @@ export default function AdminPage() {
             </button>
           ))}
         </div>
+
+        {tab === 'analytics' && (
+          <AnalyticsTab
+            data={analytics}
+            loading={analyticsLoading}
+            error={analyticsError}
+            onRefresh={fetchAnalytics}
+          />
+        )}
 
         {tab === 'documents' && (
           <div className="space-y-6">

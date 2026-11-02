@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
@@ -15,6 +16,28 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/query", tags=["query"])
 
 
+async def _log_query_task(
+    user_id, user_email, department, query_text, sources_count, top_source, latency_ms
+) -> None:
+    try:
+        from app.db.postgres import AsyncSessionLocal
+        from app.db.models import QueryLog
+        async with AsyncSessionLocal() as session:
+            entry = QueryLog(
+                user_id=user_id,
+                user_email=user_email,
+                department=department,
+                query_text=query_text[:1000],
+                sources_count=sources_count,
+                top_source=top_source[:255] if top_source else None,
+                latency_ms=latency_ms,
+            )
+            session.add(entry)
+            await session.commit()
+    except Exception as exc:
+        logger.warning("Could not log query: %s", exc)
+
+
 @router.post("", response_model=QueryResponse)
 async def query(
     body: QueryRequest,
@@ -27,9 +50,24 @@ async def query(
                 detail="You don't have permission to access this department. Please contact your administrator if you need access.",
             )
     history_dicts = [m.model_dump() for m in body.history] if body.history else None
+    t0 = time.perf_counter()
     if not body.stream:
         try:
             result = await run_query(body.query, current_user.role, body.top_k, history=history_dicts)
+            latency = (time.perf_counter() - t0) * 1000
+            srcs = result.get("sources", [])
+            top_src = srcs[0]["source"] if srcs else None
+            asyncio.create_task(
+                _log_query_task(
+                    current_user.id,
+                    current_user.email,
+                    current_user.role,
+                    body.query,
+                    len(srcs),
+                    top_src,
+                    latency,
+                )
+            )
         except Exception:
             logger.exception("Query route error user=%s", current_user.id)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Query failed")
@@ -60,6 +98,19 @@ async def query(
             final_text = "".join(tokens)
             clean_answer, follow_ups = parse_answer_and_follow_ups(final_text)
             final_sources = sources if _CITATION_RE.search(final_text) else []
+            latency = (time.perf_counter() - t0) * 1000
+            top_src = final_sources[0]["source"] if final_sources else None
+            asyncio.create_task(
+                _log_query_task(
+                    current_user.id,
+                    current_user.email,
+                    current_user.role,
+                    body.query,
+                    len(final_sources),
+                    top_src,
+                    latency,
+                )
+            )
             yield f"data: {json.dumps({'sources': final_sources, 'suggested_questions': follow_ups, 'done': True})}\n\n"
         except asyncio.CancelledError:
             logger.info("Client disconnected from query stream user=%s", current_user.id)
