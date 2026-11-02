@@ -87,6 +87,14 @@ class TopFaqItem(BaseModel):
     count: int
 
 
+class FeedbackStats(BaseModel):
+    total_feedbacks: int = 0
+    positive_feedbacks: int = 0
+    negative_feedbacks: int = 0
+    satisfaction_rate_pct: float = 100.0
+    unresolved_feedbacks: int = 0
+
+
 class AnalyticsResponse(BaseModel):
     overview: SystemOverview
     departments: list[DepartmentAnalytics]
@@ -95,3 +103,4 @@ class AnalyticsResponse(BaseModel):
     unanswered_queries: list[QueryLogItem]
     rag_eval_scores: dict[str, float]
     system_health: dict
+    feedback_stats: FeedbackStats | None = None

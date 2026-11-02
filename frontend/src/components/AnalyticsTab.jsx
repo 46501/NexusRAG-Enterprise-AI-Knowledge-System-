@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTheme } from '../context/ThemeContext'
+import { getAdminFeedbacks, resolveFeedback } from '../services/feedback'
 
 const DEPT_COLORS = {
   hr: {
@@ -39,6 +40,43 @@ export default function AnalyticsTab({ data, loading, error, onRefresh }) {
   const { isDark } = useTheme()
   const [filterDept, setFilterDept] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [feedbacks, setFeedbacks] = useState([])
+  const [feedbackFilter, setFeedbackFilter] = useState('unresolved')
+  const [feedbacksLoading, setFeedbacksLoading] = useState(false)
+  const [resolvingId, setResolvingId] = useState(null)
+  const [unresolvedCount, setUnresolvedCount] = useState(0)
+  const [totalFeedbacksCount, setTotalFeedbacksCount] = useState(0)
+
+  const fetchFeedbacks = useCallback(async () => {
+    setFeedbacksLoading(true)
+    try {
+      const res = await getAdminFeedbacks({ status: feedbackFilter })
+      setFeedbacks(res.feedbacks || [])
+      setUnresolvedCount(res.unresolved_count ?? 0)
+      setTotalFeedbacksCount(res.total ?? 0)
+    } catch (err) {
+      console.error('Failed to load feedbacks', err)
+    } finally {
+      setFeedbacksLoading(false)
+    }
+  }, [feedbackFilter])
+
+  useEffect(() => {
+    fetchFeedbacks()
+  }, [fetchFeedbacks])
+
+  async function handleToggleResolve(feedbackId, currentResolved) {
+    setResolvingId(feedbackId)
+    try {
+      await resolveFeedback(feedbackId, !currentResolved)
+      await fetchFeedbacks()
+      if (onRefresh) onRefresh()
+    } catch (err) {
+      console.error('Failed to toggle feedback resolution', err)
+    } finally {
+      setResolvingId(null)
+    }
+  }
 
   if (loading && !data) {
     return (
@@ -66,7 +104,7 @@ export default function AnalyticsTab({ data, loading, error, onRefresh }) {
 
   if (!data) return null
 
-  const { overview, departments = [], recent_queries = [], top_faqs = [], unanswered_queries = [], rag_eval_scores = {}, system_health = {} } = data
+  const { overview, departments = [], recent_queries = [], top_faqs = [], unanswered_queries = [], rag_eval_scores = {}, system_health = {}, feedback_stats = {} } = data
 
   // Filter recent queries
   const filteredQueries = recent_queries.filter((q) => {
@@ -113,7 +151,7 @@ export default function AnalyticsTab({ data, loading, error, onRefresh }) {
       </div>
 
       {/* ── Row 1: KPI Metrics Grid ──────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* KPI 1: Knowledge Base Scale */}
         <div
           className={`p-5 rounded-2xl border transition-all ${
@@ -206,6 +244,35 @@ export default function AnalyticsTab({ data, loading, error, onRefresh }) {
               RAGAS Benchmark
             </span>
             <span className="text-[10px] opacity-40 font-mono">Precision: {(rag_eval_scores.context_precision * 100).toFixed(0)}%</span>
+          </div>
+        </div>
+
+        {/* KPI 5: Employee Answer Satisfaction */}
+        <div
+          className={`p-5 rounded-2xl border transition-all ${
+            isDark ? 'bg-white/[0.03] border-white/10' : 'bg-white border-slate-200 shadow-xs'
+          }`}
+        >
+          <div className="flex items-center justify-between text-xs opacity-60 mb-2 font-medium">
+            <span>Answer Satisfaction</span>
+            <span className="text-base">👍</span>
+          </div>
+          <div className={`text-2xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            {feedback_stats.satisfaction_rate_pct ?? 100}%
+          </div>
+          <div className="flex items-center justify-between text-xs mt-1">
+            <span className="opacity-60 font-mono">
+              {feedback_stats.positive_feedbacks ?? 0} 👍 / {feedback_stats.negative_feedbacks ?? 0} 👎
+            </span>
+            <span className={`font-semibold text-[11px] ${feedback_stats.unresolved_feedbacks > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+              {feedback_stats.unresolved_feedbacks ?? 0} pending
+            </span>
+          </div>
+          <div className={`h-1.5 w-full rounded-full mt-2.5 overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
+            <div
+              className={`h-full rounded-full ${(feedback_stats.satisfaction_rate_pct ?? 100) >= 80 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+              style={{ width: `${Math.min(feedback_stats.satisfaction_rate_pct ?? 100, 100)}%` }}
+            />
           </div>
         </div>
       </div>
@@ -477,7 +544,214 @@ export default function AnalyticsTab({ data, loading, error, onRefresh }) {
         </div>
       </div>
 
-      {/* ── Row 5: System Architecture & Infrastructure Health ──── */}
+      {/* ── Row 5: Answer Feedback & Flagged Responses Review Queue ── */}
+      <div
+        className={`p-5 rounded-2xl border ${
+          isDark ? 'bg-white/[0.02] border-white/10' : 'bg-white border-slate-200 shadow-xs'
+        }`}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-base">🚩</span>
+              <h4 className="text-sm font-semibold tracking-tight">Answer Feedback & Flagged Responses Queue</h4>
+              {unresolvedCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                  {unresolvedCount} Action Required
+                </span>
+              )}
+            </div>
+            <p className="text-xs opacity-60 mt-0.5">
+              Employee-reported inaccuracies, hallucinations, and missing citations. Resolve flags to ensure corporate knowledge accuracy.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-xl p-0.5 border text-xs" style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
+              <button
+                type="button"
+                onClick={() => setFeedbackFilter('unresolved')}
+                className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                  feedbackFilter === 'unresolved'
+                    ? isDark ? 'bg-white/15 text-white font-semibold' : 'bg-white text-slate-900 shadow-xs font-semibold'
+                    : 'opacity-60 hover:opacity-100'
+                }`}
+              >
+                Unresolved ({unresolvedCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFeedbackFilter('all')}
+                className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                  feedbackFilter === 'all'
+                    ? isDark ? 'bg-white/15 text-white font-semibold' : 'bg-white text-slate-900 shadow-xs font-semibold'
+                    : 'opacity-60 hover:opacity-100'
+                }`}
+              >
+                All ({totalFeedbacksCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFeedbackFilter('resolved')}
+                className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                  feedbackFilter === 'resolved'
+                    ? isDark ? 'bg-white/15 text-white font-semibold' : 'bg-white text-slate-900 shadow-xs font-semibold'
+                    : 'opacity-60 hover:opacity-100'
+                }`}
+              >
+                Resolved
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={fetchFeedbacks}
+              disabled={feedbacksLoading}
+              title="Refresh Feedback Queue"
+              className={`p-1.5 rounded-xl border text-xs transition-all cursor-pointer ${
+                isDark ? 'bg-white/5 hover:bg-white/10 border-white/10' : 'bg-slate-50 hover:bg-slate-100 border-slate-200'
+              }`}
+            >
+              <span className={feedbacksLoading ? 'animate-spin inline-block' : 'inline-block'}>↻</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className={`border-b text-[11px] uppercase tracking-wider opacity-50 ${isDark ? 'border-white/5 bg-white/[0.01]' : 'border-slate-100 bg-slate-50'}`}>
+                <th className="py-3 px-4 font-semibold">Date</th>
+                <th className="py-3 px-4 font-semibold">User / Dept</th>
+                <th className="py-3 px-4 font-semibold">Rating & Reason</th>
+                <th className="py-3 px-4 font-semibold">Query & Answer</th>
+                <th className="py-3 px-4 font-semibold">User Comment</th>
+                <th className="py-3 px-4 font-semibold text-right">Resolution</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y" style={{ borderColor: isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9' }}>
+              {feedbacksLoading && feedbacks.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center opacity-40">
+                    <span className="inline-block animate-spin mr-2">⏳</span> Loading feedback items...
+                  </td>
+                </tr>
+              ) : feedbacks.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center opacity-40">
+                    {feedbackFilter === 'unresolved'
+                      ? '✓ No unresolved flags! All employee feedback has been addressed.'
+                      : 'No feedback items recorded yet.'}
+                  </td>
+                </tr>
+              ) : (
+                feedbacks.map((f) => {
+                  const colors = DEPT_COLORS[f.department] || DEPT_COLORS.hr
+                  const isResolving = resolvingId === f.id
+
+                  return (
+                    <tr
+                      key={f.id}
+                      className={`transition-colors ${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-slate-50/80'}`}
+                    >
+                      <td className="py-3 px-4 whitespace-nowrap opacity-60 font-mono text-[10px]">
+                        {fmtDate(f.created_at)}
+                      </td>
+
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="font-medium text-xs">{f.user_email}</div>
+                        <span className={`inline-block mt-0.5 px-2 py-0.2 rounded text-[9px] font-semibold uppercase border ${isDark ? colors.badge : colors.lightBadge}`}>
+                          {f.department}
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {f.is_positive ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                            <span>👍</span>
+                            <span>Helpful</span>
+                          </span>
+                        ) : (
+                          <div className="flex flex-col gap-1 items-start">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                              <span>👎</span>
+                              <span>{f.feedback_reason || 'Flagged'}</span>
+                            </span>
+                            {f.sources_cited && (
+                              <span className="text-[10px] opacity-50 font-mono truncate max-w-[140px]" title={f.sources_cited}>
+                                🏷️ {f.sources_cited}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4 max-w-sm">
+                        <div className="font-semibold text-xs mb-1 line-clamp-1" title={f.query_text}>
+                          "{f.query_text}"
+                        </div>
+                        <div className="text-[11px] opacity-70 line-clamp-2" title={f.answer_text}>
+                          {f.answer_text}
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-4 max-w-xs">
+                        {f.feedback_comment ? (
+                          <div className={`p-2 rounded-lg text-[11px] italic border ${isDark ? 'bg-white/[0.03] border-white/5 text-amber-200/90' : 'bg-amber-50/70 border-amber-200 text-amber-900'}`}>
+                            "{f.feedback_comment}"
+                          </div>
+                        ) : (
+                          <span className="opacity-30 italic text-[11px]">No comment provided</span>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        {f.is_resolved ? (
+                          <div className="inline-flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1 text-[11px] text-emerald-500 font-semibold">
+                              <span>✓</span>
+                              <span>Resolved</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleResolve(f.id, true)}
+                              disabled={isResolving}
+                              className={`px-2 py-1 rounded-lg text-[10px] border transition-all cursor-pointer opacity-60 hover:opacity-100 ${
+                                isDark ? 'border-white/10 hover:bg-white/5' : 'border-slate-200 hover:bg-slate-100'
+                              }`}
+                              title="Re-open this feedback item"
+                            >
+                              {isResolving ? '...' : 'Reopen'}
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleResolve(f.id, false)}
+                            disabled={isResolving}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                          >
+                            {isResolving ? (
+                              <span>Saving...</span>
+                            ) : (
+                              <>
+                                <span>✓</span>
+                                <span>Mark Resolved</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Row 6: System Architecture & Infrastructure Health ──── */}
       <div
         className={`p-5 rounded-2xl border ${
           isDark ? 'bg-white/[0.02] border-white/10' : 'bg-white border-slate-200 shadow-xs'
@@ -528,3 +802,4 @@ export default function AnalyticsTab({ data, loading, error, onRefresh }) {
     </div>
   )
 }
+

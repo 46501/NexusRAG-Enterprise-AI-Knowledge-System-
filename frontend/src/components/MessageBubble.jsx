@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import SourceCard from './SourceCard'
+import FeedbackModal from './FeedbackModal'
 import { useTheme } from '../context/ThemeContext'
 import { copyToClipboard, formatSingleMessageBrief } from '../utils/exportUtils'
+import { submitFeedback } from '../services/feedback'
 
 const DEPT_BG = {
   hr: '#7c3aed',
@@ -46,6 +48,10 @@ export default function MessageBubble({
   const userBg = DEPT_BG[userRole] ?? '#374151'
   const [copied, setCopied] = useState(false)
   const [copiedBrief, setCopiedBrief] = useState(false)
+  const [feedbackStatus, setFeedbackStatus] = useState(null)
+  const [negativeReason, setNegativeReason] = useState(null)
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
+  const [submittingFeedback, setSubmittingFeedback] = useState(false)
 
   // Extract follow-up questions from content or props
   let cleanContent = content || ''
@@ -109,6 +115,50 @@ export default function MessageBubble({
     }
   }
 
+  async function handleThumbsUp() {
+    if (feedbackStatus === 'positive' || submittingFeedback) return
+    setSubmittingFeedback(true)
+    try {
+      const sourcesList = unique.map((s) => s.source || s.file_name).filter(Boolean).join(', ')
+      await submitFeedback({
+        query_text: precedingUserQuery || 'General query',
+        answer_text: cleanContent,
+        is_positive: true,
+        sources_cited: sourcesList || null,
+      })
+      setFeedbackStatus('positive')
+    } catch (err) {
+      console.error('Failed to submit positive feedback', err)
+    } finally {
+      setSubmittingFeedback(false)
+    }
+  }
+
+  function handleThumbsDownClick() {
+    if (submittingFeedback) return
+    setIsFeedbackModalOpen(true)
+  }
+
+  async function handleNegativeFeedbackSubmit({ reason, comment }) {
+    setSubmittingFeedback(true)
+    try {
+      const sourcesList = unique.map((s) => s.source || s.file_name).filter(Boolean).join(', ')
+      await submitFeedback({
+        query_text: precedingUserQuery || 'General query',
+        answer_text: cleanContent,
+        is_positive: false,
+        feedback_reason: reason,
+        feedback_comment: comment,
+        sources_cited: sourcesList || null,
+      })
+      setFeedbackStatus('negative')
+      setNegativeReason(reason)
+      setIsFeedbackModalOpen(false)
+    } finally {
+      setSubmittingFeedback(false)
+    }
+  }
+
   return (
     <div
       className={`flex flex-col gap-2 ${isUser ? 'items-end' : 'items-start'}`}
@@ -153,9 +203,9 @@ export default function MessageBubble({
         </div>
       )}
 
-      {/* Quick Action Toolbar (Copy & Share Brief) */}
+      {/* Quick Action Toolbar (Copy, Share Brief & Feedback) */}
       {!isUser && !streaming && cleanContent && (
-        <div className="no-print flex items-center gap-2 mt-0.5 max-w-[78%]">
+        <div className="no-print flex items-center gap-1.5 mt-0.5 max-w-[78%] flex-wrap">
           <button
             type="button"
             onClick={handleCopyAnswer}
@@ -185,8 +235,70 @@ export default function MessageBubble({
             <span>{copiedBrief ? '✓' : '🏛️'}</span>
             <span>{copiedBrief ? 'Brief Copied!' : 'Share Brief'}</span>
           </button>
+
+          <span className="opacity-25 text-xs mx-0.5">|</span>
+
+          {/* Thumbs Up Button */}
+          <button
+            type="button"
+            onClick={handleThumbsUp}
+            disabled={submittingFeedback || feedbackStatus === 'positive'}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer"
+            style={{
+              background: feedbackStatus === 'positive'
+                ? isDark ? 'rgba(16, 185, 129, 0.2)' : '#d1fae5'
+                : isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9',
+              border: feedbackStatus === 'positive'
+                ? isDark ? '1px solid #10b981' : '1px solid #34d399'
+                : isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+              color: feedbackStatus === 'positive'
+                ? isDark ? '#6ee7b7' : '#065f46'
+                : isDark ? 'rgba(255,255,255,0.75)' : '#475569',
+              opacity: feedbackStatus === 'negative' ? 0.4 : 1,
+            }}
+            title={feedbackStatus === 'positive' ? 'Rated helpful' : 'Mark as helpful'}
+          >
+            <span>👍</span>
+            {feedbackStatus === 'positive' && <span className="font-semibold">Helpful</span>}
+          </button>
+
+          {/* Thumbs Down Button */}
+          <button
+            type="button"
+            onClick={handleThumbsDownClick}
+            disabled={submittingFeedback}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer"
+            style={{
+              background: feedbackStatus === 'negative'
+                ? isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2'
+                : isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9',
+              border: feedbackStatus === 'negative'
+                ? isDark ? '1px solid #ef4444' : '1px solid #f87171'
+                : isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+              color: feedbackStatus === 'negative'
+                ? isDark ? '#fca5a5' : '#991b1b'
+                : isDark ? 'rgba(255,255,255,0.75)' : '#475569',
+              opacity: feedbackStatus === 'positive' ? 0.4 : 1,
+            }}
+            title={feedbackStatus === 'negative' ? `Flagged: ${negativeReason || 'Issue'}` : 'Report inaccurate or incomplete answer'}
+          >
+            <span>👎</span>
+            {feedbackStatus === 'negative' && (
+              <span className="font-semibold truncate max-w-[120px]">
+                {negativeReason ? `Flagged (${negativeReason})` : 'Flagged'}
+              </span>
+            )}
+          </button>
         </div>
       )}
+
+      {/* Negative Feedback Modal */}
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+        onSubmit={handleNegativeFeedbackSubmit}
+        isSubmitting={submittingFeedback}
+      />
 
       {/* Clickable Suggested Follow-up Pills */}
       {!isUser && !streaming && followUpList.length > 0 && (

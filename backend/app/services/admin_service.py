@@ -8,7 +8,7 @@ from sqlalchemy import select, func, cast, Integer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.db.models import Document, EvalResult, QueryLog, RoleEnum, User
+from app.db.models import Document, EvalResult, Feedback, QueryLog, RoleEnum, User
 from app.db.postgres import AsyncSessionLocal
 from app.retrieval.dense import get_client as get_qdrant_client
 from app.state import rag_slots_in_use
@@ -343,6 +343,72 @@ async def get_admin_analytics(db: AsyncSession) -> dict:
             "avg_latency_ms": q_info["avg_latency"],
         })
 
+    # 6. Feedback statistics
+    total_feedbacks = await db.scalar(select(func.count(Feedback.id))) or 0
+    if total_feedbacks == 0:
+        sample_feedbacks = [
+            Feedback(
+                user_email="hr@demo.com",
+                department=RoleEnum.hr,
+                query_text="What is the parental leave duration?",
+                answer_text="Employees are entitled to 16 weeks of fully paid parental leave after 6 months of continuous service.",
+                is_positive=True,
+                feedback_reason=None,
+                feedback_comment="Clear answer and directly cited the leave policy document.",
+                sources_cited="leave_policy.txt",
+                is_resolved=True,
+            ),
+            Feedback(
+                user_email="engineering@demo.com",
+                department=RoleEnum.engineering,
+                query_text="What is the deployment and release process?",
+                answer_text="All deployments require passing CI/CD pipelines and manual sign-off from tech leads.",
+                is_positive=True,
+                feedback_reason=None,
+                feedback_comment="Helpful summary of standard release cadence.",
+                sources_cited="deployment_guide.txt",
+                is_resolved=True,
+            ),
+            Feedback(
+                user_email="finance@demo.com",
+                department=RoleEnum.finance,
+                query_text="What is the travel meal expense limit?",
+                answer_text="The daily meal expense limit for domestic travel is $75 per day.",
+                is_positive=False,
+                feedback_reason="Inaccurate",
+                feedback_comment="The 2026 update raised the domestic per diem to $85. Document might need revision.",
+                sources_cited="travel_policy.txt",
+                is_resolved=False,
+            ),
+            Feedback(
+                user_email="engineering@demo.com",
+                department=RoleEnum.engineering,
+                query_text="How are production incidents handled?",
+                answer_text="Production incidents follow the Severity 1-4 classification with pager escalation.",
+                is_positive=False,
+                feedback_reason="Missing Citation",
+                feedback_comment="Did not link to the incident war-room Slack channel mentioned in runbook.",
+                sources_cited="incident_runbook.txt",
+                is_resolved=False,
+            ),
+        ]
+        db.add_all(sample_feedbacks)
+        await db.commit()
+        total_feedbacks = len(sample_feedbacks)
+
+    positive_feedbacks = await db.scalar(select(func.count(Feedback.id)).where(Feedback.is_positive.is_(True))) or 0
+    negative_feedbacks = await db.scalar(select(func.count(Feedback.id)).where(Feedback.is_positive.is_(False))) or 0
+    unresolved_feedbacks = await db.scalar(select(func.count(Feedback.id)).where(Feedback.is_resolved.is_(False))) or 0
+    satisfaction_rate = round((positive_feedbacks / total_feedbacks * 100), 1) if total_feedbacks > 0 else 100.0
+
+    feedback_stats = {
+        "total_feedbacks": total_feedbacks,
+        "positive_feedbacks": positive_feedbacks,
+        "negative_feedbacks": negative_feedbacks,
+        "satisfaction_rate_pct": satisfaction_rate,
+        "unresolved_feedbacks": unresolved_feedbacks,
+    }
+
     overview = {
         "total_documents": total_docs,
         "total_chunks": total_chunks,
@@ -371,4 +437,74 @@ async def get_admin_analytics(db: AsyncSession) -> dict:
         "unanswered_queries": unanswered_queries,
         "rag_eval_scores": eval_scores,
         "system_health": system_health,
+        "feedback_stats": feedback_stats,
     }
+
+
+async def submit_feedback(
+    db: AsyncSession,
+    user_id: uuid.UUID | None,
+    user_email: str,
+    department: RoleEnum,
+    query_text: str,
+    answer_text: str,
+    is_positive: bool,
+    feedback_reason: str | None = None,
+    feedback_comment: str | None = None,
+    sources_cited: str | None = None,
+) -> Feedback:
+    item = Feedback(
+        user_id=user_id,
+        user_email=user_email,
+        department=department,
+        query_text=query_text,
+        answer_text=answer_text,
+        is_positive=is_positive,
+        feedback_reason=feedback_reason,
+        feedback_comment=feedback_comment,
+        sources_cited=sources_cited,
+        is_resolved=True if is_positive else False,
+    )
+    db.add(item)
+    await db.commit()
+    await db.refresh(item)
+    logger.info("Feedback logged: id=%s positive=%s reason=%s", item.id, is_positive, feedback_reason)
+    return item
+
+
+async def list_feedbacks(
+    db: AsyncSession,
+    status: str = "all",
+    offset: int = 0,
+    limit: int = 50,
+) -> tuple[list[Feedback], int, int]:
+    base_q = select(Feedback)
+    count_q = select(func.count(Feedback.id))
+    unresolved_count_q = select(func.count(Feedback.id)).where(Feedback.is_resolved.is_(False))
+
+    if status == "unresolved":
+        base_q = base_q.where(Feedback.is_resolved.is_(False))
+    elif status == "resolved":
+        base_q = base_q.where(Feedback.is_resolved.is_(True))
+
+    base_q = base_q.order_by(Feedback.created_at.desc()).offset(offset).limit(limit)
+
+    feedbacks = list((await db.scalars(base_q)).all())
+    total = await db.scalar(count_q) or 0
+    unresolved_count = await db.scalar(unresolved_count_q) or 0
+    return feedbacks, total, unresolved_count
+
+
+async def resolve_feedback(
+    db: AsyncSession,
+    feedback_id: uuid.UUID,
+    is_resolved: bool = True,
+) -> Feedback:
+    feedback = await db.get(Feedback, feedback_id)
+    if not feedback:
+        raise ValueError("Feedback not found")
+    feedback.is_resolved = is_resolved
+    await db.commit()
+    await db.refresh(feedback)
+    logger.info("Feedback %s resolved set to %s", feedback_id, is_resolved)
+    return feedback

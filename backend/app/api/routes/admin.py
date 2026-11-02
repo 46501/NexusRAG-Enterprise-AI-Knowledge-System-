@@ -15,13 +15,16 @@ from app.schemas.admin import (
     SetActiveRequest,
     UserAdminResponse,
 )
+from app.schemas.feedback import FeedbackItemResponse, FeedbackListResponse
 from app.services.admin_service import (
     ServerUnderLoadError,
     delete_document,
     get_admin_analytics,
     get_eval_results,
     list_documents,
+    list_feedbacks,
     list_users,
+    resolve_feedback,
     set_user_active,
     trigger_eval_run,
 )
@@ -138,3 +141,35 @@ async def get_analytics(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to load analytics dashboard data",
         )
+
+
+@router.get("/feedbacks", response_model=FeedbackListResponse)
+async def get_feedbacks(
+    status_filter: str = Query(default="all", alias="status"),
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(_require_admin),
+):
+    feedbacks, total, unresolved = await list_feedbacks(
+        db, status=status_filter, offset=offset, limit=limit
+    )
+    return FeedbackListResponse(
+        feedbacks=[FeedbackItemResponse.model_validate(f) for f in feedbacks],
+        total=total,
+        unresolved_count=unresolved,
+    )
+
+
+@router.patch("/feedbacks/{feedback_id}/resolve", response_model=FeedbackItemResponse)
+async def toggle_feedback_resolution(
+    feedback_id: uuid.UUID,
+    resolved: bool = Query(default=True),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(_require_admin),
+):
+    try:
+        item = await resolve_feedback(db, feedback_id, is_resolved=resolved)
+        return FeedbackItemResponse.model_validate(item)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Feedback not found")
