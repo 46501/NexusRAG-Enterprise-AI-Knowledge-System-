@@ -9,6 +9,7 @@ import BackHomeButton from '../components/BackHomeButton'
 import ThemeToggle from '../components/ThemeToggle'
 import CitationDrawer from '../components/CitationDrawer'
 import ExportModal from '../components/ExportModal'
+import CommandPalette from '../components/CommandPalette'
 import api from '../services/api'
 
 const DEPT = {
@@ -45,9 +46,21 @@ export default function ChatPage() {
   const [selectedDoc, setSelectedDoc] = useState(null)
   const [activeCitation, setActiveCitation] = useState({ isOpen: false, index: 1, sources: [] })
   const [exportOpen, setExportOpen] = useState(false)
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
 
   const d = DEPT[user?.role]
   const suggestions = SUGGESTIONS[user?.role] ?? []
+
+  useEffect(() => {
+    function handleGlobalKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setCommandPaletteOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleGlobalKeyDown)
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
+  }, [])
 
   useEffect(() => {
     const el = messagesRef.current
@@ -113,6 +126,40 @@ export default function ChatPage() {
                 </span>
               </div>
             )}
+
+            {/* Quick Command Palette Button */}
+            <button
+              type="button"
+              onClick={() => setCommandPaletteOpen(true)}
+              className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer opacity-75 hover:opacity-100"
+              style={{
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1',
+                color: isDark ? 'rgba(255, 255, 255, 0.8)' : '#475569',
+              }}
+              title="Search commands, policies, and actions (⌘K / Ctrl+K)"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <span>Commands</span>
+              <kbd className="font-mono text-[9px] px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 opacity-70">⌘K</kbd>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCommandPaletteOpen(true)}
+              className="md:hidden text-[11px] px-2 py-1 rounded-lg font-mono font-semibold"
+              style={{
+                background: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #cbd5e1',
+                color: isDark ? 'rgba(255, 255, 255, 0.75)' : '#475569',
+              }}
+              title="Command Palette (⌘K)"
+            >
+              ⌘K
+            </button>
             {messages.length > 0 && (
               <div className="flex items-center gap-1.5">
                 <button
@@ -402,6 +449,18 @@ export default function ChatPage() {
         messages={messages}
         user={user}
         department={user?.role}
+      />
+
+      {/* macOS Command Palette (⌘K / Ctrl+K) */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onSelectPrompt={(prompt) => sendQuery(prompt, true)}
+        onNewChat={clearMessages}
+        onExport={() => setExportOpen(true)}
+        onToggleDocs={() => setDocsOpen((v) => !v)}
+        user={user}
+        documents={docs}
       />
 
     </div>
