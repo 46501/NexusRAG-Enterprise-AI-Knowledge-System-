@@ -19,6 +19,8 @@ class SourceSchema(BaseModel):
     source: str
     department: str
     chunk_id: str | None = None
+    doc_id: str | None = None
+    chunk_index: int | None = None
     rerank_score: float | None = None
     text: str | None = None
 

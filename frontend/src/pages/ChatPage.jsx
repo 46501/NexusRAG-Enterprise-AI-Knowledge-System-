@@ -10,6 +10,7 @@ import ThemeToggle from '../components/ThemeToggle'
 import CitationDrawer from '../components/CitationDrawer'
 import ExportModal from '../components/ExportModal'
 import CommandPalette from '../components/CommandPalette'
+import DocumentReaderModal from '../components/DocumentReaderModal'
 import api from '../services/api'
 
 const DEPT = {
@@ -47,6 +48,23 @@ export default function ChatPage() {
   const [activeCitation, setActiveCitation] = useState({ isOpen: false, index: 1, sources: [] })
   const [exportOpen, setExportOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [readerState, setReaderState] = useState({
+    isOpen: false,
+    docIdOrName: null,
+    chunkIndex: null,
+    chunkId: null,
+    snippet: '',
+  })
+
+  function handleOpenDocumentReader({ docIdOrName, chunkIndex = null, chunkId = null, snippet = '' }) {
+    setReaderState({
+      isOpen: true,
+      docIdOrName,
+      chunkIndex,
+      chunkId,
+      snippet,
+    })
+  }
 
   const d = DEPT[user?.role]
   const suggestions = SUGGESTIONS[user?.role] ?? []
@@ -389,8 +407,11 @@ export default function ChatPage() {
               {docs.map((doc) => (
                 <li key={doc.id}>
                   <button
-                    onClick={() => setSelectedDoc(selectedDoc === doc.id ? null : doc.id)}
-                    className={`w-full text-left px-2.5 py-2 rounded-[10px] transition-colors ${
+                    onClick={() => {
+                      setSelectedDoc(doc.id)
+                      handleOpenDocumentReader({ docIdOrName: doc.id })
+                    }}
+                    className={`w-full text-left px-2.5 py-2 rounded-[10px] transition-colors group flex items-center justify-between ${
                       isDark ? 'hover:bg-white/[0.04]' : 'hover:bg-slate-50'
                     }`}
                     style={{
@@ -400,21 +421,33 @@ export default function ChatPage() {
                       fontFamily: 'inherit',
                       borderLeft: `2px solid ${selectedDoc === doc.id ? (d?.dot ?? 'transparent') : 'transparent'}`,
                     }}
+                    title={`Click to open ${doc.name} in Document Reader`}
                   >
-                    <p
-                      className="text-xs font-medium truncate leading-snug mb-0.5"
-                      style={{ color: selectedDoc === doc.id ? (isDark ? '#fff' : '#0f172a') : (isDark ? 'rgba(255,255,255,0.60)' : '#334155') }}
-                    >
-                      {doc.name}
-                    </p>
-                    <div className="flex gap-2">
-                      <span className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8' }}>
-                        {doc.chunk_count} chunks
-                      </span>
-                      <span className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#cbd5e1' }}>
-                        {fmtDate(doc.uploaded_at)}
-                      </span>
+                    <div className="min-w-0 pr-2">
+                      <p
+                        className="text-xs font-medium truncate leading-snug mb-0.5"
+                        style={{ color: selectedDoc === doc.id ? (isDark ? '#fff' : '#0f172a') : (isDark ? 'rgba(255,255,255,0.60)' : '#334155') }}
+                      >
+                        {doc.name}
+                      </p>
+                      <div className="flex gap-2">
+                        <span className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8' }}>
+                          {doc.chunk_count} chunks
+                        </span>
+                        <span className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#cbd5e1' }}>
+                          {fmtDate(doc.uploaded_at)}
+                        </span>
+                      </div>
                     </div>
+                    <span
+                      className="text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity shrink-0 font-medium"
+                      style={{
+                        background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
+                        color: isDark ? 'rgba(255,255,255,0.70)' : '#475569',
+                      }}
+                    >
+                      Read ↗
+                    </span>
                   </button>
                 </li>
               ))}
@@ -440,6 +473,7 @@ export default function ChatPage() {
         onClose={() => setActiveCitation((prev) => ({ ...prev, isOpen: false }))}
         sources={activeCitation.sources}
         activeIndex={activeCitation.index}
+        onOpenDocumentReader={handleOpenDocumentReader}
       />
 
       {/* Corporate Export & Share Modal (0 MB RAM) */}
@@ -459,8 +493,20 @@ export default function ChatPage() {
         onNewChat={clearMessages}
         onExport={() => setExportOpen(true)}
         onToggleDocs={() => setDocsOpen((v) => !v)}
+        onOpenDocument={(doc) => handleOpenDocumentReader({ docIdOrName: doc.id || doc.name })}
         user={user}
         documents={docs}
+      />
+
+      {/* In-App Document Reader with Highlighted Chunks */}
+      <DocumentReaderModal
+        isOpen={readerState.isOpen}
+        onClose={() => setReaderState((prev) => ({ ...prev, isOpen: false }))}
+        docIdOrName={readerState.docIdOrName}
+        highlightChunkIndex={readerState.chunkIndex}
+        highlightChunkId={readerState.chunkId}
+        highlightSnippet={readerState.snippet}
+        onAskQuestion={(prompt) => sendQuery(prompt, true)}
       />
 
     </div>

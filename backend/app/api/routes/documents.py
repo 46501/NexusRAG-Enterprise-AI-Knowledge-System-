@@ -7,9 +7,31 @@ from app.api.dependencies import get_current_user
 from app.db.models import RoleEnum, User
 from app.db.postgres import get_db
 from app.schemas.admin import DocumentListResponse, DocumentResponse
-from app.services.admin_service import list_documents
+from app.services.admin_service import list_documents, get_document_content
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+
+
+@router.get("/{document_id}/content")
+async def get_document_content_route(
+    document_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        data = await get_document_content(db, document_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+    doc_dept = data["document"]["department"]
+    if current_user.role not in (RoleEnum.admin, RoleEnum.demo_admin):
+        if doc_dept.lower() != current_user.role.value.lower():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this document.",
+            )
+
+    return data
 
 
 @router.get("", response_model=DocumentListResponse)

@@ -39,6 +39,7 @@ export default function CommandPalette({
   onNewChat,
   onExport,
   onToggleDocs,
+  onOpenDocument,
   user,
   documents = [],
 }) {
@@ -125,11 +126,24 @@ export default function CommandPalette({
     // 3. Department Documents
     documents.forEach((doc) => {
       list.push({
-        id: `doc-${doc.id}`,
+        id: `read-doc-${doc.id}`,
         category: `${deptInfo.name} Documents`,
-        label: doc.name,
-        subtitle: `${doc.chunk_count} vector chunks · Ask questions from this file`,
-        icon: '📄',
+        label: `Read ${doc.name}`,
+        subtitle: `Open in In-App Reader · ${doc.chunk_count} vector chunks`,
+        icon: '📖',
+        shortcut: 'Reader',
+        action: () => {
+          if (onOpenDocument) onOpenDocument(doc)
+          onClose()
+        },
+      })
+      list.push({
+        id: `ask-doc-${doc.id}`,
+        category: `${deptInfo.name} Documents`,
+        label: `Ask about ${doc.name}`,
+        subtitle: `Prompt NexusRAG for policies in ${doc.name}`,
+        icon: '✨',
+        shortcut: 'Ask',
         action: () => {
           onSelectPrompt(`What key information and policies are covered in ${doc.name}?`)
           onClose()
@@ -138,7 +152,7 @@ export default function CommandPalette({
     })
 
     return list
-  }, [role, deptInfo, isDark, user, documents, onNewChat, onExport, toggleTheme, onToggleDocs, navigate, onSelectPrompt, onClose])
+  }, [role, deptInfo, isDark, user, documents, onNewChat, onExport, toggleTheme, onToggleDocs, onOpenDocument, navigate, onSelectPrompt, onClose])
 
   // Filter items based on search input
   const filteredItems = useMemo(() => {
@@ -420,3 +434,4 @@ export default function CommandPalette({
     </div>
   )
 }
+

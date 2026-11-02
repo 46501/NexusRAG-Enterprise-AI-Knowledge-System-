@@ -7,7 +7,7 @@ const DEPT = {
   finance:     { bg: 'rgba(16,185,129,0.12)',  text: '#34d399', border: 'rgba(16,185,129,0.30)', label: 'Finance' },
 }
 
-export default function CitationDrawer({ isOpen, onClose, sources = [], activeIndex = 1 }) {
+export default function CitationDrawer({ isOpen, onClose, sources = [], activeIndex = 1, onOpenDocumentReader }) {
   const { isDark } = useTheme()
   const [selectedIdx, setSelectedIdx] = useState(activeIndex)
   const [copied, setCopied] = useState(false)
@@ -160,7 +160,21 @@ export default function CitationDrawer({ isOpen, onClose, sources = [], activeIn
                 <span className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : '#94a3b8' }}>
                   Document File
                 </span>
-                <p className="text-sm font-semibold truncate" style={{ color: isDark ? '#fff' : '#0f172a' }}>
+                <p
+                  onClick={() => {
+                    if (onOpenDocumentReader) {
+                      onOpenDocumentReader({
+                        docIdOrName: currentSource.doc_id || currentSource.source,
+                        chunkIndex: currentSource.chunk_index,
+                        chunkId: currentSource.chunk_id,
+                        snippet: currentSource.text,
+                      })
+                    }
+                  }}
+                  className={`text-sm font-semibold truncate ${onOpenDocumentReader ? 'cursor-pointer hover:underline' : ''}`}
+                  style={{ color: isDark ? '#fff' : '#0f172a' }}
+                  title={onOpenDocumentReader ? "Click to open in Document Reader" : undefined}
+                >
                   {currentSource.source}
                 </p>
               </div>
@@ -218,23 +232,48 @@ export default function CitationDrawer({ isOpen, onClose, sources = [], activeIn
                 Grounding Excerpt
               </label>
 
-              {currentSource.text && (
-                <button
-                  onClick={handleCopyExcerpt}
-                  className="text-xs px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer"
-                  style={{
-                    background: copied
-                      ? (isDark ? 'rgba(52,211,153,0.15)' : '#dcfce7')
-                      : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
-                    color: copied
-                      ? (isDark ? '#34d399' : '#15803d')
-                      : (isDark ? 'rgba(255,255,255,0.60)' : '#475569'),
-                    border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
-                  }}
-                >
-                  {copied ? '✓ Copied' : 'Copy Excerpt'}
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {currentSource.source && onOpenDocumentReader && (
+                  <button
+                    onClick={() => {
+                      onOpenDocumentReader({
+                        docIdOrName: currentSource.doc_id || currentSource.source,
+                        chunkIndex: currentSource.chunk_index,
+                        chunkId: currentSource.chunk_id,
+                        snippet: currentSource.text,
+                      })
+                    }}
+                    className="text-xs px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer"
+                    style={{
+                      background: isDark ? 'rgba(168,85,247,0.15)' : 'rgba(124,58,237,0.08)',
+                      color: isDark ? '#c084fc' : '#7c3aed',
+                      border: isDark ? '1px solid rgba(168,85,247,0.30)' : '1px solid rgba(124,58,237,0.20)',
+                    }}
+                    title="Open full document with this chunk highlighted"
+                  >
+                    <span>📖</span>
+                    <span>View in Reader</span>
+                  </button>
+                )}
+
+                {currentSource.text && (
+                  <button
+                    onClick={handleCopyExcerpt}
+                    className="text-xs px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer"
+                    style={{
+                      background: copied
+                        ? (isDark ? 'rgba(52,211,153,0.15)' : '#dcfce7')
+                        : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
+                      color: copied
+                        ? (isDark ? '#34d399' : '#15803d')
+                        : (isDark ? 'rgba(255,255,255,0.60)' : '#475569'),
+                      border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+                    }}
+                  >
+                    {copied ? '✓ Copied' : 'Copy Excerpt'}
+                  </button>
+                )}
+              </div>
             </div>
 
             <div

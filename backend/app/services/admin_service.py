@@ -2,6 +2,7 @@ import asyncio
 import math
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 from qdrant_client.models import FieldCondition, Filter, FilterSelector, MatchValue
 from sqlalchemy import select, func, cast, Integer
@@ -42,6 +43,92 @@ async def list_documents(
     total = await db.scalar(count_q)
     logger.info("Listed %d documents (total=%d)", len(docs), total)
     return docs, total
+
+
+async def get_document_content(
+    db: AsyncSession,
+    doc_id_or_name: str,
+) -> dict:
+    doc = None
+    try:
+        parsed_uuid = uuid.UUID(doc_id_or_name)
+        doc = await db.get(Document, parsed_uuid)
+    except (ValueError, TypeError):
+        pass
+
+    if doc is None:
+        q = select(Document).where(Document.name == doc_id_or_name)
+        res = await db.scalars(q)
+        doc = res.first()
+
+    if doc is None:
+        raise ValueError(f"Document not found: {doc_id_or_name}")
+
+    # 1. Fetch chunks from Qdrant
+    points = []
+    doc_id_str = str(doc.id)
+    try:
+        doc_filter = Filter(must=[FieldCondition(key="doc_id", match=MatchValue(value=doc_id_str))])
+        batch, _ = await get_qdrant_client().scroll(
+            collection_name=_s.qdrant_collection,
+            scroll_filter=doc_filter,
+            limit=2000,
+            with_payload=True,
+            with_vectors=False,
+        )
+        points = batch
+    except Exception as exc:
+        logger.warning("Error scrolling Qdrant by doc_id=%s: %s", doc_id_str, exc)
+
+    if not points:
+        try:
+            source_filter = Filter(must=[FieldCondition(key="source", match=MatchValue(value=doc.name))])
+            batch, _ = await get_qdrant_client().scroll(
+                collection_name=_s.qdrant_collection,
+                scroll_filter=source_filter,
+                limit=2000,
+                with_payload=True,
+                with_vectors=False,
+            )
+            points = batch
+        except Exception as exc:
+            logger.warning("Error scrolling Qdrant by source=%s: %s", doc.name, exc)
+
+    chunks = []
+    for p in points:
+        payload = p.payload or {}
+        chunks.append({
+            "chunk_id": str(p.id),
+            "chunk_index": payload.get("chunk_index", 0),
+            "text": payload.get("text", ""),
+        })
+    chunks.sort(key=lambda c: c["chunk_index"])
+
+    # 2. Retrieve original text from disk if available
+    raw_text = None
+    for base_dir in [Path("data"), Path("backend/data"), Path("/app/data")]:
+        cand = base_dir / doc.department.value / doc.name
+        if cand.is_file():
+            try:
+                raw_text = cand.read_text(encoding="utf-8", errors="replace")
+                break
+            except Exception:
+                pass
+
+    if not raw_text:
+        raw_text = "\n\n".join(c["text"] for c in chunks)
+
+    return {
+        "document": {
+            "id": str(doc.id),
+            "name": doc.name,
+            "department": doc.department.value,
+            "chunk_count": doc.chunk_count or len(chunks),
+            "uploaded_at": doc.uploaded_at.isoformat() if doc.uploaded_at else None,
+        },
+        "chunks": chunks,
+        "full_text": raw_text,
+    }
 
 
 async def _rebuild_bm25() -> None:
