@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class FeedbackSubmitRequest(BaseModel):
@@ -10,6 +10,13 @@ class FeedbackSubmitRequest(BaseModel):
     feedback_reason: str | None = Field(default=None, max_length=64)
     feedback_comment: str | None = Field(default=None, max_length=1000)
     sources_cited: str | None = Field(default=None, max_length=512)
+
+    @field_validator("sources_cited", mode="before")
+    @classmethod
+    def normalize_sources(cls, v):
+        if isinstance(v, list):
+            return ", ".join(str(x) for x in v)
+        return v
 
 
 class FeedbackItemResponse(BaseModel):

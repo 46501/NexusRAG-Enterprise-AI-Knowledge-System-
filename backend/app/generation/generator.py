@@ -167,34 +167,48 @@ async def generate(
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
         temperature=0.2,
-        max_output_tokens=1024,
+        max_output_tokens=2048,
     )
 
-    try:
-        contents = _format_history_contents(history, prompt)
-        response = await client.aio.models.generate_content(
-            model=_s.gemini_model,
-            contents=contents,
-            config=config,
-        )
-        answer = response.text or _FALLBACK
-        usage = getattr(response, "usage_metadata", None)
-        token_count = getattr(usage, "total_token_count", 0) if usage else 0
-        clean_answer, follow_ups = parse_answer_and_follow_ups(answer)
-        logger.info(
-            "Generated answer for query=%r using %d chunks, total_tokens=%d, follow_ups=%d",
-            query[:60],
-            len(chunks),
-            token_count,
-            len(follow_ups),
-        )
-        return {"answer": clean_answer, "sources": sources, "suggested_questions": follow_ups}
-    except errors.APIError as exc:
-        logger.error("Gemini API error during generation: code=%s, status=%s", exc.code, exc.status)
-        raise
-    except Exception as exc:
-        logger.error("Gemini error during generation: %s", type(exc).__name__)
-        raise
+    models_to_try = [_s.gemini_model]
+    for alt in ("gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3-flash-preview"):
+        if alt not in models_to_try:
+            models_to_try.append(alt)
+
+    contents = _format_history_contents(history, prompt)
+    last_exc = None
+    for model_name in models_to_try:
+        try:
+            response = await client.aio.models.generate_content(
+                model=model_name,
+                contents=contents,
+                config=config,
+            )
+            answer = response.text or _FALLBACK
+            usage = getattr(response, "usage_metadata", None)
+            token_count = getattr(usage, "total_token_count", 0) if usage else 0
+            clean_answer, follow_ups = parse_answer_and_follow_ups(answer)
+            logger.info(
+                "Generated answer for query=%r using %d chunks model=%s, total_tokens=%d, follow_ups=%d",
+                query[:60],
+                len(chunks),
+                model_name,
+                token_count,
+                len(follow_ups),
+            )
+            return {"answer": clean_answer, "sources": sources, "suggested_questions": follow_ups}
+        except (errors.APIError, Exception) as exc:
+            err_msg = str(exc)
+            if any(k in err_msg for k in ("503", "429", "UNAVAILABLE", "RESOURCE_EXHAUSTED", "quota")):
+                logger.warning("Gemini model %s transient error: %s, trying fallback", model_name, exc)
+                last_exc = exc
+                continue
+            logger.error("Gemini API error during generation model=%s: %s", model_name, exc)
+            raise
+
+    if last_exc:
+        raise last_exc
+    return {"answer": _FALLBACK, "sources": sources, "suggested_questions": []}
 
 
 async def generate_stream(
@@ -242,24 +256,40 @@ async def generate_stream(
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
         temperature=0.2,
-        max_output_tokens=1024,
+        max_output_tokens=2048,
     )
 
-    try:
-        contents = _format_history_contents(history, prompt)
-        stream = await client.aio.models.generate_content_stream(
-            model=_s.gemini_model,
-            contents=contents,
-            config=config,
-        )
-        async for chunk in stream:
-            text = chunk.text
-            if text:
-                yield text
-        logger.info("Streamed answer for query=%r using %d chunks", query[:60], len(chunks))
-    except errors.APIError as exc:
-        logger.error("Gemini stream API error: code=%s, status=%s", exc.code, exc.status)
-        raise
-    except Exception as exc:
-        logger.error("Gemini stream error: %s", type(exc).__name__)
-        raise
+    models_to_try = [_s.gemini_model]
+    for alt in ("gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3-flash-preview"):
+        if alt not in models_to_try:
+            models_to_try.append(alt)
+
+    contents = _format_history_contents(history, prompt)
+    last_exc = None
+    for model_name in models_to_try:
+        try:
+            stream = await client.aio.models.generate_content_stream(
+                model=model_name,
+                contents=contents,
+                config=config,
+            )
+            yielded_any = False
+            async for chunk in stream:
+                text = chunk.text
+                if text:
+                    yielded_any = True
+                    yield text
+            if yielded_any:
+                logger.info("Streamed answer for query=%r using %d chunks model=%s", query[:60], len(chunks), model_name)
+                return
+        except (errors.APIError, Exception) as exc:
+            err_msg = str(exc)
+            if any(k in err_msg for k in ("503", "429", "UNAVAILABLE", "RESOURCE_EXHAUSTED", "quota")):
+                logger.warning("Gemini stream model %s transient error: %s, trying fallback", model_name, exc)
+                last_exc = exc
+                continue
+            logger.error("Gemini stream error model=%s: %s", model_name, exc)
+            raise
+
+    if last_exc:
+        raise last_exc

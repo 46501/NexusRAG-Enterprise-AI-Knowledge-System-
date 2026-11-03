@@ -27,9 +27,9 @@ import {
 import api from '../services/api'
 
 const DEPT = {
-  hr:          { dot: '#a78bfa', text: '#a78bfa', bg: 'rgba(139,92,246,0.10)', btn: '#7c3aed' },
-  engineering: { dot: '#38bdf8', text: '#38bdf8', bg: 'rgba(14,165,233,0.10)',  btn: '#0284c7' },
-  finance:     { dot: '#34d399', text: '#34d399', bg: 'rgba(16,185,129,0.10)',  btn: '#059669' },
+  hr: { dot: '#a78bfa', text: '#a78bfa', bg: 'rgba(139,92,246,0.10)', btn: '#7c3aed' },
+  engineering: { dot: '#38bdf8', text: '#38bdf8', bg: 'rgba(14,165,233,0.10)', btn: '#0284c7' },
+  finance: { dot: '#34d399', text: '#34d399', bg: 'rgba(16,185,129,0.10)', btn: '#059669' },
 }
 
 const DEPT_NAMES = {
@@ -39,9 +39,9 @@ const DEPT_NAMES = {
 }
 
 const SUGGESTIONS = {
-  hr:          ['What is the vacation and PTO policy?', 'How does the performance review process work?', 'What health benefits are available?'],
+  hr: ['What is the vacation and PTO policy?', 'How does the performance review process work?', 'What health benefits are available?'],
   engineering: ['What is the deployment and release process?', 'How are production incidents handled?', 'What are the API design and versioning standards?'],
-  finance:     ['What is the expense reimbursement policy?', 'When are quarterly budget reviews scheduled?', 'What does the external audit process look like?'],
+  finance: ['What is the expense reimbursement policy?', 'When are quarterly budget reviews scheduled?', 'What does the external audit process look like?'],
 }
 
 function fmtDate(iso) {
@@ -571,21 +571,21 @@ export default function ChatPage() {
 
                 {messages.map((msg, i) => (
                   msg.role === 'assistant' && !msg.content ? null :
-                  <MessageBubble
-                    key={i}
-                    role={msg.role}
-                    content={msg.content}
-                    userRole={user?.role}
-                    sources={msg.sources}
-                    confidenceScore={msg.confidenceScore}
-                    focusDoc={msg.focusDoc}
-                    streaming={msg.streaming}
-                    suggestedQuestions={msg.suggestedQuestions}
-                    precedingUserQuery={i > 0 && messages[i - 1]?.role === 'user' ? messages[i - 1].content : null}
-                    onOpenCitation={(idx, srcList) => setActiveCitation({ isOpen: true, index: idx, sources: srcList || [] })}
-                    onSelectSuggestion={(q) => sendQuery(q, true, focusDoc?.name || focusDoc)}
-                    onOpenReader={handleOpenDocumentReader}
-                  />
+                    <MessageBubble
+                      key={i}
+                      role={msg.role}
+                      content={msg.content}
+                      userRole={user?.role}
+                      sources={msg.sources}
+                      confidenceScore={msg.confidenceScore}
+                      focusDoc={msg.focusDoc}
+                      streaming={msg.streaming}
+                      suggestedQuestions={msg.suggestedQuestions}
+                      precedingUserQuery={i > 0 && messages[i - 1]?.role === 'user' ? messages[i - 1].content : null}
+                      onOpenCitation={(idx, srcList) => setActiveCitation({ isOpen: true, index: idx, sources: srcList || [] })}
+                      onSelectSuggestion={(q) => sendQuery(q, true, focusDoc?.name || focusDoc)}
+                      onOpenReader={handleOpenDocumentReader}
+                    />
                 ))}
                 {thinking && (
                   <ThinkingIndicator
@@ -713,11 +713,10 @@ export default function ChatPage() {
               value={docSearchQuery}
               onChange={(e) => setDocSearchQuery(e.target.value)}
               placeholder="Filter files... (Press /)"
-              className={`w-full text-xs pl-8 pr-7 py-1.5 rounded-lg border outline-none transition-all placeholder:text-[11px] ${
-                isDark
+              className={`w-full text-xs pl-8 pr-7 py-1.5 rounded-lg border outline-none transition-all placeholder:text-[11px] ${isDark
                   ? 'bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-purple-400/50 focus:bg-white/[0.06]'
                   : 'bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-purple-500/50 focus:bg-white'
-              }`}
+                }`}
             />
             {docSearchQuery ? (
               <button
@@ -752,15 +751,14 @@ export default function ChatPage() {
                     key={key}
                     type="button"
                     onClick={() => setDocTypeFilter(key)}
-                    className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 ${
-                      isActive
+                    className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 ${isActive
                         ? isDark
                           ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-xs'
                           : 'bg-purple-100 text-purple-700 border border-purple-200 shadow-xs'
                         : isDark
-                        ? 'text-white/40 hover:text-white/70 hover:bg-white/5 border border-transparent'
-                        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent'
-                    }`}
+                          ? 'text-white/40 hover:text-white/70 hover:bg-white/5 border border-transparent'
+                          : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent'
+                      }`}
                   >
                     <span>{label}</span>
                     <span className="text-[9px] opacity-60">({count})</span>
@@ -773,11 +771,10 @@ export default function ChatPage() {
             <button
               type="button"
               onClick={() => setDocSortOrder((prev) => (prev === 'recent' ? 'alpha' : 'recent'))}
-              className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
-                isDark
+              className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 shrink-0 ${isDark
                   ? 'text-white/50 hover:text-white hover:bg-white/5 border border-white/10'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
-              }`}
+                }`}
               title={`Sort: ${docSortOrder === 'recent' ? 'Newest first (Click for A-Z)' : 'Alphabetical (Click for Newest)'}`}
             >
               <span>{docSortOrder === 'recent' ? '🕒 Recent' : '🔤 A–Z'}</span>
@@ -815,15 +812,14 @@ export default function ChatPage() {
               {filteredDocs.map((doc) => (
                 <li key={doc.id}>
                   <div
-                    className={`w-full text-left p-2.5 rounded-[12px] transition-all group border ${
-                      selectedDoc === doc.id
+                    className={`w-full text-left p-2.5 rounded-[12px] transition-all group border ${selectedDoc === doc.id
                         ? isDark
                           ? 'bg-purple-500/15 border-purple-500/40 shadow-xs'
                           : 'bg-purple-50 border-purple-200 shadow-xs'
                         : isDark
-                        ? 'border-transparent hover:bg-white/[0.04]'
-                        : 'border-transparent hover:bg-slate-100'
-                    }`}
+                          ? 'border-transparent hover:bg-white/[0.04]'
+                          : 'border-transparent hover:bg-slate-100'
+                      }`}
                     style={{
                       borderLeft: `3px solid ${selectedDoc === doc.id ? (d?.dot ?? 'transparent') : 'transparent'}`,
                     }}
@@ -872,11 +868,10 @@ export default function ChatPage() {
                             e.stopPropagation()
                             setFocusDoc(focusDoc?.id === doc.id ? null : doc)
                           }}
-                          className={`text-[10px] px-2 py-0.5 rounded font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-                            focusDoc?.id === doc.id
+                          className={`text-[10px] px-2 py-0.5 rounded font-semibold transition-all cursor-pointer flex items-center gap-1 ${focusDoc?.id === doc.id
                               ? 'ring-1 shadow-xs'
                               : 'hover:scale-105 opacity-80 group-hover:opacity-100'
-                          }`}
+                            }`}
                           style={{
                             background: focusDoc?.id === doc.id
                               ? (isDark ? 'rgba(168, 85, 247, 0.25)' : '#f3e8ff')

@@ -24,11 +24,17 @@ from app.state import limiter
 router = APIRouter(prefix="/auth", tags=["auth"])
 _s = get_settings()
 
-_COOKIE_OPTS = {
-    "httponly": True,
-    "samesite": "lax",
-    "secure": _s.app_env == "production",
-}
+
+def _get_cookie_opts(request: Request) -> dict:
+    is_secure = _s.app_env == "production" and (
+        request.url.scheme == "https"
+        or request.headers.get("x-forwarded-proto") == "https"
+    )
+    return {
+        "httponly": True,
+        "samesite": "lax",
+        "secure": is_secure,
+    }
 
 
 @router.post("/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED)
@@ -84,14 +90,16 @@ async def login(request: Request, body: LoginRequest, response: Response, db: As
             )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
-    response.set_cookie("access_token", access, max_age=_s.jwt_access_token_expire_minutes * 60, **_COOKIE_OPTS)
-    response.set_cookie("refresh_token", refresh, max_age=_s.jwt_refresh_token_expire_days * 86400, **_COOKIE_OPTS)
+    cookie_opts = _get_cookie_opts(request)
+    response.set_cookie("access_token", access, max_age=_s.jwt_access_token_expire_minutes * 60, **cookie_opts)
+    response.set_cookie("refresh_token", refresh, max_age=_s.jwt_refresh_token_expire_days * 86400, **cookie_opts)
     return TokenResponse(access_token=access)
 
 
 @router.post("/refresh", response_model=TokenResponse)
 @router.post("/refresh/", response_model=TokenResponse, include_in_schema=False)
 async def refresh(
+    request: Request,
     response: Response,
     refresh_token: str | None = Cookie(default=None),
     db: AsyncSession = Depends(get_db),
@@ -103,14 +111,16 @@ async def refresh(
     except ValueError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token invalid or expired")
 
-    response.set_cookie("access_token", access, max_age=_s.jwt_access_token_expire_minutes * 60, **_COOKIE_OPTS)
-    response.set_cookie("refresh_token", new_refresh, max_age=_s.jwt_refresh_token_expire_days * 86400, **_COOKIE_OPTS)
+    cookie_opts = _get_cookie_opts(request)
+    response.set_cookie("access_token", access, max_age=_s.jwt_access_token_expire_minutes * 60, **cookie_opts)
+    response.set_cookie("refresh_token", new_refresh, max_age=_s.jwt_refresh_token_expire_days * 86400, **cookie_opts)
     return TokenResponse(access_token=access)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 @router.post("/logout/", status_code=status.HTTP_204_NO_CONTENT, include_in_schema=False)
 async def logout(
+    request: Request,
     response: Response,
     refresh_token: str | None = Cookie(default=None),
     db: AsyncSession = Depends(get_db),
@@ -118,8 +128,9 @@ async def logout(
 ):
     if refresh_token:
         await revoke_refresh_token(db, refresh_token)
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+    cookie_opts = _get_cookie_opts(request)
+    response.delete_cookie("access_token", httponly=cookie_opts["httponly"], samesite=cookie_opts["samesite"], secure=cookie_opts["secure"])
+    response.delete_cookie("refresh_token", httponly=cookie_opts["httponly"], samesite=cookie_opts["samesite"], secure=cookie_opts["secure"])
 
 
 @router.get("/me", response_model=UserResponse)

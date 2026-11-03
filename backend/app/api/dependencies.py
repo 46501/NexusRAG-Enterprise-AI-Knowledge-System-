@@ -1,20 +1,30 @@
 from fastapi import Cookie, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.auth.jwt_handler import decode_token
 from app.db.models import RoleEnum, User
 from app.db.postgres import get_db
-from sqlalchemy import select
+
+_bearer_security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
+    auth_header: HTTPAuthorizationCredentials | None = Depends(_bearer_security),
     access_token: str | None = Cookie(default=None),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    if not access_token:
+    token = None
+    if auth_header and auth_header.credentials:
+        token = auth_header.credentials
+    elif access_token:
+        token = access_token
+
+    if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     try:
-        payload = decode_token(access_token, "access")
+        payload = decode_token(token, "access")
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 

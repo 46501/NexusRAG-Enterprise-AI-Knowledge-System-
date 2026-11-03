@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     jwt_refresh_token_expire_days: int = 7
 
     gemini_api_key: str
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.5-flash-lite"
     gemini_timeout_seconds: int = 30
 
     openai_api_key: str | None = None
