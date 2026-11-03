@@ -65,6 +65,50 @@ html.light .doc-scroll {
   scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }
 
+/* ── Modern Micro-Interactions & Transitions ── */
+@keyframes msgFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Subtle button tap down feedback */
+button:not(:disabled):active {
+  transform: scale(0.97);
+  transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Citation chip micro-interactions */
+.citation-chip {
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), filter 0.16s ease, box-shadow 0.16s ease !important;
+}
+.citation-chip:hover {
+  transform: scale(1.08) translateY(-0.5px) !important;
+  filter: brightness(1.1) !important;
+}
+.citation-chip:active {
+  transform: scale(0.95) !important;
+}
+
+/* Smooth focus rings */
+input:focus-visible, textarea:focus-visible {
+  outline: none;
+}
+
 @media print {
   /* Hide non-printable navigation, buttons, inputs */
   header,

@@ -604,8 +604,10 @@ export default function ChatPage() {
           className="flex-shrink-0 px-4 sm:px-6 pt-2 pb-5 transition-colors relative z-10"
           style={{
             background: isDark
-              ? 'linear-gradient(to top, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.7) 70%, transparent 100%)'
-              : 'linear-gradient(to top, rgba(248, 250, 252, 0.95) 0%, rgba(248, 250, 252, 0.7) 70%, transparent 100%)',
+              ? 'linear-gradient(to top, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.65) 60%, transparent 100%)'
+              : 'linear-gradient(to top, rgba(248, 250, 252, 0.95) 0%, rgba(248, 250, 252, 0.65) 60%, transparent 100%)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
           }}
         >
           <div className="max-w-[720px] mx-auto">

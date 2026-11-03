@@ -245,7 +245,7 @@ export default function Chat({
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); submit() }}
-      className="flex items-end gap-2.5 rounded-2xl px-4 py-3 transition-all duration-200 relative"
+      className="flex items-end gap-2.5 rounded-2xl px-4 py-3 transition-all duration-200 relative focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:border-purple-500/35"
       style={{
         background: isDark
           ? 'linear-gradient(135deg, rgba(26, 29, 43, 0.85) 0%, rgba(18, 20, 30, 0.92) 100%)'
