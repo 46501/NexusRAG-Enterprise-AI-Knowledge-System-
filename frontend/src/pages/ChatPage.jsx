@@ -609,7 +609,7 @@ export default function ChatPage() {
 
       {/* ── RIGHT: Documents panel ──────────────────────── */}
       <aside
-        className={`flex-col flex-shrink-0 md:w-[260px] transition-colors ${docsOpen ? 'flex fixed inset-0 z-50 w-full md:relative md:inset-auto md:z-auto' : 'hidden md:flex'}`}
+        className={`flex-col flex-shrink-0 md:w-[300px] lg:w-[310px] transition-colors ${docsOpen ? 'flex fixed inset-0 z-50 w-full md:relative md:inset-auto md:z-auto' : 'hidden md:flex'}`}
         style={{ background: isDark ? '#0f0f0f' : '#ffffff', borderLeft: isDark ? 'none' : '1px solid #e2e8f0' }}
       >
         {/* Panel header */}
@@ -682,95 +682,125 @@ export default function ChatPage() {
           ) : docs.length === 0 ? (
             <p className="px-2 text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>No documents found.</p>
           ) : (
-            <ul className="space-y-1">
+            <ul className="space-y-1.5">
               {docs.map((doc) => (
                 <li key={doc.id}>
-                  <button
-                    onClick={() => {
-                      setSelectedDoc(doc.id)
-                      handleOpenDocumentReader({ docIdOrName: doc.id })
-                    }}
-                    className={`w-full text-left px-2.5 py-2 rounded-[10px] transition-colors group flex items-center justify-between ${
-                      isDark ? 'hover:bg-white/[0.04]' : 'hover:bg-slate-50'
+                  <div
+                    className={`w-full text-left p-2.5 rounded-[12px] transition-all group border ${
+                      selectedDoc === doc.id
+                        ? isDark
+                          ? 'bg-purple-500/15 border-purple-500/40 shadow-xs'
+                          : 'bg-purple-50 border-purple-200 shadow-xs'
+                        : isDark
+                        ? 'border-transparent hover:bg-white/[0.04]'
+                        : 'border-transparent hover:bg-slate-100'
                     }`}
                     style={{
-                      background: selectedDoc === doc.id ? d?.bg : undefined,
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontFamily: 'inherit',
-                      borderLeft: `2px solid ${selectedDoc === doc.id ? (d?.dot ?? 'transparent') : 'transparent'}`,
+                      borderLeft: `3px solid ${selectedDoc === doc.id ? (d?.dot ?? 'transparent') : 'transparent'}`,
                     }}
-                    title={`Click to open ${doc.name} in Document Reader`}
+                    title={doc.name}
                   >
-                    <div className="min-w-0 pr-2">
-                      <p
-                        className="text-xs font-medium truncate leading-snug mb-0.5"
-                        style={{ color: selectedDoc === doc.id ? (isDark ? '#fff' : '#0f172a') : (isDark ? 'rgba(255,255,255,0.60)' : '#334155') }}
-                      >
-                        {doc.name}
-                      </p>
-                      <div className="flex gap-2">
-                        <span className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8' }}>
-                          {doc.chunk_count} chunks
+                    {/* Row 1: Complete Filename with icon (natural wrap, no truncation ellipsis) */}
+                    <div
+                      onClick={() => {
+                        setSelectedDoc(doc.id)
+                        handleOpenDocumentReader({ docIdOrName: doc.id })
+                      }}
+                      className="cursor-pointer mb-2 group/title"
+                      title={`${doc.name} (Click to open in reader)`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="text-sm shrink-0 mt-0.5 select-none">
+                          {doc.name.endsWith('.pdf') ? '📕' : doc.name.endsWith('.md') ? '📝' : '📄'}
                         </span>
-                        <span className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#cbd5e1' }}>
-                          {fmtDate(doc.uploaded_at)}
-                        </span>
+                        <p
+                          className="text-xs font-semibold leading-snug break-words [overflow-wrap:anywhere] transition-colors group-hover/title:text-purple-400"
+                          style={{
+                            color: selectedDoc === doc.id
+                              ? (isDark ? '#fff' : '#0f172a')
+                              : (isDark ? 'rgba(255,255,255,0.92)' : '#1e293b'),
+                          }}
+                        >
+                          {doc.name}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setFocusDoc(focusDoc?.id === doc.id ? null : doc)
-                        }}
-                        className={`text-[10px] px-1.5 py-0.5 rounded transition-all font-medium cursor-pointer ${
-                          focusDoc?.id === doc.id
-                            ? 'opacity-100 ring-1'
-                            : 'opacity-0 group-hover:opacity-100'
-                        }`}
-                        style={{
-                          background: focusDoc?.id === doc.id
-                            ? (isDark ? 'rgba(168, 85, 247, 0.25)' : '#f3e8ff')
-                            : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
-                          color: focusDoc?.id === doc.id
-                            ? (isDark ? '#d8b4fe' : '#7e22ce')
-                            : (isDark ? 'rgba(255,255,255,0.70)' : '#475569'),
-                          borderColor: focusDoc?.id === doc.id
-                            ? (isDark ? 'rgba(168, 85, 247, 0.45)' : '#d8b4fe')
-                            : 'transparent',
-                        }}
-                        title={focusDoc?.id === doc.id ? "Clear focus (Search all)" : "Focus chat on this document only"}
-                      >
-                        {focusDoc?.id === doc.id ? '🎯 Focused' : '🎯 Focus'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleOpenComparison(doc, null)
-                        }}
-                        className="text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-all font-medium cursor-pointer hover:scale-105"
-                        style={{
-                          background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
-                          color: isDark ? '#38bdf8' : '#0284c7',
-                        }}
-                        title={`Compare ${doc.name} with another document`}
-                      >
-                        📊
-                      </button>
-                      <span
-                        className="text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity font-medium"
-                        style={{
-                          background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
-                          color: isDark ? 'rgba(255,255,255,0.70)' : '#475569',
-                        }}
-                      >
-                        Read ↗
-                      </span>
+
+                    {/* Row 2: Metadata (left) & Actions (right) */}
+                    <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-black/5 dark:border-white/5 select-none">
+                      {/* Metadata */}
+                      <div className="flex items-center gap-1.5 text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.40)' : '#64748b' }}>
+                        <span className="font-mono font-medium">{doc.chunk_count} chunks</span>
+                        <span className="opacity-40">·</span>
+                        <span>{fmtDate(doc.uploaded_at)}</span>
+                      </div>
+
+                      {/* Action Controls */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setFocusDoc(focusDoc?.id === doc.id ? null : doc)
+                          }}
+                          className={`text-[10px] px-2 py-0.5 rounded font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                            focusDoc?.id === doc.id
+                              ? 'ring-1 shadow-xs'
+                              : 'hover:scale-105 opacity-80 group-hover:opacity-100'
+                          }`}
+                          style={{
+                            background: focusDoc?.id === doc.id
+                              ? (isDark ? 'rgba(168, 85, 247, 0.25)' : '#f3e8ff')
+                              : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
+                            color: focusDoc?.id === doc.id
+                              ? (isDark ? '#d8b4fe' : '#7e22ce')
+                              : (isDark ? 'rgba(255,255,255,0.75)' : '#475569'),
+                            borderColor: focusDoc?.id === doc.id
+                              ? (isDark ? 'rgba(168, 85, 247, 0.45)' : '#d8b4fe')
+                              : 'transparent',
+                          }}
+                          title={focusDoc?.id === doc.id ? "Clear focus (Search all)" : `Focus queries on ${doc.name}`}
+                        >
+                          <span>🎯</span>
+                          <span>{focusDoc?.id === doc.id ? 'Focused' : 'Focus'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleOpenComparison(doc, null)
+                          }}
+                          className="text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all cursor-pointer hover:scale-105 opacity-80 group-hover:opacity-100"
+                          style={{
+                            background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
+                            color: isDark ? '#38bdf8' : '#0284c7',
+                            border: isDark ? '1px solid rgba(56, 189, 248, 0.30)' : '1px solid #bae6fd',
+                          }}
+                          title={`Compare ${doc.name} side-by-side with another file`}
+                        >
+                          📊
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedDoc(doc.id)
+                            handleOpenDocumentReader({ docIdOrName: doc.id })
+                          }}
+                          className="text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all cursor-pointer hover:scale-105 opacity-80 group-hover:opacity-100"
+                          style={{
+                            background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
+                            color: isDark ? 'rgba(255,255,255,0.75)' : '#475569',
+                          }}
+                          title={`Open ${doc.name} in Document Reader`}
+                        >
+                          Read ↗
+                        </button>
+                      </div>
                     </div>
-                  </button>
+                  </div>
                 </li>
               ))}
             </ul>
