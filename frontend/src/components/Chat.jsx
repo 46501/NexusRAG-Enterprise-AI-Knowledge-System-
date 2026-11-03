@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTheme } from '../context/ThemeContext'
+import SpotlightAutocomplete from './SpotlightAutocomplete'
+import { getAutocompleteSuggestions, extractRecentQueriesFromThreads } from '../services/autocomplete'
 
 const DEPT_BTN = {
   hr: '#7c3aed',
@@ -7,15 +9,49 @@ const DEPT_BTN = {
   finance: '#059669',
 }
 
-export default function Chat({ onSend, disabled, userRole, focusDoc = null, onClearFocus = null }) {
+export default function Chat({
+  onSend,
+  disabled,
+  userRole,
+  focusDoc = null,
+  onClearFocus = null,
+  documents = [],
+  threads = [],
+  onFocusDoc = null,
+}) {
   const { isDark } = useTheme()
   const [input, setInput] = useState('')
   const [isListening, setIsListening] = useState(false)
   const [speechSupported, setSpeechSupported] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [isDismissed, setIsDismissed] = useState(false)
   const textareaRef = useRef(null)
   const recognitionRef = useRef(null)
   const baseInputRef = useRef('')
   const btnColor = DEPT_BTN[userRole] ?? '#374151'
+
+  // Extract recent queries from saved threads
+  const recentQueries = useMemo(() => extractRecentQueriesFromThreads(threads), [threads])
+
+  // Compute autocomplete suggestions and ghost text
+  const { bestMatch, ghostSuffix, allItems } = useMemo(() => {
+    if (isDismissed || !input.trim()) {
+      return { bestMatch: null, ghostSuffix: '', allItems: [] }
+    }
+    return getAutocompleteSuggestions({
+      input,
+      userRole,
+      documents,
+      recentQueries,
+    })
+  }, [input, userRole, documents, recentQueries, isDismissed])
+
+  // Reset selected index when suggestions change
+  useEffect(() => {
+    setSelectedIndex(0)
+  }, [allItems])
+
+  const showPopover = !isDismissed && allItems.length > 0 && input.trim().length >= 2
 
   useEffect(() => {
     const SpeechRecognition = typeof window !== 'undefined'
@@ -100,7 +136,35 @@ export default function Chat({ onSend, disabled, userRole, focusDoc = null, onCl
 
   function handleChange(e) {
     setInput(e.target.value)
+    setIsDismissed(false)
     resizeTextarea()
+  }
+
+  function applySelection(item, shouldSubmit = true) {
+    if (!item) return
+    if (item.type === 'document') {
+      if (onFocusDoc) {
+        onFocusDoc(item.doc)
+      }
+      if (input.includes('@')) {
+        setInput(input.slice(0, input.lastIndexOf('@')).trim())
+      } else {
+        setInput('')
+      }
+      setIsDismissed(true)
+      return
+    }
+
+    const targetQuery = item.label
+    setInput(targetQuery)
+    setIsDismissed(true)
+
+    if (shouldSubmit) {
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
+      setInput('')
+      const docParam = focusDoc?.name || (typeof focusDoc === 'string' ? focusDoc : null)
+      onSend(targetQuery, true, docParam)
+    }
   }
 
   function submit() {
@@ -115,6 +179,7 @@ export default function Chat({ onSend, disabled, userRole, focusDoc = null, onCl
     const q = input.trim()
     if (!q || disabled) return
     setInput('')
+    setIsDismissed(true)
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
     }
@@ -123,6 +188,51 @@ export default function Chat({ onSend, disabled, userRole, focusDoc = null, onCl
   }
 
   function handleKeyDown(e) {
+    if (showPopover) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelectedIndex((prev) => (allItems.length ? (prev + 1) % allItems.length : 0))
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelectedIndex((prev) => (allItems.length ? (prev - 1 + allItems.length) % allItems.length : 0))
+        return
+      }
+      if (e.key === 'Tab' || (e.key === 'ArrowRight' && textareaRef.current?.selectionStart === input.length)) {
+        if (ghostSuffix && bestMatch) {
+          e.preventDefault()
+          setInput(bestMatch)
+          setIsDismissed(true)
+          return
+        } else if (allItems[selectedIndex]) {
+          e.preventDefault()
+          applySelection(allItems[selectedIndex], false)
+          return
+        }
+      }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        if (allItems[selectedIndex]) {
+          e.preventDefault()
+          applySelection(allItems[selectedIndex], true)
+          return
+        }
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setIsDismissed(true)
+        return
+      }
+    } else {
+      // Popover is closed, but ghost text suffix exists
+      if (ghostSuffix && bestMatch && (e.key === 'Tab' || (e.key === 'ArrowRight' && textareaRef.current?.selectionStart === input.length))) {
+        e.preventDefault()
+        setInput(bestMatch)
+        setIsDismissed(true)
+        return
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       submit()
@@ -189,33 +299,78 @@ export default function Chat({ onSend, disabled, userRole, focusDoc = null, onCl
         </div>
       )}
 
-      <textarea
-        ref={textareaRef}
-        value={input}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        placeholder={
-          isListening
-            ? "Listening to your voice..."
-            : focusDoc
-            ? `Ask anything specifically from ${focusDoc.name || focusDoc}…`
-            : "Ask anything about your department's documents…"
-        }
-        rows={1}
-        disabled={disabled}
-        className={`flex-1 resize-none text-sm focus:outline-none disabled:opacity-50 ${
-          isDark ? 'placeholder:text-white/35' : 'placeholder:text-slate-400'
-        }`}
-        style={{
-          lineHeight: '1.5rem',
-          background: 'transparent',
-          color: isDark ? 'rgba(255,255,255,0.92)' : '#0f172a',
-          fontFamily: 'inherit',
-          overflowY: 'hidden',
-          paddingTop: '2px',
-          paddingBottom: '2px',
-        }}
+      {/* Spotlight Autocomplete Popover */}
+      <SpotlightAutocomplete
+        isOpen={showPopover}
+        onClose={() => setIsDismissed(true)}
+        items={allItems}
+        selectedIndex={selectedIndex}
+        onSelect={(item) => applySelection(item, true)}
+        inputQuery={input}
       />
+
+      {/* Input area with Inline Ghost Text */}
+      <div className="relative flex-1 flex items-center min-w-0">
+        <textarea
+          ref={textareaRef}
+          value={input}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder={
+            isListening
+              ? "Listening to your voice..."
+              : focusDoc
+              ? `Ask anything specifically from ${focusDoc.name || focusDoc}…`
+              : "Ask anything about your department's documents…"
+          }
+          rows={1}
+          disabled={disabled}
+          className={`w-full resize-none text-sm focus:outline-none disabled:opacity-50 relative z-10 ${
+            isDark ? 'placeholder:text-white/35' : 'placeholder:text-slate-400'
+          }`}
+          style={{
+            lineHeight: '1.5rem',
+            background: 'transparent',
+            color: isDark ? 'rgba(255,255,255,0.92)' : '#0f172a',
+            fontFamily: 'inherit',
+            overflowY: 'hidden',
+            paddingTop: '2px',
+            paddingBottom: '2px',
+          }}
+        />
+
+        {/* Inline Ghost Text (appears right after cursor) */}
+        {ghostSuffix && !input.includes('\n') && (
+          <div
+            className="absolute left-0 top-0 w-full pointer-events-none flex items-center text-sm font-normal select-none overflow-hidden z-0"
+            style={{
+              lineHeight: '1.5rem',
+              paddingTop: '2px',
+              paddingBottom: '2px',
+              fontFamily: 'inherit',
+            }}
+          >
+            {/* Mirror typed text invisibly so suffix starts at the exact cursor position */}
+            <span className="opacity-0 whitespace-pre">{input}</span>
+            <span
+              className="opacity-45 italic tracking-tight truncate"
+              style={{ color: isDark ? '#d8b4fe' : '#7c3aed' }}
+            >
+              {ghostSuffix}
+            </span>
+            <span
+              className="ml-2 shrink-0 font-mono text-[9px] px-1.5 py-0.2 rounded border uppercase tracking-wider opacity-60 inline-flex items-center gap-0.5"
+              style={{
+                background: isDark ? 'rgba(168, 85, 247, 0.20)' : '#f3e8ff',
+                color: isDark ? '#d8b4fe' : '#7e22ce',
+                borderColor: isDark ? 'rgba(168, 85, 247, 0.35)' : '#d8b4fe',
+              }}
+            >
+              Tab ⇥
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Voice Dictation (Microphone Button) */}
       <button

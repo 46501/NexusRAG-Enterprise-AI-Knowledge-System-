@@ -599,6 +599,9 @@ export default function ChatPage() {
               userRole={user?.role}
               focusDoc={focusDoc}
               onClearFocus={() => setFocusDoc(null)}
+              documents={docs}
+              threads={threads}
+              onFocusDoc={(doc) => setFocusDoc(doc)}
             />
           </div>
         </div>
