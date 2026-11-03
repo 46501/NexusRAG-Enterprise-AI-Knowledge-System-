@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useQuery } from '../hooks/useQuery'
@@ -76,6 +76,49 @@ export default function ChatPage() {
     chunkId: null,
     snippet: '',
   })
+  const [docSearchQuery, setDocSearchQuery] = useState('')
+  const [docTypeFilter, setDocTypeFilter] = useState('all') // 'all' | 'pdf' | 'txt' | 'md'
+  const [docSortOrder, setDocSortOrder] = useState('recent') // 'recent' | 'alpha'
+  const docSearchInputRef = useRef(null)
+
+  // Document counts by file extension
+  const docCounts = useMemo(() => {
+    let pdf = 0, txt = 0, md = 0
+    docs.forEach((doc) => {
+      const lower = (doc.name || '').toLowerCase()
+      if (lower.endsWith('.pdf')) pdf++
+      else if (lower.endsWith('.md')) md++
+      else if (lower.endsWith('.txt')) txt++
+    })
+    return { all: docs.length, pdf, txt, md }
+  }, [docs])
+
+  // Filtered and sorted documents (0 CPU lag via memoization)
+  const filteredDocs = useMemo(() => {
+    let result = [...docs]
+
+    // 1. Filter by file type
+    if (docTypeFilter !== 'all') {
+      const ext = `.${docTypeFilter}`
+      result = result.filter((d) => (d.name || '').toLowerCase().endsWith(ext))
+    }
+
+    // 2. Filter by search query
+    const q = docSearchQuery.trim().toLowerCase()
+    if (q) {
+      result = result.filter((d) => (d.name || '').toLowerCase().includes(q))
+    }
+
+    // 3. Sort
+    if (docSortOrder === 'alpha') {
+      result.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+    } else {
+      // Default: recent (newest upload first)
+      result.sort((a, b) => new Date(b.uploaded_at || 0) - new Date(a.uploaded_at || 0))
+    }
+
+    return result
+  }, [docs, docTypeFilter, docSearchQuery, docSortOrder])
 
   function handleOpenComparison(initialA = null, initialB = null) {
     setComparisonDocs({ docA: initialA, docB: initialB })
@@ -291,6 +334,21 @@ export default function ChatPage() {
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'm') {
         e.preventDefault()
         setComparisonModalOpen((prev) => !prev)
+      } else if (
+        e.key === '/' &&
+        !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName) &&
+        !document.activeElement?.isContentEditable
+      ) {
+        e.preventDefault()
+        setDocsOpen(true)
+        setTimeout(() => docSearchInputRef.current?.focus(), 50)
+      } else if (e.key === 'Escape' && document.activeElement === docSearchInputRef.current) {
+        e.preventDefault()
+        if (docSearchQuery) {
+          setDocSearchQuery('')
+        } else {
+          docSearchInputRef.current?.blur()
+        }
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -644,9 +702,104 @@ export default function ChatPage() {
             <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: d?.text }}>
               {user?.role}
             </span>
-            <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>
-              · {docs.length} files
+            <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.30)' : '#64748b' }}>
+              · {filteredDocs.length !== docs.length ? `${filteredDocs.length} of ${docs.length} files` : `${docs.length} files`}
             </span>
+          </div>
+        </div>
+
+        {/* Search & Filter Bar */}
+        <div
+          className="px-3 py-2 space-y-1.5 border-b select-none"
+          style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0' }}
+        >
+          {/* Search Input Box */}
+          <div className="relative flex items-center">
+            <svg
+              className="absolute left-2.5 w-3.5 h-3.5 pointer-events-none opacity-40"
+              style={{ color: isDark ? '#fff' : '#0f172a' }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" strokeWidth="2" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <input
+              ref={docSearchInputRef}
+              type="text"
+              value={docSearchQuery}
+              onChange={(e) => setDocSearchQuery(e.target.value)}
+              placeholder="Filter files... (Press /)"
+              className={`w-full text-xs pl-8 pr-7 py-1.5 rounded-lg border outline-none transition-all placeholder:text-[11px] ${
+                isDark
+                  ? 'bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-purple-400/50 focus:bg-white/[0.06]'
+                  : 'bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-purple-500/50 focus:bg-white'
+              }`}
+            />
+            {docSearchQuery ? (
+              <button
+                type="button"
+                onClick={() => setDocSearchQuery('')}
+                className="absolute right-2 text-xs opacity-50 hover:opacity-100 cursor-pointer p-0.5"
+                title="Clear search (Esc)"
+              >
+                ✕
+              </button>
+            ) : (
+              <kbd className="absolute right-2 font-mono text-[9px] px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 opacity-40 pointer-events-none select-none">
+                /
+              </kbd>
+            )}
+          </div>
+
+          {/* Type Filter Chips & Sort Toggle */}
+          <div className="flex items-center justify-between gap-1">
+            {/* Type Chips */}
+            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+              {[
+                { key: 'all', label: 'All', count: docCounts.all },
+                { key: 'pdf', label: 'PDF', count: docCounts.pdf },
+                { key: 'txt', label: 'TXT', count: docCounts.txt },
+                { key: 'md', label: 'MD', count: docCounts.md },
+              ].map(({ key, label, count }) => {
+                if (key !== 'all' && count === 0) return null
+                const isActive = docTypeFilter === key
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setDocTypeFilter(key)}
+                    className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 ${
+                      isActive
+                        ? isDark
+                          ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-xs'
+                          : 'bg-purple-100 text-purple-700 border border-purple-200 shadow-xs'
+                        : isDark
+                        ? 'text-white/40 hover:text-white/70 hover:bg-white/5 border border-transparent'
+                        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent'
+                    }`}
+                  >
+                    <span>{label}</span>
+                    <span className="text-[9px] opacity-60">({count})</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Sort Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setDocSortOrder((prev) => (prev === 'recent' ? 'alpha' : 'recent'))}
+              className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                isDark
+                  ? 'text-white/50 hover:text-white hover:bg-white/5 border border-white/10'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
+              }`}
+              title={`Sort: ${docSortOrder === 'recent' ? 'Newest first (Click for A-Z)' : 'Alphabetical (Click for Newest)'}`}
+            >
+              <span>{docSortOrder === 'recent' ? '🕒 Recent' : '🔤 A–Z'}</span>
+            </button>
           </div>
         </div>
 
@@ -659,9 +812,25 @@ export default function ChatPage() {
             </div>
           ) : docs.length === 0 ? (
             <p className="px-2 text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>No documents found.</p>
+          ) : filteredDocs.length === 0 ? (
+            <div className="px-3 py-8 text-center space-y-2">
+              <p className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.50)' : '#64748b' }}>
+                No files match <span className="font-semibold text-purple-400">"{docSearchQuery}"</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setDocSearchQuery('')
+                  setDocTypeFilter('all')
+                }}
+                className="text-[11px] font-medium text-purple-400 hover:underline cursor-pointer"
+              >
+                Clear filter
+              </button>
+            </div>
           ) : (
             <ul className="space-y-1.5">
-              {docs.map((doc) => (
+              {filteredDocs.map((doc) => (
                 <li key={doc.id}>
                   <div
                     className={`w-full text-left p-2.5 rounded-[12px] transition-all group border ${
