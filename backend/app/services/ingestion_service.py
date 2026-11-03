@@ -18,7 +18,7 @@ _SYNC_DB_URL = (
 )
 
 
-def _run_ingest_sync(file_path: Path, role_access: str, uploader_id: str, original_filename: str) -> str:
+def _run_ingest_sync(file_path: Path, role_access: str, uploader_id: str, original_filename: str) -> tuple[str, int]:
     engine = create_engine(_SYNC_DB_URL)
     with Session(engine) as db:
         doc_id = ingest_file(
@@ -29,21 +29,24 @@ def _run_ingest_sync(file_path: Path, role_access: str, uploader_id: str, origin
             original_filename=original_filename,
         )
         rebuild_bm25_index(db)
+        from app.db.models import Document
+        doc_rec = db.get(Document, uuid.UUID(doc_id))
+        chunk_count = doc_rec.chunk_count if doc_rec else 0
         db.commit()
     engine.dispose()
-    return doc_id
+    return doc_id, chunk_count
 
 
-async def ingest_upload(file_path: Path, role_access: str, uploader_id: str, original_filename: str) -> str:
+async def ingest_upload(file_path: Path, role_access: str, uploader_id: str, original_filename: str) -> tuple[str, int]:
     if not file_path.exists():
         raise ValueError(f"Temp file not found: {file_path}")
 
     logger.info("Starting ingestion for %s role=%s uploader=%s", original_filename, role_access, uploader_id)
 
     loop = asyncio.get_event_loop()
-    doc_id = await loop.run_in_executor(
+    doc_id, chunk_count = await loop.run_in_executor(
         None, _run_ingest_sync, file_path, role_access, uploader_id, original_filename
     )
 
-    logger.info("Ingestion complete doc_id=%s", doc_id)
-    return doc_id
+    logger.info("Ingestion complete doc_id=%s chunks=%d", doc_id, chunk_count)
+    return doc_id, chunk_count

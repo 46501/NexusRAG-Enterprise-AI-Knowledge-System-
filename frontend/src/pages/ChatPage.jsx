@@ -11,6 +11,7 @@ import CitationDrawer from '../components/CitationDrawer'
 import ExportModal from '../components/ExportModal'
 import CommandPalette from '../components/CommandPalette'
 import DocumentReaderModal from '../components/DocumentReaderModal'
+import DocumentUploadModal from '../components/DocumentUploadModal'
 import api from '../services/api'
 
 const DEPT = {
@@ -49,6 +50,9 @@ export default function ChatPage() {
   const [exportOpen, setExportOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [focusDoc, setFocusDoc] = useState(null)
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  const [droppedFile, setDroppedFile] = useState(null)
+  const [windowDragging, setWindowDragging] = useState(false)
   const [readerState, setReaderState] = useState({
     isOpen: false,
     docIdOrName: null,
@@ -70,31 +74,73 @@ export default function ChatPage() {
   const d = DEPT[user?.role]
   const suggestions = SUGGESTIONS[user?.role] ?? []
 
-  useEffect(() => {
-    function handleGlobalKeyDown(e) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault()
-        setCommandPaletteOpen((prev) => !prev)
-      }
-    }
-    window.addEventListener('keydown', handleGlobalKeyDown)
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-  }, [])
-
-  useEffect(() => {
-    const el = messagesRef.current
-    if (!el) return
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 180
-    if (nearBottom) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-    }
-  }, [messages, thinking])
-
-  useEffect(() => {
+  function fetchDocs() {
+    setDocsLoading(true)
     api.get('/documents')
       .then((res) => setDocs(res.data.documents ?? []))
       .catch(() => setDocs([]))
       .finally(() => setDocsLoading(false))
+  }
+
+  useEffect(() => {
+    fetchDocs()
+  }, [])
+
+  // Full-window drag & drop listener
+  useEffect(() => {
+    let dragCounter = 0
+    function handleDragEnter(e) {
+      e.preventDefault()
+      dragCounter++
+      if (e.dataTransfer?.types && Array.from(e.dataTransfer.types).includes('Files')) {
+        setWindowDragging(true)
+      }
+    }
+    function handleDragLeave(e) {
+      e.preventDefault()
+      dragCounter--
+      if (dragCounter <= 0) {
+        dragCounter = 0
+        setWindowDragging(false)
+      }
+    }
+    function handleDragOver(e) {
+      e.preventDefault()
+    }
+    function handleDrop(e) {
+      e.preventDefault()
+      dragCounter = 0
+      setWindowDragging(false)
+      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+        setDroppedFile(e.dataTransfer.files[0])
+        setUploadModalOpen(true)
+      }
+    }
+    window.addEventListener('dragenter', handleDragEnter)
+    window.addEventListener('dragleave', handleDragLeave)
+    window.addEventListener('dragover', handleDragOver)
+    window.addEventListener('drop', handleDrop)
+    return () => {
+      window.removeEventListener('dragenter', handleDragEnter)
+      window.removeEventListener('dragleave', handleDragLeave)
+      window.removeEventListener('dragover', handleDragOver)
+      window.removeEventListener('drop', handleDrop)
+    }
+  }, [])
+
+  // Global Keyboard Shortcuts (⌘K for palette, ⌘U for upload)
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setCommandPaletteOpen((prev) => !prev)
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'u') {
+        e.preventDefault()
+        setUploadModalOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   return (
@@ -379,18 +425,34 @@ export default function ChatPage() {
             <p className="text-[10px] font-semibold uppercase tracking-[0.1em]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>
               Documents
             </p>
-            <button
-              className="md:hidden text-[11px] px-2 py-0.5 rounded"
-              style={{
-                color: isDark ? 'rgba(255,255,255,0.35)' : '#475569',
-                border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
-                background: 'none',
-                cursor: 'pointer'
-              }}
-              onClick={() => setDocsOpen(false)}
-            >
-              ✕ Close
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setUploadModalOpen(true)}
+                className="text-[10px] px-2 py-0.5 rounded font-semibold transition-all hover:scale-105 cursor-pointer flex items-center gap-1 shadow-xs"
+                style={{
+                  background: isDark ? 'rgba(168, 85, 247, 0.20)' : '#f3e8ff',
+                  color: isDark ? '#d8b4fe' : '#7e22ce',
+                  border: isDark ? '1px solid rgba(168, 85, 247, 0.35)' : '1px solid #d8b4fe',
+                }}
+                title="Upload & index new corporate file (⌘U)"
+              >
+                <span>+</span>
+                <span>Upload</span>
+              </button>
+              <button
+                className="md:hidden text-[11px] px-2 py-0.5 rounded"
+                style={{
+                  color: isDark ? 'rgba(255,255,255,0.35)' : '#475569',
+                  border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
+                  background: 'none',
+                  cursor: 'pointer'
+                }}
+                onClick={() => setDocsOpen(false)}
+              >
+                ✕ Close
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-1.5">
             {d && <span className="w-1.5 h-1.5 rounded-full" style={{ background: d.dot }} />}
@@ -533,6 +595,7 @@ export default function ChatPage() {
         onToggleDocs={() => setDocsOpen((v) => !v)}
         onOpenDocument={(doc) => handleOpenDocumentReader({ docIdOrName: doc.id || doc.name })}
         onFocusDoc={(doc) => setFocusDoc(doc)}
+        onOpenUpload={() => setUploadModalOpen(true)}
         user={user}
         documents={docs}
       />
@@ -546,6 +609,53 @@ export default function ChatPage() {
         highlightChunkId={readerState.chunkId}
         highlightSnippet={readerState.snippet}
         onAskQuestion={(prompt) => sendQuery(prompt, true, focusDoc?.name || focusDoc)}
+        onFocusDoc={(doc) => setFocusDoc(doc)}
+      />
+
+      {/* Full-Window Drag & Drop Overlay */}
+      {windowDragging && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-8 backdrop-blur-md pointer-events-none transition-all duration-300"
+          style={{
+            background: isDark ? 'rgba(10, 10, 12, 0.78)' : 'rgba(255, 255, 255, 0.82)',
+          }}
+        >
+          <div
+            className="w-full max-w-lg p-10 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center text-center shadow-2xl transition-all transform scale-105"
+            style={{
+              borderColor: '#a855f7',
+              background: isDark ? 'rgba(168, 85, 247, 0.08)' : 'rgba(168, 85, 247, 0.05)',
+            }}
+          >
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg"
+              style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)', color: '#fff' }}
+            >
+              📂
+            </div>
+            <h3 className="text-xl font-bold mb-1" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>
+              Drop Corporate Document Here
+            </h3>
+            <p className="text-xs max-w-xs" style={{ color: isDark ? 'rgba(255,255,255,0.60)' : '#64748b' }}>
+              Release file to instantly open the Ingestion Drawer with chunking & vector indexing.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Drag & Drop Corporate Document Ingestion Drawer */}
+      <DocumentUploadModal
+        isOpen={uploadModalOpen}
+        onClose={() => {
+          setUploadModalOpen(false)
+          setDroppedFile(null)
+        }}
+        user={user}
+        initialFile={droppedFile}
+        onUploadSuccess={() => {
+          fetchDocs()
+        }}
+        onOpenReader={(doc) => handleOpenDocumentReader({ docIdOrName: doc.docIdOrName || doc.id || doc.filename })}
         onFocusDoc={(doc) => setFocusDoc(doc)}
       />
 

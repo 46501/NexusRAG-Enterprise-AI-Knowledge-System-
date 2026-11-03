@@ -55,7 +55,7 @@ async def ingest_document(
     temp_path.write_bytes(contents)
 
     try:
-        doc_id = await ingest_upload(
+        doc_id, chunk_count = await ingest_upload(
             file_path=temp_path,
             role_access=role_access,
             uploader_id=str(current_user.id),
@@ -67,4 +67,9 @@ async def ingest_document(
         if temp_path.exists():
             temp_path.unlink()
 
-    return {"doc_id": doc_id, "filename": file.filename, "department": role_access}
+    return {
+        "doc_id": doc_id,
+        "filename": file.filename,
+        "department": role_access,
+        "chunk_count": chunk_count,
+    }

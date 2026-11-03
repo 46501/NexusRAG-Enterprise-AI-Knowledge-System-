@@ -88,7 +88,7 @@ export function useQuery() {
         try {
           const err = await res.json()
           errDetail = err.detail ?? errDetail
-        } catch (_) {}
+        } catch (_) { }
         updateLastAssistant({ content: errDetail, streaming: false })
         return
       }

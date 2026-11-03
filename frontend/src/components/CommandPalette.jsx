@@ -41,6 +41,7 @@ export default function CommandPalette({
   onToggleDocs,
   onOpenDocument,
   onFocusDoc,
+  onOpenUpload,
   user,
   documents = [],
 }) {
@@ -97,6 +98,16 @@ export default function CommandPalette({
       icon: '📚',
       shortcut: '⌘D',
       action: () => { onToggleDocs(); onClose() },
+    })
+
+    list.push({
+      id: 'upload-doc',
+      category: 'Actions',
+      label: 'Upload New Corporate Document',
+      subtitle: 'Index PDF, TXT, or MD into vector and BM25 knowledge base',
+      icon: '📂',
+      shortcut: '⌘U',
+      action: () => { if (onOpenUpload) onOpenUpload(); onClose() },
     })
 
     if (user?.role === 'admin' || user?.role === 'demo_admin') {
@@ -165,7 +176,7 @@ export default function CommandPalette({
     })
 
     return list
-  }, [role, deptInfo, isDark, user, documents, onNewChat, onExport, toggleTheme, onToggleDocs, onOpenDocument, onFocusDoc, navigate, onSelectPrompt, onClose])
+  }, [role, deptInfo, isDark, user, documents, onNewChat, onExport, toggleTheme, onToggleDocs, onOpenDocument, onFocusDoc, onOpenUpload, navigate, onSelectPrompt, onClose])
 
   // Filter items based on search input
   const filteredItems = useMemo(() => {
