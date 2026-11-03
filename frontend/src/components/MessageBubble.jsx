@@ -39,6 +39,7 @@ export default function MessageBubble({
   userRole,
   sources,
   confidenceScore,
+  focusDoc,
   streaming,
   suggestedQuestions,
   precedingUserQuery,
@@ -283,6 +284,20 @@ export default function MessageBubble({
             onOpenCitation={onOpenCitation}
             onOpenReader={onOpenReader}
           />
+
+          {focusDoc && (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border"
+              style={{
+                background: isDark ? 'rgba(168, 85, 247, 0.15)' : '#f3e8ff',
+                color: isDark ? '#d8b4fe' : '#7e22ce',
+                borderColor: isDark ? 'rgba(168, 85, 247, 0.35)' : '#d8b4fe',
+              }}
+              title={`Answer scoped exclusively to ${focusDoc}`}
+            >
+              <span>🎯 Scoped to {focusDoc}</span>
+            </span>
+          )}
 
           {unique.length > 0 && (
             <div className="flex gap-1.5 flex-wrap items-center">

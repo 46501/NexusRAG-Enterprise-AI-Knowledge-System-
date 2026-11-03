@@ -16,6 +16,7 @@ export default function DocumentReaderModal({
   highlightChunkId = null,
   highlightSnippet = '',
   onAskQuestion,
+  onFocusDoc,
 }) {
   const { isDark } = useTheme()
   const [data, setData] = useState(null)
@@ -261,6 +262,25 @@ export default function DocumentReaderModal({
 
           {/* Top Actions */}
           <div className="flex items-center gap-2">
+            {onFocusDoc && (
+              <button
+                onClick={() => {
+                  onFocusDoc(doc || { name: docIdOrName })
+                  onClose()
+                }}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:scale-[1.02]"
+                style={{
+                  background: isDark ? 'rgba(168,85,247,0.22)' : '#f3e8ff',
+                  color: isDark ? '#d8b4fe' : '#7e22ce',
+                  border: isDark ? '1px solid rgba(168,85,247,0.40)' : '1px solid #d8b4fe',
+                }}
+                title="Scope all chat questions specifically to this document"
+              >
+                <span>🎯</span>
+                <span>Focus Q&A</span>
+              </button>
+            )}
+
             <button
               onClick={handleAskAboutDoc}
               className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer"

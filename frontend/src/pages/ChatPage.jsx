@@ -48,6 +48,7 @@ export default function ChatPage() {
   const [activeCitation, setActiveCitation] = useState({ isOpen: false, index: 1, sources: [] })
   const [exportOpen, setExportOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [focusDoc, setFocusDoc] = useState(null)
   const [readerState, setReaderState] = useState({
     isOpen: false,
     docIdOrName: null,
@@ -330,11 +331,12 @@ export default function ChatPage() {
                     userRole={user?.role}
                     sources={msg.sources}
                     confidenceScore={msg.confidenceScore}
+                    focusDoc={msg.focusDoc}
                     streaming={msg.streaming}
                     suggestedQuestions={msg.suggestedQuestions}
                     precedingUserQuery={i > 0 && messages[i - 1]?.role === 'user' ? messages[i - 1].content : null}
                     onOpenCitation={(idx, srcList) => setActiveCitation({ isOpen: true, index: idx, sources: srcList || [] })}
-                    onSelectSuggestion={(q) => sendQuery(q, true)}
+                    onSelectSuggestion={(q) => sendQuery(q, true, focusDoc?.name || focusDoc)}
                     onOpenReader={handleOpenDocumentReader}
                   />
                 ))}
@@ -355,7 +357,13 @@ export default function ChatPage() {
           }}
         >
           <div className="max-w-[720px] mx-auto">
-            <Chat onSend={sendQuery} disabled={thinking} userRole={user?.role} />
+            <Chat
+              onSend={(q, stream, docParam) => sendQuery(q, stream, docParam ?? focusDoc?.name ?? focusDoc)}
+              disabled={thinking}
+              userRole={user?.role}
+              focusDoc={focusDoc}
+              onClearFocus={() => setFocusDoc(null)}
+            />
           </div>
         </div>
       </div>
@@ -441,15 +449,43 @@ export default function ChatPage() {
                         </span>
                       </div>
                     </div>
-                    <span
-                      className="text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity shrink-0 font-medium"
-                      style={{
-                        background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
-                        color: isDark ? 'rgba(255,255,255,0.70)' : '#475569',
-                      }}
-                    >
-                      Read ↗
-                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setFocusDoc(focusDoc?.id === doc.id ? null : doc)
+                        }}
+                        className={`text-[10px] px-1.5 py-0.5 rounded transition-all font-medium cursor-pointer ${
+                          focusDoc?.id === doc.id
+                            ? 'opacity-100 ring-1'
+                            : 'opacity-0 group-hover:opacity-100'
+                        }`}
+                        style={{
+                          background: focusDoc?.id === doc.id
+                            ? (isDark ? 'rgba(168, 85, 247, 0.25)' : '#f3e8ff')
+                            : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
+                          color: focusDoc?.id === doc.id
+                            ? (isDark ? '#d8b4fe' : '#7e22ce')
+                            : (isDark ? 'rgba(255,255,255,0.70)' : '#475569'),
+                          borderColor: focusDoc?.id === doc.id
+                            ? (isDark ? 'rgba(168, 85, 247, 0.45)' : '#d8b4fe')
+                            : 'transparent',
+                        }}
+                        title={focusDoc?.id === doc.id ? "Clear focus (Search all)" : "Focus chat on this document only"}
+                      >
+                        {focusDoc?.id === doc.id ? '🎯 Focused' : '🎯 Focus'}
+                      </button>
+                      <span
+                        className="text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity font-medium"
+                        style={{
+                          background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
+                          color: isDark ? 'rgba(255,255,255,0.70)' : '#475569',
+                        }}
+                      >
+                        Read ↗
+                      </span>
+                    </div>
                   </button>
                 </li>
               ))}
@@ -491,11 +527,12 @@ export default function ChatPage() {
       <CommandPalette
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
-        onSelectPrompt={(prompt) => sendQuery(prompt, true)}
+        onSelectPrompt={(prompt) => sendQuery(prompt, true, focusDoc?.name || focusDoc)}
         onNewChat={clearMessages}
         onExport={() => setExportOpen(true)}
         onToggleDocs={() => setDocsOpen((v) => !v)}
         onOpenDocument={(doc) => handleOpenDocumentReader({ docIdOrName: doc.id || doc.name })}
+        onFocusDoc={(doc) => setFocusDoc(doc)}
         user={user}
         documents={docs}
       />
@@ -508,7 +545,8 @@ export default function ChatPage() {
         highlightChunkIndex={readerState.chunkIndex}
         highlightChunkId={readerState.chunkId}
         highlightSnippet={readerState.snippet}
-        onAskQuestion={(prompt) => sendQuery(prompt, true)}
+        onAskQuestion={(prompt) => sendQuery(prompt, true, focusDoc?.name || focusDoc)}
+        onFocusDoc={(doc) => setFocusDoc(doc)}
       />
 
     </div>

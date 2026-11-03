@@ -1,5 +1,5 @@
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.models import Filter, FieldCondition, MatchAny
+from qdrant_client.models import Filter, FieldCondition, MatchAny, MatchValue
 
 from app.config import get_settings
 from app.retrieval.embedder import embed
@@ -29,17 +29,25 @@ async def dense_search(
     query: str,
     allowed_roles: list[str],
     top_k: int = 20,
+    focus_doc: str | None = None,
 ) -> list[dict]:
     vector = embed([query])[0]
 
-    role_filter = Filter(
-        must=[
+    must_conditions = [
+        FieldCondition(
+            key="role_access",
+            match=MatchAny(any=allowed_roles),
+        )
+    ]
+    if focus_doc:
+        must_conditions.append(
             FieldCondition(
-                key="role_access",
-                match=MatchAny(any=allowed_roles),
+                key="source",
+                match=MatchValue(value=focus_doc),
             )
-        ]
-    )
+        )
+
+    role_filter = Filter(must=must_conditions)
 
     response = await get_client().query_points(
         collection_name=_s.qdrant_collection,

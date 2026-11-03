@@ -114,7 +114,11 @@ def _build_retrieval_query(query: str, history: list[dict] | None) -> str:
 
 @traceable(name="run_query", run_type="chain")
 async def run_query(
-    query: str, role: RoleEnum, top_k: int, history: list[dict] | None = None
+    query: str,
+    role: RoleEnum,
+    top_k: int,
+    history: list[dict] | None = None,
+    focus_doc: str | None = None,
 ) -> dict:
     if _is_greeting(query):
         logger.info("Greeting detected, skipping retrieval query=%r", query[:60])
@@ -127,8 +131,8 @@ async def run_query(
 
     try:
         async with _state.get_semaphore():
-            logger.info("RAG query start role=%s query=%r retrieval_query=%r", role, query[:60], retrieval_query[:60])
-            fused = await hybrid_search(retrieval_query, allowed_roles, top_k=top_k * 3)
+            logger.info("RAG query start role=%s query=%r focus_doc=%s", role, query[:60], focus_doc)
+            fused = await hybrid_search(retrieval_query, allowed_roles, top_k=top_k * 3, focus_doc=focus_doc)
             ranked = _normalize_rerank_scores(rerank(retrieval_query, fused, top_k=top_k))
             result = await generate(query, ranked, history=history)
     except Exception:
@@ -152,7 +156,11 @@ async def run_query(
 
 @traceable(name="run_query_stream", run_type="chain")
 async def run_query_stream(
-    query: str, role: RoleEnum, top_k: int, history: list[dict] | None = None
+    query: str,
+    role: RoleEnum,
+    top_k: int,
+    history: list[dict] | None = None,
+    focus_doc: str | None = None,
 ) -> tuple[AsyncIterator[str], list[dict]]:
     if _is_greeting(query):
         logger.info("Greeting detected, skipping retrieval query=%r", query[:60])
@@ -163,8 +171,8 @@ async def run_query_stream(
 
     try:
         async with _state.get_semaphore():
-            logger.info("RAG stream start role=%s query=%r retrieval_query=%r", role, query[:60], retrieval_query[:60])
-            fused = await hybrid_search(retrieval_query, allowed_roles, top_k=top_k * 3)
+            logger.info("RAG stream start role=%s query=%r focus_doc=%s", role, query[:60], focus_doc)
+            fused = await hybrid_search(retrieval_query, allowed_roles, top_k=top_k * 3, focus_doc=focus_doc)
             ranked = _normalize_rerank_scores(rerank(retrieval_query, fused, top_k=top_k))
     except Exception:
         logger.exception("RAG stream retrieval failed role=%s query=%r", role, query[:60])
@@ -176,6 +184,8 @@ async def run_query_stream(
             "source": c.get("metadata", {}).get("source", "unknown"),
             "department": c.get("metadata", {}).get("role_access", "unknown"),
             "chunk_id": c.get("id"),
+            "doc_id": c.get("metadata", {}).get("doc_id"),
+            "chunk_index": c.get("metadata", {}).get("chunk_index"),
             "rerank_score": c.get("rerank_score"),
             "text": c.get("text", ""),
         }

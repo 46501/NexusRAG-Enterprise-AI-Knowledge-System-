@@ -40,6 +40,7 @@ export default function CommandPalette({
   onExport,
   onToggleDocs,
   onOpenDocument,
+  onFocusDoc,
   user,
   documents = [],
 }) {
@@ -126,6 +127,18 @@ export default function CommandPalette({
     // 3. Department Documents
     documents.forEach((doc) => {
       list.push({
+        id: `focus-doc-${doc.id}`,
+        category: `${deptInfo.name} Documents`,
+        label: `Focus Q&A on ${doc.name}`,
+        subtitle: `Scope floating chat queries strictly to this file`,
+        icon: '🎯',
+        shortcut: 'Focus',
+        action: () => {
+          if (onFocusDoc) onFocusDoc(doc)
+          onClose()
+        },
+      })
+      list.push({
         id: `read-doc-${doc.id}`,
         category: `${deptInfo.name} Documents`,
         label: `Read ${doc.name}`,
@@ -152,7 +165,7 @@ export default function CommandPalette({
     })
 
     return list
-  }, [role, deptInfo, isDark, user, documents, onNewChat, onExport, toggleTheme, onToggleDocs, onOpenDocument, navigate, onSelectPrompt, onClose])
+  }, [role, deptInfo, isDark, user, documents, onNewChat, onExport, toggleTheme, onToggleDocs, onOpenDocument, onFocusDoc, navigate, onSelectPrompt, onClose])
 
   // Filter items based on search input
   const filteredItems = useMemo(() => {

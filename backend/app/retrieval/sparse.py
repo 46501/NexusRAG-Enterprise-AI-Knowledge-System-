@@ -75,6 +75,7 @@ def sparse_search(
     query: str,
     allowed_roles: list[str],
     top_k: int = 20,
+    focus_doc: str | None = None,
 ) -> list[dict]:
     if _retriever is None or _doc_store is None:
         logger.info("Sparse index not available, returning empty results")
@@ -88,6 +89,8 @@ def sparse_search(
         doc = _doc_store[int(idx)]
         if doc.get("role_access") not in allowed_roles:
             continue
+        if focus_doc and doc.get("source") != focus_doc and doc.get("doc_id") != focus_doc:
+            continue
         hits.append({
             "id": doc["id"],
             "score": float(score),
@@ -97,5 +100,5 @@ def sparse_search(
         if len(hits) >= top_k:
             break
 
-    logger.info("Sparse search returned %d hits", len(hits))
+    logger.info("Sparse search returned %d hits (focus_doc=%s)", len(hits), focus_doc)
     return hits

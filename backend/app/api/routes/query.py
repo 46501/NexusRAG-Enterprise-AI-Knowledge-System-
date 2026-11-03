@@ -49,11 +49,32 @@ async def query(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to access this department. Please contact your administrator if you need access.",
             )
+
+    if body.focus_doc and current_user.role not in (RoleEnum.admin, RoleEnum.demo_admin):
+        from app.db.postgres import AsyncSessionLocal
+        from app.db.models import Document
+        from sqlalchemy import select
+        async with AsyncSessionLocal() as session:
+            q = select(Document).where(Document.name == body.focus_doc)
+            res = await session.execute(q)
+            doc = res.scalar_one_or_none()
+            if doc and doc.department != current_user.role:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You don't have permission to focus on documents outside your department.",
+                )
+
     history_dicts = [m.model_dump() for m in body.history] if body.history else None
     t0 = time.perf_counter()
     if not body.stream:
         try:
-            result = await run_query(body.query, current_user.role, body.top_k, history=history_dicts)
+            result = await run_query(
+                body.query,
+                current_user.role,
+                body.top_k,
+                history=history_dicts,
+                focus_doc=body.focus_doc,
+            )
             latency = (time.perf_counter() - t0) * 1000
             srcs = result.get("sources", [])
             top_src = srcs[0]["source"] if srcs else None
@@ -76,10 +97,17 @@ async def query(
             sources=result["sources"],
             suggested_questions=result.get("suggested_questions", []),
             confidence_score=result.get("confidence_score"),
+            focus_doc=body.focus_doc if result.get("sources") else None,
         )
 
     try:
-        stream, sources = await run_query_stream(body.query, current_user.role, body.top_k, history=history_dicts)
+        stream, sources = await run_query_stream(
+            body.query,
+            current_user.role,
+            body.top_k,
+            history=history_dicts,
+            focus_doc=body.focus_doc,
+        )
     except Exception:
         logger.exception("Stream query route error user=%s", current_user.id)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Query failed")
@@ -120,7 +148,7 @@ async def query(
                 else:
                     conf_score = 94.0
 
-            yield f"data: {json.dumps({'sources': final_sources, 'suggested_questions': follow_ups, 'confidence_score': conf_score, 'done': True})}\n\n"
+            yield f"data: {json.dumps({'sources': final_sources, 'suggested_questions': follow_ups, 'confidence_score': conf_score, 'focus_doc': body.focus_doc if final_sources else None, 'done': True})}\n\n"
         except asyncio.CancelledError:
             logger.info("Client disconnected from query stream user=%s", current_user.id)
             raise

@@ -12,6 +12,7 @@ class QueryRequest(BaseModel):
     stream: bool = False
     top_k: int = Field(default=5, ge=1, le=20)
     history: list[ChatMessage] = []
+    focus_doc: str | None = None
 
 
 class SourceSchema(BaseModel):
@@ -30,3 +31,4 @@ class QueryResponse(BaseModel):
     sources: list[SourceSchema]
     suggested_questions: list[str] = []
     confidence_score: float | None = None
+    focus_doc: str | None = None

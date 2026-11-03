@@ -7,7 +7,7 @@ const DEPT_BTN = {
   finance: '#059669',
 }
 
-export default function Chat({ onSend, disabled, userRole }) {
+export default function Chat({ onSend, disabled, userRole, focusDoc = null, onClearFocus = null }) {
   const { isDark } = useTheme()
   const [input, setInput] = useState('')
   const [isListening, setIsListening] = useState(false)
@@ -118,13 +118,17 @@ export default function Chat({ onSend, disabled, userRole }) {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
     }
-    onSend(q, true)
+    const docParam = focusDoc?.name || (typeof focusDoc === 'string' ? focusDoc : null)
+    onSend(q, true, docParam)
   }
 
   function handleKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       submit()
+    } else if (e.key === 'Escape' && !input.trim() && focusDoc && onClearFocus) {
+      e.preventDefault()
+      onClearFocus()
     }
   }
 
@@ -144,6 +148,32 @@ export default function Chat({ onSend, disabled, userRole }) {
           : '0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(0, 0, 0, 0.03)',
       }}
     >
+      {/* Focus Document Scope Pill */}
+      {focusDoc && (
+        <div
+          className="absolute -top-7 left-4 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border backdrop-blur-md shadow-sm transition-all"
+          style={{
+            background: isDark ? 'rgba(168, 85, 247, 0.22)' : '#f3e8ff',
+            color: isDark ? '#d8b4fe' : '#7e22ce',
+            borderColor: isDark ? 'rgba(168, 85, 247, 0.45)' : '#d8b4fe',
+          }}
+        >
+          <span>🎯</span>
+          <span>Focusing on:</span>
+          <span className="font-mono font-bold truncate max-w-[200px]">{focusDoc.name || focusDoc}</span>
+          {onClearFocus && (
+            <button
+              type="button"
+              onClick={onClearFocus}
+              className="ml-1 text-[10px] hover:scale-125 transition-transform cursor-pointer opacity-70 hover:opacity-100"
+              title="Clear focus (Esc)"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Listening Indicator Pill */}
       {isListening && (
         <div
@@ -164,7 +194,13 @@ export default function Chat({ onSend, disabled, userRole }) {
         value={input}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        placeholder={isListening ? "Listening to your voice..." : "Ask anything about your department's documents…"}
+        placeholder={
+          isListening
+            ? "Listening to your voice..."
+            : focusDoc
+            ? `Ask anything specifically from ${focusDoc.name || focusDoc}…`
+            : "Ask anything about your department's documents…"
+        }
         rows={1}
         disabled={disabled}
         className={`flex-1 resize-none text-sm focus:outline-none disabled:opacity-50 ${

@@ -47,12 +47,13 @@ async def hybrid_search(
     top_k: int = 10,
     dense_k: int = 20,
     sparse_k: int = 20,
+    focus_doc: str | None = None,
 ) -> list[dict]:
-    dense_hits = await dense_search(query, allowed_roles, top_k=dense_k)
-    sparse_hits = sparse_search(query, allowed_roles, top_k=sparse_k)
+    dense_hits = await dense_search(query, allowed_roles, top_k=dense_k, focus_doc=focus_doc)
+    sparse_hits = sparse_search(query, allowed_roles, top_k=sparse_k, focus_doc=focus_doc)
 
     fused = _rrf_fusion(dense_hits, sparse_hits, top_k=top_k)
-    logger.info("Hybrid search fused to %d results", len(fused))
+    logger.info("Hybrid search fused to %d results (focus_doc=%s)", len(fused), focus_doc)
     return fused
 
 

@@ -33,7 +33,7 @@ export function useQuery() {
     }
   }
 
-  async function sendQuery(query, stream = true) {
+  async function sendQuery(query, stream = true, focusDoc = null) {
     const history = messages
       .filter((m) => m.content && (m.role === 'user' || m.role === 'assistant'))
       .slice(-6)
@@ -47,13 +47,14 @@ export function useQuery() {
 
     if (!stream) {
       try {
-        const res = await api.post('/query', { query, stream: false, history })
+        const res = await api.post('/query', { query, stream: false, history, focus_doc: focusDoc })
         appendMessage({
           role: 'assistant',
           content: res.data.answer,
           sources: res.data.sources ?? [],
           suggestedQuestions: res.data.suggested_questions ?? [],
           confidenceScore: res.data.confidence_score ?? null,
+          focusDoc: res.data.focus_doc ?? focusDoc ?? null,
         })
       } catch (err) {
         if (err.response?.status === 401) {
@@ -75,7 +76,7 @@ export function useQuery() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, stream: true, history }),
+        body: JSON.stringify({ query, stream: true, history, focus_doc: focusDoc }),
       })
 
       if (!res.ok) {
@@ -132,6 +133,7 @@ export function useQuery() {
                 sources: payload.sources ?? [],
                 suggestedQuestions: payload.suggested_questions ?? [],
                 confidenceScore: payload.confidence_score ?? null,
+                focusDoc: payload.focus_doc ?? focusDoc ?? null,
                 streaming: false,
               })
             }
