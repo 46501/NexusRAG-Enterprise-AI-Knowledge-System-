@@ -157,5 +157,5 @@ export function useQuery() {
     }
   }
 
-  return { messages, thinking, sendQuery, clearMessages }
+  return { messages, thinking, sendQuery, clearMessages, setMessages }
 }

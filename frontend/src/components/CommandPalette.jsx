@@ -42,8 +42,11 @@ export default function CommandPalette({
   onOpenDocument,
   onFocusDoc,
   onOpenUpload,
+  onToggleThreads,
+  onSelectThread,
   user,
   documents = [],
+  threads = [],
 }) {
   const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
@@ -110,6 +113,16 @@ export default function CommandPalette({
       action: () => { if (onOpenUpload) onOpenUpload(); onClose() },
     })
 
+    list.push({
+      id: 'toggle-threads',
+      category: 'Actions',
+      label: 'Toggle Saved Chat Threads Sidebar',
+      subtitle: 'View, search, or resume past conversational sessions',
+      icon: '💾',
+      shortcut: '⌘S',
+      action: () => { if (onToggleThreads) onToggleThreads(); onClose() },
+    })
+
     if (user?.role === 'admin' || user?.role === 'demo_admin') {
       list.push({
         id: 'admin',
@@ -122,7 +135,24 @@ export default function CommandPalette({
       })
     }
 
-    // 2. Department Prompts
+    // 2. Saved Chat Threads (Past sessions)
+    if (threads && threads.length > 0) {
+      threads.slice(0, 8).forEach((t) => {
+        list.push({
+          id: `saved-thread-${t.id}`,
+          category: 'Saved Chat Threads',
+          label: t.title || 'Untitled Conversation',
+          subtitle: `Resume thread · ${t.messages?.length || 0} msgs`,
+          icon: '💬',
+          action: () => {
+            if (onSelectThread) onSelectThread(t)
+            onClose()
+          },
+        })
+      })
+    }
+
+    // 3. Department Prompts
     const rolePrompts = DEPT_PROMPTS[role] || []
     rolePrompts.forEach((p, idx) => {
       list.push({
@@ -176,7 +206,7 @@ export default function CommandPalette({
     })
 
     return list
-  }, [role, deptInfo, isDark, user, documents, onNewChat, onExport, toggleTheme, onToggleDocs, onOpenDocument, onFocusDoc, onOpenUpload, navigate, onSelectPrompt, onClose])
+  }, [role, deptInfo, isDark, user, documents, threads, onNewChat, onExport, toggleTheme, onToggleDocs, onOpenDocument, onFocusDoc, onOpenUpload, onToggleThreads, onSelectThread, navigate, onSelectPrompt, onClose])
 
   // Filter items based on search input
   const filteredItems = useMemo(() => {

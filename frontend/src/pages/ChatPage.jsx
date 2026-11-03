@@ -12,6 +12,16 @@ import ExportModal from '../components/ExportModal'
 import CommandPalette from '../components/CommandPalette'
 import DocumentReaderModal from '../components/DocumentReaderModal'
 import DocumentUploadModal from '../components/DocumentUploadModal'
+import ThreadHistorySidebar from '../components/ThreadHistorySidebar'
+import {
+  getThreads,
+  saveThread,
+  deleteThread,
+  clearAllThreads,
+  getActiveThreadId,
+  setActiveThreadId,
+  generateThreadTitle,
+} from '../services/threads'
 import api from '../services/api'
 
 const DEPT = {
@@ -39,7 +49,7 @@ function fmtDate(iso) {
 export default function ChatPage() {
   const { user, logout } = useAuth()
   const { isDark } = useTheme()
-  const { messages, thinking, sendQuery, clearMessages } = useQuery()
+  const { messages, thinking, sendQuery, clearMessages, setMessages } = useQuery()
   const bottomRef = useRef(null)
   const messagesRef = useRef(null)
   const [docsOpen, setDocsOpen] = useState(false)
@@ -53,6 +63,9 @@ export default function ChatPage() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [droppedFile, setDroppedFile] = useState(null)
   const [windowDragging, setWindowDragging] = useState(false)
+  const [threadsSidebarOpen, setThreadsSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1280)
+  const [threads, setThreads] = useState([])
+  const [activeThreadId, setActiveThreadIdState] = useState(() => getActiveThreadId(user?.id, user?.role))
   const [readerState, setReaderState] = useState({
     isOpen: false,
     docIdOrName: null,
@@ -128,7 +141,131 @@ export default function ChatPage() {
     }
   }, [])
 
-  // Global Keyboard Shortcuts (⌘K for palette, ⌘U for upload)
+  // Load threads on initial mount or when user role changes
+  useEffect(() => {
+    if (!user?.id) return
+    const loaded = getThreads(user.id, user.role)
+    setThreads(loaded)
+
+    const savedId = getActiveThreadId(user.id, user.role)
+    if (savedId) {
+      const existing = loaded.find((t) => t.id === savedId)
+      if (existing && existing.messages?.length > 0) {
+        setActiveThreadIdState(existing.id)
+        setMessages(existing.messages)
+        if (existing.focusDoc) {
+          setFocusDoc(existing.focusDoc)
+        }
+      } else {
+        setActiveThreadIdState(null)
+      }
+    }
+  }, [user?.id, user?.role])
+
+  // Sync active thread when conversation messages update
+  useEffect(() => {
+    if (!user?.id || messages.length === 0) return
+
+    const lastMsg = messages[messages.length - 1]
+    const isStreaming = lastMsg?.streaming || thinking
+
+    // When the first user message is sent, immediately create the thread so it shows up in sidebar
+    if (messages.length === 1 && messages[0].role === 'user' && !activeThreadId) {
+      const newId = `thread_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+      const title = generateThreadTitle(messages[0].content)
+      const newThread = {
+        id: newId,
+        userId: user.id,
+        department: user.role,
+        title,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        messages,
+        focusDoc,
+      }
+      setActiveThreadIdState(newId)
+      setActiveThreadId(user.id, user.role, newId)
+      saveThread(user.id, user.role, newThread)
+      setThreads(getThreads(user.id, user.role))
+      return
+    }
+
+    // Do not write intermediate SSE tokens on every render
+    if (isStreaming) return
+
+    // Normal finished turn - update thread in storage
+    let currentId = activeThreadId
+    let currentTitle = 'New Conversation'
+
+    if (!currentId) {
+      currentId = `thread_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+      const firstUserMsg = messages.find((m) => m.role === 'user')
+      currentTitle = generateThreadTitle(firstUserMsg?.content || 'New Conversation')
+      setActiveThreadIdState(currentId)
+      setActiveThreadId(user.id, user.role, currentId)
+    } else {
+      const existing = threads.find((t) => t.id === currentId)
+      currentTitle = existing?.title || generateThreadTitle(messages[0]?.content || 'New Conversation')
+    }
+
+    const threadToSave = {
+      id: currentId,
+      userId: user.id,
+      department: user.role,
+      title: currentTitle,
+      messages,
+      focusDoc,
+      updatedAt: new Date().toISOString(),
+    }
+
+    saveThread(user.id, user.role, threadToSave)
+    setThreads(getThreads(user.id, user.role))
+  }, [messages, thinking, user?.id, user?.role])
+
+  function handleSelectThread(thread) {
+    if (!thread) return
+    setActiveThreadIdState(thread.id)
+    setActiveThreadId(user?.id, user?.role, thread.id)
+    setMessages(thread.messages || [])
+    setFocusDoc(thread.focusDoc || null)
+    if (window.innerWidth < 768) {
+      setThreadsSidebarOpen(false)
+    }
+  }
+
+  function handleNewChat() {
+    setActiveThreadIdState(null)
+    setActiveThreadId(user?.id, user?.role, null)
+    clearMessages()
+    setFocusDoc(null)
+    if (window.innerWidth < 768) {
+      setThreadsSidebarOpen(false)
+    }
+  }
+
+  function handleRenameThread(threadId, newTitle) {
+    const existing = threads.find((t) => t.id === threadId)
+    if (!existing) return
+    const updated = { ...existing, title: newTitle, updatedAt: new Date().toISOString() }
+    saveThread(user?.id, user?.role, updated)
+    setThreads(getThreads(user?.id, user?.role))
+  }
+
+  function handleDeleteThread(threadId) {
+    deleteThread(user?.id, user?.role, threadId)
+    setThreads(getThreads(user?.id, user?.role))
+    if (activeThreadId === threadId) {
+      handleNewChat()
+    }
+  }
+
+  function handleClearAllThreads() {
+    clearAllThreads(user?.id, user?.role)
+    setThreads([])
+    handleNewChat()
+  }
+
+  // Global Keyboard Shortcuts (⌘K for palette, ⌘U for upload, ⌘S for threads, ⌘N for new chat)
   useEffect(() => {
     function handleKeyDown(e) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -137,11 +274,17 @@ export default function ChatPage() {
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'u') {
         e.preventDefault()
         setUploadModalOpen((prev) => !prev)
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        setThreadsSidebarOpen((prev) => !prev)
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault()
+        handleNewChat()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [threads, activeThreadId])
 
   return (
     <div
@@ -153,7 +296,21 @@ export default function ChatPage() {
       }}
     >
 
-      {/* ── LEFT: Chat column ─────────────────────────────── */}
+      {/* ── LEFT: Thread History Sidebar ──────────────────── */}
+      <ThreadHistorySidebar
+        isOpen={threadsSidebarOpen}
+        onClose={() => setThreadsSidebarOpen(false)}
+        threads={threads}
+        activeThreadId={activeThreadId}
+        onSelectThread={handleSelectThread}
+        onNewChat={handleNewChat}
+        onRenameThread={handleRenameThread}
+        onDeleteThread={handleDeleteThread}
+        onClearAll={handleClearAllThreads}
+        userRole={user?.role}
+      />
+
+      {/* ── CENTER: Chat column ───────────────────────────── */}
       <div
         className="flex flex-col min-w-0 overflow-hidden"
         style={{ flex: 1, borderRight: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e2e8f0' }}
@@ -175,6 +332,28 @@ export default function ChatPage() {
               <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] border border-[#dea123]/80 inline-block shadow-xs" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] border border-[#1aab29]/80 inline-block shadow-xs" />
             </div>
+
+            {/* macOS Sidebar Toggle (Threads / History) */}
+            <button
+              type="button"
+              onClick={() => setThreadsSidebarOpen((prev) => !prev)}
+              className="p-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center hover:scale-105"
+              style={{
+                color: threadsSidebarOpen ? (isDark ? '#d8b4fe' : '#7e22ce') : (isDark ? 'rgba(255, 255, 255, 0.65)' : '#64748b'),
+                background: threadsSidebarOpen
+                  ? (isDark ? 'rgba(168, 85, 247, 0.18)' : '#f3e8ff')
+                  : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9'),
+                border: threadsSidebarOpen
+                  ? (isDark ? '1px solid rgba(168, 85, 247, 0.35)' : '1px solid #d8b4fe')
+                  : (isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1'),
+              }}
+              title={`Toggle Chat Threads Sidebar (${threadsSidebarOpen ? 'Hide' : 'Show'}) (⌘S)`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <line x1="9" y1="3" x2="9" y2="21" />
+              </svg>
+            </button>
 
             <BackHomeButton />
             {d && (
@@ -229,14 +408,14 @@ export default function ChatPage() {
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={clearMessages}
+                  onClick={handleNewChat}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer hover:opacity-100 opacity-80"
                   style={{
                     background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9',
                     border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
                     color: isDark ? 'rgba(255,255,255,0.85)' : '#334155',
                   }}
-                  title="Start a fresh conversation thread"
+                  title="Start a fresh conversation thread (⌘N)"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -590,14 +769,17 @@ export default function ChatPage() {
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
         onSelectPrompt={(prompt) => sendQuery(prompt, true, focusDoc?.name || focusDoc)}
-        onNewChat={clearMessages}
+        onNewChat={handleNewChat}
         onExport={() => setExportOpen(true)}
         onToggleDocs={() => setDocsOpen((v) => !v)}
         onOpenDocument={(doc) => handleOpenDocumentReader({ docIdOrName: doc.id || doc.name })}
         onFocusDoc={(doc) => setFocusDoc(doc)}
         onOpenUpload={() => setUploadModalOpen(true)}
+        onToggleThreads={() => setThreadsSidebarOpen((v) => !v)}
+        onSelectThread={handleSelectThread}
         user={user}
         documents={docs}
+        threads={threads}
       />
 
       {/* In-App Document Reader with Highlighted Chunks */}
