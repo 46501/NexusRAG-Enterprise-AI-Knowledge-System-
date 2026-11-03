@@ -12,6 +12,7 @@ import ExportModal from '../components/ExportModal'
 import CommandPalette from '../components/CommandPalette'
 import DocumentReaderModal from '../components/DocumentReaderModal'
 import DocumentUploadModal from '../components/DocumentUploadModal'
+import DocumentComparisonModal from '../components/DocumentComparisonModal'
 import ThreadHistorySidebar from '../components/ThreadHistorySidebar'
 import {
   getThreads,
@@ -66,6 +67,8 @@ export default function ChatPage() {
   const [threadsSidebarOpen, setThreadsSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1280)
   const [threads, setThreads] = useState([])
   const [activeThreadId, setActiveThreadIdState] = useState(() => getActiveThreadId(user?.id, user?.role))
+  const [comparisonModalOpen, setComparisonModalOpen] = useState(false)
+  const [comparisonDocs, setComparisonDocs] = useState({ docA: null, docB: null })
   const [readerState, setReaderState] = useState({
     isOpen: false,
     docIdOrName: null,
@@ -73,6 +76,11 @@ export default function ChatPage() {
     chunkId: null,
     snippet: '',
   })
+
+  function handleOpenComparison(initialA = null, initialB = null) {
+    setComparisonDocs({ docA: initialA, docB: initialB })
+    setComparisonModalOpen(true)
+  }
 
   function handleOpenDocumentReader({ docIdOrName, chunkIndex = null, chunkId = null, snippet = '' }) {
     setReaderState({
@@ -280,6 +288,9 @@ export default function ChatPage() {
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
         e.preventDefault()
         handleNewChat()
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'm') {
+        e.preventDefault()
+        setComparisonModalOpen((prev) => !prev)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -607,6 +618,20 @@ export default function ChatPage() {
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
+                onClick={() => handleOpenComparison()}
+                className="text-[10px] px-2 py-0.5 rounded font-semibold transition-all hover:scale-105 cursor-pointer flex items-center gap-1 shadow-xs"
+                style={{
+                  background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
+                  color: isDark ? '#38bdf8' : '#0284c7',
+                  border: isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #bae6fd',
+                }}
+                title="Compare documents side-by-side in a matrix (⌘M)"
+              >
+                <span>📊</span>
+                <span>Compare</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setUploadModalOpen(true)}
                 className="text-[10px] px-2 py-0.5 rounded font-semibold transition-all hover:scale-105 cursor-pointer flex items-center gap-1 shadow-xs"
                 style={{
@@ -717,6 +742,21 @@ export default function ChatPage() {
                       >
                         {focusDoc?.id === doc.id ? '🎯 Focused' : '🎯 Focus'}
                       </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleOpenComparison(doc, null)
+                        }}
+                        className="text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-all font-medium cursor-pointer hover:scale-105"
+                        style={{
+                          background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
+                          color: isDark ? '#38bdf8' : '#0284c7',
+                        }}
+                        title={`Compare ${doc.name} with another document`}
+                      >
+                        📊
+                      </button>
                       <span
                         className="text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity font-medium"
                         style={{
@@ -777,6 +817,7 @@ export default function ChatPage() {
         onOpenUpload={() => setUploadModalOpen(true)}
         onToggleThreads={() => setThreadsSidebarOpen((v) => !v)}
         onSelectThread={handleSelectThread}
+        onOpenComparison={handleOpenComparison}
         user={user}
         documents={docs}
         threads={threads}
@@ -792,6 +833,7 @@ export default function ChatPage() {
         highlightSnippet={readerState.snippet}
         onAskQuestion={(prompt) => sendQuery(prompt, true, focusDoc?.name || focusDoc)}
         onFocusDoc={(doc) => setFocusDoc(doc)}
+        onCompareDoc={(doc) => handleOpenComparison(doc, null)}
       />
 
       {/* Full-Window Drag & Drop Overlay */}
@@ -839,6 +881,24 @@ export default function ChatPage() {
         }}
         onOpenReader={(doc) => handleOpenDocumentReader({ docIdOrName: doc.docIdOrName || doc.id || doc.filename })}
         onFocusDoc={(doc) => setFocusDoc(doc)}
+      />
+
+      {/* Side-by-Side Multi-Document Comparison Matrix Modal */}
+      <DocumentComparisonModal
+        isOpen={comparisonModalOpen}
+        onClose={() => {
+          setComparisonModalOpen(false)
+          setComparisonDocs({ docA: null, docB: null })
+        }}
+        documents={docs}
+        userRole={user?.role}
+        initialDocA={comparisonDocs.docA}
+        initialDocB={comparisonDocs.docB}
+        onOpenDocumentReader={handleOpenDocumentReader}
+        onOpenInChat={(prompt) => {
+          handleNewChat()
+          sendQuery(prompt, true)
+        }}
       />
 
     </div>

@@ -17,6 +17,7 @@ export default function DocumentReaderModal({
   highlightSnippet = '',
   onAskQuestion,
   onFocusDoc,
+  onCompareDoc,
 }) {
   const { isDark } = useTheme()
   const [data, setData] = useState(null)
@@ -278,6 +279,26 @@ export default function DocumentReaderModal({
               >
                 <span>🎯</span>
                 <span>Focus Q&A</span>
+              </button>
+            )}
+
+            {onCompareDoc && (
+              <button
+                type="button"
+                onClick={() => {
+                  onCompareDoc(doc || { id: docIdOrName, name: docIdOrName })
+                  onClose()
+                }}
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:scale-[1.02]"
+                style={{
+                  background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
+                  color: isDark ? '#38bdf8' : '#0284c7',
+                  border: isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #bae6fd',
+                }}
+                title="Compare this document side-by-side with another file"
+              >
+                <span>📊</span>
+                <span>Compare</span>
               </button>
             )}
 

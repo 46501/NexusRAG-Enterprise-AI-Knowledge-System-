@@ -44,6 +44,7 @@ export default function CommandPalette({
   onOpenUpload,
   onToggleThreads,
   onSelectThread,
+  onOpenComparison,
   user,
   documents = [],
   threads = [],
@@ -121,6 +122,16 @@ export default function CommandPalette({
       icon: '💾',
       shortcut: '⌘S',
       action: () => { if (onToggleThreads) onToggleThreads(); onClose() },
+    })
+
+    list.push({
+      id: 'compare-docs',
+      category: 'Actions',
+      label: 'Multi-Document Comparison Matrix',
+      subtitle: 'Compare policies, runbooks, and SLAs side-by-side in a structured grid',
+      icon: '📊',
+      shortcut: '⌘M',
+      action: () => { if (onOpenComparison) onOpenComparison(); onClose() },
     })
 
     if (user?.role === 'admin' || user?.role === 'demo_admin') {
@@ -206,7 +217,7 @@ export default function CommandPalette({
     })
 
     return list
-  }, [role, deptInfo, isDark, user, documents, threads, onNewChat, onExport, toggleTheme, onToggleDocs, onOpenDocument, onFocusDoc, onOpenUpload, onToggleThreads, onSelectThread, navigate, onSelectPrompt, onClose])
+  }, [role, deptInfo, isDark, user, documents, threads, onNewChat, onExport, toggleTheme, onToggleDocs, onOpenDocument, onFocusDoc, onOpenUpload, onToggleThreads, onSelectThread, onOpenComparison, navigate, onSelectPrompt, onClose])
 
   // Filter items based on search input
   const filteredItems = useMemo(() => {
