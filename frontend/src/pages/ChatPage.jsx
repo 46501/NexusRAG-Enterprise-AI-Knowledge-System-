@@ -6,7 +6,7 @@ import MessageBubble from '../components/MessageBubble'
 import ThinkingIndicator from '../components/ThinkingIndicator'
 import Chat from '../components/Chat'
 import BackHomeButton from '../components/BackHomeButton'
-import ThemeToggle from '../components/ThemeToggle'
+import UserProfileMenu from '../components/UserProfileMenu'
 import CitationDrawer from '../components/CitationDrawer'
 import ExportModal from '../components/ExportModal'
 import CommandPalette from '../components/CommandPalette'
@@ -457,48 +457,26 @@ export default function ChatPage() {
             )}
             {/* Mobile docs toggle */}
             <button
-              className="md:hidden ml-2 text-xs px-3 py-1.5 rounded-lg"
+              className="md:hidden ml-1 text-xs px-2.5 py-1.5 rounded-xl font-medium transition-all"
               style={{
-                color: isDark ? 'rgba(255,255,255,0.45)' : '#475569',
+                color: docsOpen ? (isDark ? '#fff' : '#0f172a') : (isDark ? 'rgba(255,255,255,0.70)' : '#475569'),
                 border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
-                background: 'none',
+                background: docsOpen ? (isDark ? 'rgba(255,255,255,0.10)' : '#e2e8f0') : (isDark ? 'rgba(255,255,255,0.04)' : '#ffffff'),
                 cursor: 'pointer'
               }}
               onClick={() => setDocsOpen((v) => !v)}
+              title="Toggle Documents Panel"
             >
-              Docs
+              📄 Docs
             </button>
           </div>
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <span className="hidden sm:block text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.45)' }}>
-              {user?.email}
-            </span>
-            {d && (
-              <span
-                className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider"
-                style={{
-                  background: isDark ? d.bg : d.bg.replace('0.10', '0.12'),
-                  color: d.dot,
-                  border: `1px solid ${d.dot}40`,
-                }}
-              >
-                {user?.role}
-              </span>
-            )}
-            {/* ThemeToggle placed directly between department badge and Sign Out button */}
-            <ThemeToggle />
-            <button
-              onClick={logout}
-              className="text-[11px] transition-colors"
-              style={{
-                color: isDark ? 'rgba(255,255,255,0.40)' : 'rgba(0,0,0,0.55)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              Sign out
-            </button>
+
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+            {/* Unified Enterprise User Profile Menu */}
+            <UserProfileMenu
+              onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+              onExport={() => setExportOpen(true)}
+            />
           </div>
         </header>
 

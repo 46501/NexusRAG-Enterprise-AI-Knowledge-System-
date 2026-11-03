@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import BackHomeButton from '../components/BackHomeButton'
-import ThemeToggle from '../components/ThemeToggle'
+import UserProfileMenu from '../components/UserProfileMenu'
 import AnalyticsTab from '../components/AnalyticsTab'
 import api from '../services/api'
 
@@ -332,21 +332,8 @@ export default function AdminPage() {
           <span className={`${isDark ? 'text-white/20' : 'text-slate-300'} hidden sm:inline`}>/</span>
           <span className={`text-sm ${isDark ? 'text-white/40' : 'text-slate-500'} hidden sm:inline`}>Admin Panel</span>
         </div>
-        <div className="flex items-center gap-2.5 sm:gap-3.5 flex-shrink-0">
-          <span className={`text-xs ${isDark ? 'text-white/30' : 'text-slate-400'} hidden sm:inline`}>{user?.email}</span>
-          <DeptBadge dept={user?.role} />
-          {/* ThemeToggle placed directly between department badge and Sign Out button */}
-          <ThemeToggle />
-          <button
-            onClick={logout}
-            className={`text-xs transition-colors py-1.5 px-2.5 rounded-lg border ${
-              isDark
-                ? 'text-white/50 hover:text-white border-white/10 hover:border-white/25'
-                : 'text-slate-600 hover:text-slate-900 border-slate-200 hover:border-slate-300 bg-white shadow-xs'
-            }`}
-          >
-            Sign out
-          </button>
+        <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
+          <UserProfileMenu />
         </div>
       </header>
 
