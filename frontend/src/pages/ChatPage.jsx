@@ -13,6 +13,7 @@ import CommandPalette from '../components/CommandPalette'
 import DocumentReaderModal from '../components/DocumentReaderModal'
 import DocumentUploadModal from '../components/DocumentUploadModal'
 import DocumentComparisonModal from '../components/DocumentComparisonModal'
+import WorkspaceEmptyState from '../components/WorkspaceEmptyState'
 import ThreadHistorySidebar from '../components/ThreadHistorySidebar'
 import {
   getThreads,
@@ -542,41 +543,15 @@ export default function ChatPage() {
         <div ref={messagesRef} className="flex-1 overflow-y-auto px-5 pt-10 pb-6 chat-scroll">
           <div className="max-w-[700px] mx-auto flex flex-col gap-4 min-h-full">
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center min-h-[55vh] text-center">
-                {d && (
-                  <div
-                    className="w-11 h-11 rounded-[14px] flex items-center justify-center mb-3.5"
-                    style={{ background: d.btn, boxShadow: `0 0 0 1px ${d.bg.replace('0.10', '0.20')}, 0 4px 20px ${d.bg}` }}
-                  >
-                    <span className="text-white text-base font-bold uppercase">{user?.role?.[0]}</span>
-                  </div>
-                )}
-                <h2 className={`text-lg font-semibold capitalize mb-1.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  {user?.role} Knowledge Base
-                </h2>
-                <p className="text-sm max-w-xs leading-relaxed mb-7" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : '#64748b' }}>
-                  Ask anything about your department's documents. Every answer is grounded in your role's knowledge base and cited with sources.
-                </p>
-                <div className="flex flex-col gap-2 w-full max-w-[420px]">
-                  {suggestions.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => sendQuery(s, true)}
-                      className="text-left px-3.5 py-2.5 rounded-xl text-sm transition-colors hover:border-violet-500/50"
-                      style={{
-                        background: isDark ? 'rgba(255,255,255,0.04)' : '#ffffff',
-                        border: isDark ? '1px solid rgba(255,255,255,0.09)' : '1px solid #e2e8f0',
-                        color: isDark ? 'rgba(255,255,255,0.65)' : '#334155',
-                        boxShadow: isDark ? 'none' : '0 1px 2px rgba(0,0,0,0.03)',
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <WorkspaceEmptyState
+                user={user}
+                docs={docs}
+                onSendPrompt={(prompt, stream, docParam) => sendQuery(prompt, stream, docParam ?? focusDoc?.name ?? focusDoc)}
+                onFocusDoc={(doc) => setFocusDoc(doc)}
+                onOpenComparison={() => handleOpenComparison()}
+                onOpenUpload={() => setUploadModalOpen(true)}
+                onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+              />
             ) : (
               <>
                 {/* Print-Only Corporate Briefing Header */}
