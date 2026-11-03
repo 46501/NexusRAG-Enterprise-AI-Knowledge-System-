@@ -612,7 +612,12 @@ export default function ChatPage() {
                     onOpenReader={handleOpenDocumentReader}
                   />
                 ))}
-                {thinking && <ThinkingIndicator />}
+                {thinking && (
+                  <ThinkingIndicator
+                    userRole={user?.role}
+                    focusDoc={focusDoc}
+                  />
+                )}
                 <div ref={bottomRef} />
               </>
             )}
