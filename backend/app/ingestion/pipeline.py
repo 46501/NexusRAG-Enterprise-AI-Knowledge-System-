@@ -49,7 +49,7 @@ def ingest_file(
     logger.info("Ingesting %s as role_access=%s", display_name, role_access)
 
     raw_text = load_document(file_path)
-    chunks = chunk_text(raw_text)
+    chunks = chunk_text(raw_text, doc_title=display_name, department=role_access)
 
     doc_meta = build_doc_meta(file_path, role_access, original_filename=original_filename)
 
@@ -57,7 +57,7 @@ def ingest_file(
         client = QdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key)
     else:
         client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port)
-    texts = [c.text for c in chunks]
+    texts = [c.contextual_text for c in chunks]
     vectors = embed(texts)
 
     _ensure_collection(client, vector_size=len(vectors[0]))
@@ -68,10 +68,14 @@ def ingest_file(
             vector=vectors[i],
             payload={
                 "text": chunks[i].text,
+                "contextual_text": chunks[i].contextual_text,
+                "section": chunks[i].section,
+                "context_prefix": chunks[i].context_prefix,
+                "chunk_index": chunks[i].chunk_index,
+                "total_chunks": len(chunks),
                 "doc_id": doc_meta.doc_id,
                 "source": doc_meta.source,
                 "role_access": doc_meta.role_access,
-                "chunk_index": chunks[i].chunk_index,
             },
         )
         for i in range(len(chunks))
@@ -119,14 +123,18 @@ def rebuild_bm25_index(db: Session | None = None) -> None:
         offset = next_offset
 
     for point in all_points:
-        corpus_texts.append(point.payload["text"])
+        payload = point.payload or {}
+        corpus_texts.append(payload.get("contextual_text") or payload.get("text", ""))
         doc_metadata.append({
             "id": str(point.id),
-            "text": point.payload["text"],
-            "doc_id": point.payload.get("doc_id"),
-            "source": point.payload.get("source"),
-            "role_access": point.payload.get("role_access"),
-            "chunk_index": point.payload.get("chunk_index"),
+            "text": payload.get("text", ""),
+            "contextual_text": payload.get("contextual_text", ""),
+            "section": payload.get("section", ""),
+            "doc_id": payload.get("doc_id"),
+            "source": payload.get("source"),
+            "role_access": payload.get("role_access"),
+            "chunk_index": payload.get("chunk_index"),
+            "total_chunks": payload.get("total_chunks"),
         })
 
     save_sparse_index(corpus_texts, doc_metadata)

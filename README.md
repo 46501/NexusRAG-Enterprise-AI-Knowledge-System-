@@ -42,6 +42,13 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
                                |  - Dual Auth (Bearer / Cookie)    |
                                |  - Rate Limiting (SlowAPI)        |
                                |  - Role & Department RBAC Guard   |
+                               +-----------------+-----------------+
+                                                 |
+                                                 v
+                               +-----------------------------------+
+                               | Agentic Planner & Decomposition   |
+                               |  - Complexity / Multi-Hop Guard   |
+                               |  - 2-3 Atomic Sub-Queries Planner |
                                +--------+------------------+-------+
                                         |                  |
            +----------------------------+                  +----------------------------+
@@ -51,13 +58,14 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
 |  Dense Search (Async) |                                                    | Sparse Search (BM25s) |
 |  BAAI/bge-small       |                                                    | In-Process Lexical    |
 |  Qdrant Cloud Filter  |                                                    | Department Partition  |
+|  Contextual Grounding |                                                    | Contextual Text Index |
 +----------+------------+                                                    +-----------+-----------+
            |                                                                             |
            +----------------------------+                  +-----------------------------+
                                         |                  |
                                         v                  v
                                +-----------------------------------+
-                               |     Reciprocal Rank Fusion (RRF)  |
+                               | Multi-Query RRF Fusion & Dedup    |
                                +-----------------+-----------------+
                                                  |
                                                  v
@@ -66,12 +74,19 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
                                |   (ms-marco-MiniLM-L-6-v2)        |
                                +-----------------+-----------------+
                                                  |
-                                                 v Top-K Chunks
+                                                 v
                                +-----------------------------------+
-                               |      Google Gemini Synthesis      |
+                               | Parent-Child Context Expansion    |
+                               |  - Stitch contiguous chunk blocks |
+                               |  - Eliminate severed clauses      |
+                               +-----------------+-----------------+
+                                                 |
+                                                 v Top Expanded Context
+                               +-----------------------------------+
+                               | Google Gemini Self-Reflective RAG |
                                |  - Primary: gemini-3.5-flash-lite |
                                |  - Failover: 3.5-flash / 3-flash  |
-                               |  - Anti-Hallucination Guardrails  |
+                               |  - CRAG Anti-Hallucination Guard  |
                                +-----------------+-----------------+
                                                  |
                                          SSE Token Stream
@@ -106,12 +121,14 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
 
 ## Key Features & Capabilities
 
-### 1. Hybrid Retrieval & Multi-Model RAG Pipeline
-- **Hybrid Dense + Sparse Fusion:** Dense cosine embeddings capture semantic meaning; BM25s captures exact technical acronyms, policy IDs, and codes.
-- **Cross-Encoder Precision:** Fused results are rescored by a cross-encoder reading query and context together before feeding the LLM.
-- **Multi-Model Redundancy:** Automatic failover prevents disruptions if an upstream model experiences transient 503 high demand or quota limits.
-- **Anti-Hallucination Guardrails:** Irrelevant or out-of-domain queries strictly decline without hallucinating citations or leaking context.
-- **Streaming Tokens with SSE:** Real-time token streaming with bracketed citation mapping (`[1]`, `[2]`), confidence scoring, and dynamic follow-up suggestions.
+### 1. Advanced Next-Gen RAG Engine (Tier 1 Architecture)
+- **Anthropic-Style Contextual Retrieval:** Chunks are situational-aware during ingestion, automatically detecting document headers and prepending `[Document: <name> | Department: <dept> | Section: <title>]` before embedding and BM25 indexing.
+- **Agentic Multi-Hop Query Decomposition:** Complex comparative ("Compare X and Y"), multipart, or cross-clause questions are automatically detected by an agentic planner, decomposed into 2-3 focused atomic sub-queries, retrieved in parallel, and merged via multi-query Reciprocal Rank Fusion (RRF).
+- **Hierarchical / Parent-Child Context Expansion:** Precision chunk retrieval is coupled with adjacent chunk window stitching (`merge_contiguous_chunks`), seamlessly recombining adjacent chunks from the same document to eliminate cut-off clauses, broken tables, and severed bullet lists.
+- **Self-Reflective RAG (CRAG) & Anti-Hallucination Safeguards:** Retrieval sufficiency checks verify evidence before synthesis; ungrounded questions explicitly decline rather than hallucinating policies, while valid queries receive citation chips (`[1]`, `[2]`), dynamic follow-ups, and calibrated confidence scores.
+- **Hybrid Dense + Sparse Fusion:** Dense cosine embeddings (`BAAI/bge-small-en-v1.5`) capture semantic meaning; BM25s captures exact technical acronyms, policy IDs, and codes.
+- **Multi-Model Redundancy:** Automatic failover across `gemini-3.5-flash-lite`, `gemini-3.5-flash`, and `gemini-3-flash-preview` prevents disruptions from transient 503 high-demand or quota limits.
+- **Streaming Tokens with SSE:** Real-time token streaming with bracketed citation mapping, confidence scoring, and dynamic follow-up suggestions.
 
 ### 2. Department Workspaces & Multi-Tenant RBAC Isolation
 - **Strict Query-Level Isolation:** HR, Engineering, and Finance workspaces operate in complete data silos.
@@ -274,6 +291,9 @@ TEST SUITE SUMMARY: 44/44 Passed (100.0%) | 0 Failed
 
 ### Run Additional Targeted Tests
 ```bash
+# Tier 1 Next-Gen RAG (Contextual Grounding, Multi-Hop Decomposition, CRAG)
+python tests/test_tier1_nextgen_rag.py
+
 # Authentication & Seeded Logins
 python scripts/verify_auth_system.py
 

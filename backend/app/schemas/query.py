@@ -24,6 +24,7 @@ class SourceSchema(BaseModel):
     chunk_index: int | None = None
     rerank_score: float | None = None
     text: str | None = None
+    section: str | None = None
 
 
 class QueryResponse(BaseModel):

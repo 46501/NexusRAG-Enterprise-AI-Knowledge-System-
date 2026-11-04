@@ -1,3 +1,4 @@
+import asyncio
 import re
 from collections.abc import AsyncIterator
 
@@ -8,6 +9,7 @@ from app.db.models import RoleEnum
 from app.generation.generator import generate, generate_stream
 import app.state as _state
 from app.retrieval.hybrid import hybrid_search
+from app.retrieval.planner import decompose_query, fuse_multi_query_hits, merge_contiguous_chunks
 from app.retrieval.reranker import rerank
 from app.utils.logger import get_logger
 
@@ -132,13 +134,39 @@ async def run_query(
     try:
         async with _state.get_semaphore():
             logger.info("RAG query start role=%s query=%r focus_doc=%s", role, query[:60], focus_doc)
-            fused = await hybrid_search(retrieval_query, allowed_roles, top_k=top_k * 3, focus_doc=focus_doc)
+
+            # 1. Agentic Query Planning & Multi-Hop Decomposition
+            sub_queries = await decompose_query(retrieval_query, history=history)
+
+            # 2. Parallel or Single-Pass Hybrid Retrieval
+            if len(sub_queries) > 1:
+                logger.info(
+                    "Executing parallel multi-hop retrieval for %d sub-queries: %s",
+                    len(sub_queries),
+                    sub_queries,
+                )
+                tasks = [
+                    hybrid_search(sq, allowed_roles, top_k=top_k * 2, focus_doc=focus_doc)
+                    for sq in sub_queries
+                ]
+                sub_hits_list = await asyncio.gather(*tasks)
+                fused = fuse_multi_query_hits(sub_hits_list, top_k=top_k * 3)
+            else:
+                fused = await hybrid_search(retrieval_query, allowed_roles, top_k=top_k * 3, focus_doc=focus_doc)
+
+            # 3. Reranking and Confidence Normalization
             ranked = _normalize_rerank_scores(rerank(retrieval_query, fused, top_k=top_k))
-            result = await generate(query, ranked, history=history)
+
+            # 4. Hierarchical / Parent-Child Context Expansion
+            expanded_ranked = merge_contiguous_chunks(ranked)
+
+            # 5. Generative Synthesis with Self-Reflective Grounding
+            result = await generate(query, expanded_ranked, history=history)
     except Exception:
         logger.exception("RAG query failed role=%s query=%r", role, query[:60])
         raise
 
+    # 6. Self-Correction & Grounding Verification
     if not _CITATION_RE.search(result["answer"]):
         result["sources"] = []
         result["confidence_score"] = None
@@ -172,8 +200,31 @@ async def run_query_stream(
     try:
         async with _state.get_semaphore():
             logger.info("RAG stream start role=%s query=%r focus_doc=%s", role, query[:60], focus_doc)
-            fused = await hybrid_search(retrieval_query, allowed_roles, top_k=top_k * 3, focus_doc=focus_doc)
+
+            # 1. Agentic Query Planning & Multi-Hop Decomposition
+            sub_queries = await decompose_query(retrieval_query, history=history)
+
+            # 2. Parallel or Single-Pass Hybrid Retrieval
+            if len(sub_queries) > 1:
+                logger.info(
+                    "Executing parallel multi-hop stream retrieval for %d sub-queries: %s",
+                    len(sub_queries),
+                    sub_queries,
+                )
+                tasks = [
+                    hybrid_search(sq, allowed_roles, top_k=top_k * 2, focus_doc=focus_doc)
+                    for sq in sub_queries
+                ]
+                sub_hits_list = await asyncio.gather(*tasks)
+                fused = fuse_multi_query_hits(sub_hits_list, top_k=top_k * 3)
+            else:
+                fused = await hybrid_search(retrieval_query, allowed_roles, top_k=top_k * 3, focus_doc=focus_doc)
+
+            # 3. Reranking and Confidence Normalization
             ranked = _normalize_rerank_scores(rerank(retrieval_query, fused, top_k=top_k))
+
+            # 4. Hierarchical / Parent-Child Context Expansion
+            expanded_ranked = merge_contiguous_chunks(ranked)
     except Exception:
         logger.exception("RAG stream retrieval failed role=%s query=%r", role, query[:60])
         raise
@@ -188,8 +239,9 @@ async def run_query_stream(
             "chunk_index": c.get("metadata", {}).get("chunk_index"),
             "rerank_score": c.get("rerank_score"),
             "text": c.get("text", ""),
+            "section": c.get("metadata", {}).get("section", ""),
         }
-        for i, c in enumerate(ranked)
+        for i, c in enumerate(expanded_ranked)
     ]
 
-    return generate_stream(query, ranked, history=history), sources
+    return generate_stream(query, expanded_ranked, history=history), sources

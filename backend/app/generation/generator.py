@@ -12,21 +12,18 @@ _s = get_settings()
 _client: genai.Client | None = None
 
 SYSTEM_INSTRUCTION = (
-    "You are a helpful enterprise knowledge assistant. "
-    "IMPORTANT: If the user's message is a greeting or very short casual message with no question "
-    "(like 'hi', 'hello', 'thanks', 'good'), do NOT use the context documents at all. "
-    "Just respond warmly and briefly as a helpful assistant would, then invite them to ask about their department's documents. "
-    "The context documents below are only relevant when the user asks an actual question. "
-    "Answer the user's question using only the context provided. "
-    "Cite sources by their bracketed number, e.g. [1]. "
-    "Only if the question is a genuine off-topic request unrelated to work (e.g. write me a poem, what is the weather), "
-    "respond with exactly: "
-    "\"I can only answer questions based on your department's documents.\""
-    "\n\nAt the end of your response based on documents, provide 2 to 3 concise relevant follow-up questions formatted exactly as:\n"
+    "You are an enterprise AI knowledge assistant for corporate documents and policies.\n"
+    "EVALUATION & GROUNDING RULES:\n"
+    "1. If the message is a greeting or very short casual pleasantry (e.g. 'hi', 'hello', 'thanks'), respond warmly and invite questions about company documents without citing sources.\n"
+    "2. For all document questions, answer accurately and comprehensively using ONLY the provided Context.\n"
+    "3. Every factual statement or policy detail must be explicitly cited using the bracketed source number, e.g. [1] or [1][2].\n"
+    "4. RETRIEVAL SUFFICIENCY & SELF-REFLECTION: If the provided Context does not contain the answer, or only partially answers a multi-part question, explicitly state what is not found in the documents (e.g. 'The documents do not specify...'). Never fabricate or extrapolate unstated policies.\n"
+    "5. If the request is a completely off-topic casual query unrelated to work (e.g. write a poem, tell a joke, current weather), respond with: 'I can only answer questions based on your department\'s documents.'\n\n"
+    "At the end of your response based on documents, provide 2 to 3 concise relevant follow-up questions formatted exactly as:\n"
     "---FOLLOW_UPS---\n"
-    "- First follow-up question?\n"
-    "- Second follow-up question?\n"
-    "- Third follow-up question?"
+    "- [First follow-up question]\n"
+    "- [Second follow-up question]\n"
+    "- [Third follow-up question]"
 )
 
 GREETING_SYSTEM_INSTRUCTION = (
@@ -101,9 +98,17 @@ def get_client() -> genai.Client:
 def _build_context(chunks: list[dict]) -> str:
     context_parts = []
     for i, chunk in enumerate(chunks, 1):
-        dept = chunk.get("metadata", {}).get("role_access", "unknown")
-        source = chunk.get("metadata", {}).get("source", "unknown")
-        context_parts.append(f"[{i}] (department={dept}, source={source})\n{chunk['text']}")
+        meta = chunk.get("metadata", {})
+        dept = meta.get("role_access", "unknown")
+        source = meta.get("source", "unknown")
+        sec = meta.get("section")
+        range_info = meta.get("chunk_index_range")
+        extra_parts = [f"department={dept}", f"source={source}"]
+        if sec:
+            extra_parts.append(f"section={sec}")
+        if range_info:
+            extra_parts.append(f"chunks={range_info}")
+        context_parts.append(f"[{i}] ({', '.join(extra_parts)})\n{chunk['text']}")
     return "\n\n".join(context_parts)
 
 
@@ -120,6 +125,7 @@ def _extract_sources(chunks: list[dict]) -> list[dict]:
             "chunk_index": meta.get("chunk_index"),
             "rerank_score": chunk.get("rerank_score"),
             "text": chunk.get("text", ""),
+            "section": meta.get("section", ""),
         })
     return sources
 
