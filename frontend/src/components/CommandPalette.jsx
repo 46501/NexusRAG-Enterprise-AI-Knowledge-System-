@@ -45,6 +45,7 @@ export default function CommandPalette({
   onToggleThreads,
   onSelectThread,
   onOpenComparison,
+  onOpenAgentModal,
   user,
   documents = [],
   threads = [],
@@ -132,6 +133,36 @@ export default function CommandPalette({
       icon: '📊',
       shortcut: '⌘M',
       action: () => { if (onOpenComparison) onOpenComparison(); onClose() },
+    })
+
+    list.push({
+      id: 'agent-audit',
+      category: 'Autonomous Agents (Tier 2)',
+      label: 'Policy Compliance Auditor',
+      subtitle: 'Audit proposed scenarios & actions for Pass/Warn/Fail policy conformity',
+      icon: '🏛️',
+      shortcut: '⌘A',
+      action: () => { if (onOpenAgentModal) onOpenAgentModal({ persona: 'auditor' }); onClose() },
+    })
+
+    list.push({
+      id: 'agent-risk',
+      category: 'Autonomous Agents (Tier 2)',
+      label: 'Legal & Operational Risk Assessor',
+      subtitle: 'Identify contractual liabilities, SLA risks, and conflicting clauses',
+      icon: '⚖️',
+      shortcut: '⌘R',
+      action: () => { if (onOpenAgentModal) onOpenAgentModal({ persona: 'risk' }); onClose() },
+    })
+
+    list.push({
+      id: 'agent-collab',
+      category: 'Autonomous Agents (Tier 2)',
+      label: 'Multi-Agent Executive Council',
+      subtitle: 'Joint consensus evaluation by Compliance Auditor & Risk Assessor',
+      icon: '🤝',
+      shortcut: '↵',
+      action: () => { if (onOpenAgentModal) onOpenAgentModal({ persona: 'collaborative' }); onClose() },
     })
 
     if (user?.role === 'admin' || user?.role === 'demo_admin') {

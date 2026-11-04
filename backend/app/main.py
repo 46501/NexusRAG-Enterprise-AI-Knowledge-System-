@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from app.api.routes import admin, auth, documents, feedback, health, ingest, query
+from app.api.routes import admin, agents, auth, documents, feedback, health, ingest, query
 from app.config import configure_langsmith, get_settings
 from app.db.postgres import close_db, init_db
 from app.generation.generator import load_generator
@@ -71,6 +71,7 @@ app.include_router(query.router, prefix="/api/v1")
 app.include_router(ingest.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1")
 app.include_router(feedback.router, prefix="/api/v1")
+app.include_router(agents.router, prefix="/api/v1")
 
 _STATIC_DIR = Path("/app/frontend/dist")
 

@@ -132,6 +132,7 @@ export default function MessageBubble({
   onOpenCitation,
   onSelectSuggestion,
   onOpenReader,
+  onOpenAgentAudit,
 }) {
   const { isDark } = useTheme()
   const isUser = role === 'user'
@@ -401,6 +402,20 @@ export default function MessageBubble({
               </button>
             )}
 
+            {onOpenAgentAudit && (
+              <button
+                type="button"
+                onClick={() => onOpenAgentAudit({ scenario: precedingUserQuery || cleanContent })}
+                className="p-1.5 rounded-lg text-xs transition-transform hover:scale-105 cursor-pointer"
+                style={{
+                  color: isDark ? '#c084fc' : '#9333ea',
+                }}
+                title="Launch Policy Compliance & Risk Auditor on this query"
+              >
+                🤖
+              </button>
+            )}
+
             <button
               type="button"
               onClick={handleToggleSpeech}
@@ -554,6 +569,23 @@ export default function MessageBubble({
             <span>{copiedBrief ? '✓' : '🏛️'}</span>
             <span>{copiedBrief ? 'Brief Copied!' : 'Share Brief'}</span>
           </button>
+
+          {onOpenAgentAudit && (
+            <button
+              type="button"
+              onClick={() => onOpenAgentAudit({ scenario: precedingUserQuery || cleanContent })}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all opacity-70 hover:opacity-100 cursor-pointer"
+              style={{
+                background: isDark ? 'rgba(168,85,247,0.14)' : '#f5f3ff',
+                border: isDark ? '1px solid rgba(168,85,247,0.28)' : '1px solid #ddd6fe',
+                color: isDark ? '#d8b4fe' : '#7c3aed',
+              }}
+              title="Launch specialist Agent Compliance & Risk Audit on this question"
+            >
+              <span>🤖</span>
+              <span>Audit with Agent</span>
+            </button>
+          )}
 
           {/* Audio Read Aloud Button */}
           <button

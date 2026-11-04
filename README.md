@@ -32,6 +32,9 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
                                +-----------------------------------+
                                |       React 18 + Vite Frontend    |
                                | (Tailwind CSS, Dark/Light Themes) |
+                               | - Multi-Agent Sidecar Drawer      |
+                               | - Command Palette (Ctrl+K)        |
+                               | - Document Reader & Comparison    |
                                +-----------------+-----------------+
                                                  |
                                  HTTPS (Bearer JWT or HttpOnly Cookie)
@@ -42,59 +45,39 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
                                |  - Dual Auth (Bearer / Cookie)    |
                                |  - Rate Limiting (SlowAPI)        |
                                |  - Role & Department RBAC Guard   |
-                               +-----------------+-----------------+
-                                                 |
-                                                 v
-                               +-----------------------------------+
-                               | Agentic Planner & Decomposition   |
-                               |  - Complexity / Multi-Hop Guard   |
-                               |  - 2-3 Atomic Sub-Queries Planner |
                                +--------+------------------+-------+
                                         |                  |
-           +----------------------------+                  +----------------------------+
-           |                                                                            |
-           v                                                                            v
-+-----------------------+                                                    +-----------------------+
-|  Dense Search (Async) |                                                    | Sparse Search (BM25s) |
-|  BAAI/bge-small       |                                                    | In-Process Lexical    |
-|  Qdrant Cloud Filter  |                                                    | Department Partition  |
-|  Contextual Grounding |                                                    | Contextual Text Index |
-+----------+------------+                                                    +-----------+-----------+
-           |                                                                             |
-           +----------------------------+                  +-----------------------------+
-                                        |                  |
-                                        v                  v
-                               +-----------------------------------+
-                               | Multi-Query RRF Fusion & Dedup    |
-                               +-----------------+-----------------+
-                                                 |
-                                                 v
-                               +-----------------------------------+
-                               |      Cross-Encoder Reranker       |
-                               |   (ms-marco-MiniLM-L-6-v2)        |
-                               +-----------------+-----------------+
-                                                 |
-                                                 v
-                               +-----------------------------------+
-                               | Parent-Child Context Expansion    |
-                               |  - Stitch contiguous chunk blocks |
-                               |  - Eliminate severed clauses      |
-                               +-----------------+-----------------+
-                                                 |
-                                                 v Top Expanded Context
-                               +-----------------------------------+
-                               | Google Gemini Self-Reflective RAG |
-                               |  - Primary: gemini-3.5-flash-lite |
-                               |  - Failover: 3.5-flash / 3-flash  |
-                               |  - CRAG Anti-Hallucination Guard  |
-                               +-----------------+-----------------+
-                                                 |
-                                         SSE Token Stream
-                                                 |
-                                                 v
-                               +-----------------------------------+
-                               | Client Markdown & Citation Stream |
-                               +-----------------------------------+
+                    +-------------------+                  +-------------------+
+                    |                                                          |
+                    v Standard RAG Route                                       v Multi-Agent Routes
++---------------------------------------+                  +---------------------------------------+
+| Agentic Planner & Decomposition       |                  | Autonomous Multi-Agent Orchestrator   |
+|  - Complexity / Multi-Hop Guard       |                  |  - 🏛️ Policy Compliance Auditor      |
+|  - 2-3 Atomic Sub-Queries Planner     |                  |  - ⚖️ Legal & Risk Assessor           |
+|  - Contextual Grounding & Parent-Child|                  |  - ⚡ Policy Intelligence Assistant    |
++-------------------+-------------------+                  |  - 🤝 Dual-Agent Executive Council    |
+                    |                                      +-------------------+-------------------+
+                    v                                                          |
++------------------------------------------------------------------------------+
+| Hybrid Retrieval Engine (Qdrant Dense BAAI/bge-small + BM25s Sparse Lexical) |
+|  - Strict Department Isolation Vector Filters                                |
+|  - Multi-Query Reciprocal Rank Fusion (RRF)                                  |
+|  - Cross-Encoder Reranking (ms-marco-MiniLM-L-6-v2)                          |
++---------------------------------------+--------------------------------------+
+                                        |
+                                        v
++------------------------------------------------------------------------------+
+| Google Gemini Generation & Synthesis Engine                                  |
+|  - Primary: gemini-3.5-flash-lite (Failover: gemini-3.5-flash, gemini-3-flash)|
+|  - CRAG Anti-Hallucination & Evidence Verification                           |
+|  - Structured Pydantic & JSON Spec Extraction                               |
+|  - Server-Sent Events (SSE) Streaming Pipeline                               |
++---------------------------------------+--------------------------------------+
+                                        |
+                                        v
++------------------------------------------------------------------------------+
+| Client-Side Rendering: Interactive Sidecar Reports, Memo Exports & Stream    |
++------------------------------------------------------------------------------+
 ```
 
 ---
@@ -104,6 +87,7 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
 | Layer | Technologies & Libraries |
 |---|---|
 | **API & Backend** | FastAPI, Uvicorn, Pydantic v2, Python 3.11 |
+| **Autonomous Multi-Agent Layer** | Async Multi-Agent Orchestrator, Policy Compliance Auditor, Risk Assessor, Policy Intelligence Assistant, Executive Council |
 | **Authentication & RBAC** | Dual-mode: HttpOnly cookies + `Authorization: Bearer` headers, bcrypt (`$2b$12$`), python-jose JWT |
 | **Relational Database** | Supabase Managed PostgreSQL, SQLAlchemy 2.0 (async), asyncpg |
 | **Vector Database** | Qdrant Cloud Cluster (`rag_documents`), Qdrant Client |
@@ -130,7 +114,18 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
 - **Multi-Model Redundancy:** Automatic failover across `gemini-3.5-flash-lite`, `gemini-3.5-flash`, and `gemini-3-flash-preview` prevents disruptions from transient 503 high-demand or quota limits.
 - **Streaming Tokens with SSE:** Real-time token streaming with bracketed citation mapping, confidence scoring, and dynamic follow-up suggestions.
 
-### 2. Department Workspaces & Multi-Tenant RBAC Isolation
+### 2. Autonomous Multi-Agent Collaboration & Sidecar Workflows (Tier 2 Architecture)
+- **🏛️ Policy Compliance Auditor (`auditor`):** Evaluates real-world employee actions, planned operational procedures, or expenditure requests against department policy documents. Generates definitive `compliant` (green), `warning` (amber), or `violation` (red) verdicts accompanied by rule-by-rule pass/fail tables, mandatory approvers, and remediation action items.
+- **⚖️ Legal & Operational Risk Assessor (`risk`):** Evaluates outage escalations, architecture changes, vendor contracts, and SLA commitments. Diagnoses risk severity (`low`, `medium`, `high`, `critical`), identifies conflicting clauses, quantifies regulatory/financial penalty vectors, and prescribes actionable mitigations.
+- **⚡ Policy Intelligence Assistant (`intelligence`):** Produces executive-level policy briefs from complex corporate governance documents. Synthesizes key takeaways, structured role-based obligation matrices (Employee vs. Manager vs. Department Leads), and proactive compliance gap audits.
+- **🤝 Multi-Agent Executive Council (`collaborative`):** Orchestrates concurrent, parallel evaluation by both the Compliance Auditor and Risk Assessor over role-isolated documents. Synthesizes both reports into an executive consensus determination, resolving conflicting clause interpretations into unanimous strategic recommendations.
+- **Integrated Sidecar UI & Quick Starters:**
+  - Glassmorphic modal (`AgentSidecarModal.jsx`) featuring interactive persona selection tabs, animated stage indicators, verdict badges, copyable markdown memos, and source chunk inspection.
+  - One-click departmental scenario templates for instant auditing across HR, Engineering, and Finance.
+  - Multi-surface triggers: Message Bubble `🤖 Audit Scenario` button, Command Palette shortcuts (`⌘A`, `⌘R`, Executive Council), Document Reader header action, and Workspace Starter cards.
+  - Strict department RBAC validation ensuring zero cross-tenant knowledge leaks.
+
+### 3. Department Workspaces & Multi-Tenant RBAC Isolation
 - **Strict Query-Level Isolation:** HR, Engineering, and Finance workspaces operate in complete data silos.
 - **Zero-Leakage Enforcement:**
   - Query parameter overrides (`?department=...`) blocked with `403 Forbidden`.
@@ -139,12 +134,12 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
   - Non-admin upload attempts to other departments blocked with `403 Forbidden`.
   - Admin endpoints (`/admin/users`, `/admin/analytics`, `/admin/feedbacks`) restricted to Admin roles.
 
-### 3. Document Sidebar, Reader & Full Filename Display
+### 4. Document Sidebar, Reader & Full Filename Display
 - **Complete Filename Visibility:** Document names and file extensions (`performance_review.txt`, `deployment_guide.txt`) are displayed in full with natural wrapping, clean line breaks, and hover tooltips across all departments.
 - **Sidebar Search & Filtering:** Press `/` to focus the search bar, filter by file type (All, PDF, TXT, MD), and toggle sort order (🕒 Recent vs 🔤 A–Z).
 - **Integrated Document Reader:** Click **Read** on any document card to view the reconstructed full text and chunk inspection modal directly in the workspace.
 
-### 4. Side-by-Side Multi-Document Comparison Matrix
+### 5. Side-by-Side Multi-Document Comparison Matrix
 - **Comparative Analysis Engine:** Select two documents to generate a structured comparison matrix across operational, policy, financial, and compliance dimensions.
 - **Presets Available:**
   - Comprehensive Matrix
@@ -154,14 +149,14 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
   - Custom Analysis
 - **One-Click Export:** Download comparison matrices directly to CSV or copy clean Markdown tables to the clipboard.
 
-### 5. Chat UX, Thinking Pipeline & Feedback Loop
+### 6. Chat UX, Thinking Pipeline & Feedback Loop
 - **Dynamic Retrieval Thinking Indicator:** Visual multi-step pipeline indicator showcasing query preprocessing, dense/sparse search, reranking, and synthesis phases.
 - **Message Action Toolbar:** Copy answer text, export formatted Markdown briefs, and inspect citations via interactive slide-out drawer.
 - **Inline Feedback System:** Submit thumbs-up or thumbs-down feedback with categorized reasons (`Inaccurate`, `Incomplete`, `Missing Citation`, `Outdated`, `Off-Topic`).
 - **Spotlight Autocomplete:** Contextual typeahead providing department-specific starter questions with Tab/arrow acceptance.
 - **Enriched Cold-Start Empty State:** Department metrics, quick starters, and recent files.
 
-### 6. Admin Control Center & Analytics
+### 7. Admin Control Center & Analytics
 - **System Metrics Overview:** Total queries, average latency (ms), total documents, active users, and grounding rate.
 - **User Management:** View all registered accounts, role assignments, last login timestamps, and activate/deactivate accounts.
 - **Feedback Management:** Inspect flagged responses, review user comments, and mark feedback items as resolved.
@@ -291,7 +286,10 @@ TEST SUITE SUMMARY: 44/44 Passed (100.0%) | 0 Failed
 
 ### Run Additional Targeted Tests
 ```bash
-# Tier 1 Next-Gen RAG (Contextual Grounding, Multi-Hop Decomposition, CRAG)
+# Tier 2 Autonomous Multi-Agent Workflows & Executive Council (4/4 Passed)
+python tests/test_tier2_multi_agent.py
+
+# Tier 1 Next-Gen RAG (Contextual Grounding, Multi-Hop Decomposition, CRAG) (4/4 Passed)
 python tests/test_tier1_nextgen_rag.py
 
 # Authentication & Seeded Logins

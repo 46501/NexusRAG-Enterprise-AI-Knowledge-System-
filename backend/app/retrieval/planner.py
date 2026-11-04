@@ -288,3 +288,4 @@ def merge_contiguous_chunks(ranked_chunks: list[dict], max_char_length: int = 35
             merged.append(current)
 
     return merged
+

@@ -114,6 +114,7 @@ export default function WorkspaceEmptyState({
   onOpenComparison,
   onOpenUpload,
   onOpenCommandPalette,
+  onOpenAgentModal,
 }) {
   const { isDark } = useTheme()
   const role = user?.role || 'hr'
@@ -259,6 +260,21 @@ export default function WorkspaceEmptyState({
                     >
                       🎯 Focus
                     </button>
+                    {onOpenAgentModal && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenAgentModal({ focusDoc: doc.name, persona: 'auditor' })}
+                        className="text-[10px] px-1.5 py-1 rounded-md font-medium transition-all cursor-pointer opacity-70 hover:opacity-100 hover:scale-105"
+                        style={{
+                          background: isDark ? 'rgba(168, 85, 247, 0.15)' : '#f3e8ff',
+                          color: isDark ? '#d8b4fe' : '#7e22ce',
+                          border: isDark ? '1px solid rgba(168, 85, 247, 0.3)' : '1px solid #d8b4fe',
+                        }}
+                        title={`Run autonomous compliance audit on ${doc.name}`}
+                      >
+                        🤖 Audit
+                      </button>
+                    )}
                   </div>
                 </div>
               )

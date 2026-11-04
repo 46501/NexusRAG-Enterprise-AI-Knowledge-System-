@@ -13,6 +13,7 @@ import CommandPalette from '../components/CommandPalette'
 import DocumentReaderModal from '../components/DocumentReaderModal'
 import DocumentUploadModal from '../components/DocumentUploadModal'
 import DocumentComparisonModal from '../components/DocumentComparisonModal'
+import AgentSidecarModal from '../components/AgentSidecarModal'
 import WorkspaceEmptyState from '../components/WorkspaceEmptyState'
 import ThreadHistorySidebar from '../components/ThreadHistorySidebar'
 import {
@@ -70,6 +71,8 @@ export default function ChatPage() {
   const [activeThreadId, setActiveThreadIdState] = useState(() => getActiveThreadId(user?.id, user?.role))
   const [comparisonModalOpen, setComparisonModalOpen] = useState(false)
   const [comparisonDocs, setComparisonDocs] = useState({ docA: null, docB: null })
+  const [agentModalOpen, setAgentModalOpen] = useState(false)
+  const [agentModalConfig, setAgentModalConfig] = useState({ scenario: '', persona: 'auditor', focusDoc: null })
   const [readerState, setReaderState] = useState({
     isOpen: false,
     docIdOrName: null,
@@ -124,6 +127,11 @@ export default function ChatPage() {
   function handleOpenComparison(initialA = null, initialB = null) {
     setComparisonDocs({ docA: initialA, docB: initialB })
     setComparisonModalOpen(true)
+  }
+
+  function handleOpenAgentModal({ scenario = '', persona = 'auditor', focusDoc = null } = {}) {
+    setAgentModalConfig({ scenario, persona, focusDoc })
+    setAgentModalOpen(true)
   }
 
   function handleOpenDocumentReader({ docIdOrName, chunkIndex = null, chunkId = null, snippet = '' }) {
@@ -474,6 +482,25 @@ export default function ChatPage() {
             >
               ⌘K
             </button>
+
+            {/* Autonomous Multi-Agent Workflows Button */}
+            <button
+              type="button"
+              onClick={() => handleOpenAgentModal()}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:scale-105 shadow-xs"
+              style={{
+                background: isDark ? 'rgba(168, 85, 247, 0.20)' : '#f5f3ff',
+                color: isDark ? '#d8b4fe' : '#7c3aed',
+                border: isDark ? '1px solid rgba(168, 85, 247, 0.40)' : '1px solid #ddd6fe',
+              }}
+              title="Launch Autonomous Policy Compliance & Risk Auditor (Tier 2)"
+            >
+              <span className="text-sm">🤖</span>
+              <span className="hidden sm:inline">Agents</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/30 text-purple-200">
+                Tier 2
+              </span>
+            </button>
             {messages.length > 0 && (
               <div className="flex items-center gap-1.5">
                 <button
@@ -551,6 +578,7 @@ export default function ChatPage() {
                 onOpenComparison={() => handleOpenComparison()}
                 onOpenUpload={() => setUploadModalOpen(true)}
                 onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+                onOpenAgentModal={handleOpenAgentModal}
               />
             ) : (
               <>
@@ -585,6 +613,7 @@ export default function ChatPage() {
                       onOpenCitation={(idx, srcList) => setActiveCitation({ isOpen: true, index: idx, sources: srcList || [] })}
                       onSelectSuggestion={(q) => sendQuery(q, true, focusDoc?.name || focusDoc)}
                       onOpenReader={handleOpenDocumentReader}
+                      onOpenAgentAudit={(cfg) => handleOpenAgentModal(cfg)}
                     />
                 ))}
                 {thinking && (
@@ -975,6 +1004,7 @@ export default function ChatPage() {
         onToggleThreads={() => setThreadsSidebarOpen((v) => !v)}
         onSelectThread={handleSelectThread}
         onOpenComparison={handleOpenComparison}
+        onOpenAgentModal={handleOpenAgentModal}
         user={user}
         documents={docs}
         threads={threads}
@@ -991,6 +1021,7 @@ export default function ChatPage() {
         onAskQuestion={(prompt) => sendQuery(prompt, true, focusDoc?.name || focusDoc)}
         onFocusDoc={(doc) => setFocusDoc(doc)}
         onCompareDoc={(doc) => handleOpenComparison(doc, null)}
+        onAuditDoc={handleOpenAgentModal}
       />
 
       {/* Full-Window Drag & Drop Overlay */}
@@ -1056,6 +1087,18 @@ export default function ChatPage() {
           handleNewChat()
           sendQuery(prompt, true)
         }}
+      />
+
+      {/* Autonomous Multi-Agent Workflows & Governance Sidecar Modal */}
+      <AgentSidecarModal
+        isOpen={agentModalOpen}
+        onClose={() => setAgentModalOpen(false)}
+        initialScenario={agentModalConfig.scenario}
+        initialPersona={agentModalConfig.persona}
+        initialDoc={agentModalConfig.focusDoc}
+        docs={docs}
+        userRole={user?.role}
+        onOpenReader={handleOpenDocumentReader}
       />
 
     </div>

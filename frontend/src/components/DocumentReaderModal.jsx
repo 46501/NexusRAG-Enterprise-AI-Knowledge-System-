@@ -18,6 +18,7 @@ export default function DocumentReaderModal({
   onAskQuestion,
   onFocusDoc,
   onCompareDoc,
+  onAuditDoc,
 }) {
   const { isDark } = useTheme()
   const [data, setData] = useState(null)
@@ -299,6 +300,26 @@ export default function DocumentReaderModal({
               >
                 <span>📊</span>
                 <span>Compare</span>
+              </button>
+            )}
+
+            {onAuditDoc && (
+              <button
+                type="button"
+                onClick={() => {
+                  onAuditDoc({ focusDoc: doc?.name || docIdOrName, persona: 'auditor' })
+                  onClose()
+                }}
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:scale-[1.02]"
+                style={{
+                  background: isDark ? 'rgba(168, 85, 247, 0.22)' : '#f3e8ff',
+                  color: isDark ? '#d8b4fe' : '#7e22ce',
+                  border: isDark ? '1px solid rgba(168, 85, 247, 0.45)' : '1px solid #d8b4fe',
+                }}
+                title="Launch autonomous compliance audit on this policy"
+              >
+                <span>🤖</span>
+                <span>Audit</span>
               </button>
             )}
 
