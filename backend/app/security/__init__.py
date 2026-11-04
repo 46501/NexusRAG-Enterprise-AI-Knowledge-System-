@@ -25,6 +25,17 @@ from app.security.pii_scrubber import (
     scrub_stream,
     scrub_text,
 )
+from app.security.token_blacklist import (
+    check_account_lockout,
+    clear_all_blacklist_data,
+    get_security_stats,
+    is_token_revoked,
+    record_failed_login,
+    record_successful_login,
+    revoke_all_user_tokens,
+    revoke_token,
+    unlock_account,
+)
 
 __all__ = [
     "ENTERPRISE_REFUSAL_MESSAGE",
@@ -48,4 +59,13 @@ __all__ = [
     "DEFAULT_CSP",
     "DEFAULT_PERMISSIONS_POLICY",
     "get_default_security_headers",
+    "check_account_lockout",
+    "clear_all_blacklist_data",
+    "get_security_stats",
+    "is_token_revoked",
+    "record_failed_login",
+    "record_successful_login",
+    "revoke_all_user_tokens",
+    "revoke_token",
+    "unlock_account",
 ]

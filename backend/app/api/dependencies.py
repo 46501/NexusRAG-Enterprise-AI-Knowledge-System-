@@ -28,6 +28,13 @@ async def get_current_user(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 
+    from app.security.token_blacklist import is_token_revoked
+    if is_token_revoked(token, payload=payload):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session has been revoked or logged out. Please log in again.",
+        )
+
     user = await db.scalar(select(User).where(User.id == payload["sub"]))
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")

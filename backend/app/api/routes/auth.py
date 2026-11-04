@@ -77,11 +77,23 @@ async def signup(request: Request, body: SignupRequest, db: AsyncSession = Depen
 @router.post("/login/", response_model=TokenResponse, include_in_schema=False)
 @limiter.limit("60/minute")
 async def login(request: Request, body: LoginRequest, response: Response, db: AsyncSession = Depends(get_db)):
+    client_ip = request.client.host if request.client else "unknown"
+    from app.security.token_blacklist import check_account_lockout, record_failed_login, record_successful_login
+    is_locked, remaining_sec = check_account_lockout(body.email, client_ip)
+    if is_locked:
+        mins = max(1, remaining_sec // 60)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Account is temporarily locked due to excessive failed attempts. Please try again in {mins} minutes.",
+        )
+
     try:
         user = await authenticate_user(db, body.email, body.password)
         access, refresh = await create_tokens(db, user)
         await db.commit()
+        record_successful_login(body.email, client_ip)
     except ValueError as exc:
+        record_failed_login(body.email, client_ip)
         err_msg = str(exc).lower()
         if "inactive" in err_msg:
             raise HTTPException(
@@ -122,10 +134,21 @@ async def refresh(
 async def logout(
     request: Request,
     response: Response,
+    access_token: str | None = Cookie(default=None),
     refresh_token: str | None = Cookie(default=None),
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
+    from app.security.token_blacklist import revoke_token
+    token = None
+    auth_header = request.headers.get("authorization")
+    if auth_header and auth_header.lower().startswith("bearer "):
+        token = auth_header.split(" ", 1)[1].strip()
+    elif access_token:
+        token = access_token
+    if token:
+        revoke_token(token, reason="user_logout")
+
     if refresh_token:
         await revoke_refresh_token(db, refresh_token)
     cookie_opts = _get_cookie_opts(request)

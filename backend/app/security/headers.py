@@ -143,3 +143,4 @@ def get_default_security_headers(is_https: bool = True) -> dict[str, str]:
     if is_https:
         headers["strict-transport-security"] = "max-age=31536000; includeSubDomains; preload"
     return headers
+

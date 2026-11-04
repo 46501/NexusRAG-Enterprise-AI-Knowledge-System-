@@ -1,4 +1,5 @@
 import hashlib
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Literal
 
@@ -18,6 +19,7 @@ def create_access_token(user_id: str, role: str) -> str:
         "sub": user_id,
         "role": role,
         "type": "access",
+        "jti": uuid.uuid4().hex,
         "exp": _now() + timedelta(minutes=_s.jwt_access_token_expire_minutes),
         "iat": _now(),
     }
@@ -28,6 +30,7 @@ def create_refresh_token(user_id: str) -> str:
     payload = {
         "sub": user_id,
         "type": "refresh",
+        "jti": uuid.uuid4().hex,
         "exp": _now() + timedelta(days=_s.jwt_refresh_token_expire_days),
         "iat": _now(),
     }

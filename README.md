@@ -366,6 +366,11 @@ Evaluation performed over golden enterprise benchmark queries across HR, Enginee
   - **Content Security Policy (CSP):** Fine-grained directives restricting script, style, font, connect, and media sources (`default-src 'self'`).
   - **Referrer & Permissions Hardening:** `Referrer-Policy: strict-origin-when-cross-origin` and sandboxed `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()`.
   - **Anti-Caching for Sensitive Endpoints:** Injects `Cache-Control: no-store, no-cache, must-revalidate` and `Pragma: no-cache` on `/auth/*` and `/admin/*` routes to prevent token/session caching in browser history.
+- **Token Blacklist & Account Lockout Guard (`app/security/token_blacklist.py`):** Enterprise session lifecycle management and anti-brute-force defense:
+  - **Instant Token Revocation:** Logs out and invalidates access tokens immediately via unique JTI (JWT ID) tracking and SHA-256 blacklisting. Revoked tokens return `401 Unauthorized` instantly, eliminating the 60-minute token replay vulnerability.
+  - **Account-Wide Session Termination:** Supports instant bulk revocation (`revoke_all_user_tokens`) upon admin account deactivation or role updates.
+  - **Brute-Force Lockout Defense:** Automatically locks target accounts for 15 minutes after 5 consecutive failed login attempts within a 10-minute sliding window, returning `HTTP 429 Too Many Requests`.
+  - **Auto-Expiring In-Memory Store:** Thread-safe, auto-purging data structures with < 1 MB memory footprint that automatically clean expired records.
 - **Password Protection:** Salting and hashing via `passlib[bcrypt]` with work factor 12.
 - **Session Architecture:** Dual-mode authentication (HttpOnly cookies with CSRF/SameSite protection + standard Bearer tokens).
 - **Access Control:** User roles (`admin`, `hr`, `engineering`, `finance`) enforced via FastAPI dependencies with immediate `403 Forbidden` on unauthorized department requests.

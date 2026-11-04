@@ -245,6 +245,9 @@ async def set_user_active(db: AsyncSession, user_id: uuid.UUID, is_active: bool)
     if not user:
         raise ValueError(f"User not found: {user_id}")
     user.is_active = is_active
+    if not is_active:
+        from app.security.token_blacklist import revoke_all_user_tokens
+        revoke_all_user_tokens(str(user_id))
     logger.info("Set user %s is_active=%s", user_id, is_active)
     return user
 
