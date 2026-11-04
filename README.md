@@ -87,8 +87,9 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
 | Layer | Technologies & Libraries |
 |---|---|
 | **API & Backend** | FastAPI, Uvicorn, Pydantic v2, Python 3.11 |
-| **Enterprise Observability & Eval** | Telemetry Drift Detection Engine, Native Gemini LLM-as-a-Judge, Regression Delta Matrix, LangSmith Span Tracing |
-| **Autonomous Multi-Agent Layer** | Async Multi-Agent Orchestrator, Policy Compliance Auditor, Risk Assessor, Policy Intelligence Assistant, Executive Council |
+| **Knowledge Operations & Predictive Analytics** | Cross-Policy Contradiction Radar, Freshness & Decay Scorer, Autonomous Policy Gap Drafter, Demand Forecaster, Enterprise Health Index (Tier 4) |
+| **Enterprise Observability & Eval** | Telemetry Drift Detection Engine, Native Gemini LLM-as-a-Judge, Regression Delta Matrix, LangSmith Span Tracing (Tier 3) |
+| **Autonomous Multi-Agent Layer** | Async Multi-Agent Orchestrator, Policy Compliance Auditor, Risk Assessor, Policy Intelligence Assistant, Executive Council (Tier 2) |
 | **Authentication & RBAC** | Dual-mode: HttpOnly cookies + `Authorization: Bearer` headers, bcrypt (`$2b$12$`), python-jose JWT |
 | **Relational Database** | Supabase Managed PostgreSQL, SQLAlchemy 2.0 (async), asyncpg |
 | **Vector Database** | Qdrant Cloud Cluster (`rag_documents`), Qdrant Client |
@@ -133,7 +134,15 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
 - **LangSmith Native Tracing & Span Enrichment:** Telemetry span instrumentation decorating hybrid retrieval, agent workflows, and query decomposition.
 - **Dedicated Observability Dashboard:** Interactive admin tab (`ObservabilityTab.jsx`) with live drift alert banner, regression matrix scorecards, topic gap clusters, and scheduled continuous eval triggers.
 
-### 4. Department Workspaces & Multi-Tenant RBAC Isolation
+### 4. Knowledge Operations & Proactive AI Analytics (Tier 4 Architecture)
+- **🔍 Cross-Policy Contradiction Radar (`contradiction_radar.py`):** Scans intra- and cross-policy clauses across HR, Engineering, and Finance documents to detect conflicting rules, contradictory SLA turnaround windows, divergent approval limits, and outdated provisions. Returns severity rating (`critical`, `high`, `medium`, `low`), offending clause quotes from both documents, and recommended reconciliation paths.
+- **⏳ Freshness, Velocity & Temporal Decay Scorer (`decay_scorer.py`):** Computes multi-factor obsolescence risk scores (0–100) per document combining temporal decay past 30/90 days, citation query velocity, and negative user feedback reports. Assigns intuitive status labels (`Fresh`, `Degrading`, `Stale`, `Critical Revision`).
+- **📝 Autonomous Policy Gap Drafter (`policy_drafter.py`):** When telemetry or ungrounded inquiry clusters reveal missing institutional knowledge, the autonomous drafter generates comprehensive, formatted enterprise SOPs complete with purpose, scope, numbered policy rules, approval matrices, and audit clauses. Includes one-click direct publishing into PostgreSQL & Qdrant Cloud.
+- **📈 Predictive Knowledge Demand Forecaster (`demand_forecaster.py`):** Synthesizes organizational calendar cycles (performance reviews, budget cycles, canary releases, travel summits) and query velocity to project 30-day inquiry surges with surge probability, percentage volume increases, and preparation checklists.
+- **🏆 Enterprise Knowledge Health Index (`health_index.py`):** Authoritative composite 0–100 health score with letter grade (A–D), verdict, and 5 foundational pillars (Retrieval Grounding 25%, RAGAS Quality 25%, User Satisfaction 20%, Policy Freshness 15%, Contradiction Freedom 15%), accompanied by department scorecards and prioritized action items.
+- **🎛️ Executive Knowledge Operations Console (`KnowledgeOpsTab.jsx`):** Integrated directly into the Admin Workspace with real-time health gauge, pillar breakdown bars, contradiction diff cards, 30-day demand forecast checklists, interactive gap drafter with quick-pick templates, and document decay table.
+
+### 5. Department Workspaces & Multi-Tenant RBAC Isolation
 - **Strict Query-Level Isolation:** HR, Engineering, and Finance workspaces operate in complete data silos.
 - **Zero-Leakage Enforcement:**
   - Query parameter overrides (`?department=...`) blocked with `403 Forbidden`.
@@ -142,12 +151,12 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
   - Non-admin upload attempts to other departments blocked with `403 Forbidden`.
   - Admin endpoints (`/admin/users`, `/admin/analytics`, `/admin/feedbacks`, `/admin/observability`) restricted to Admin roles.
 
-### 5. Document Sidebar, Reader & Full Filename Display
+### 6. Document Sidebar, Reader & Full Filename Display
 - **Complete Filename Visibility:** Document names and file extensions (`performance_review.txt`, `deployment_guide.txt`) are displayed in full with natural wrapping, clean line breaks, and hover tooltips across all departments.
 - **Sidebar Search & Filtering:** Press `/` to focus the search bar, filter by file type (All, PDF, TXT, MD), and toggle sort order (🕒 Recent vs 🔤 A–Z).
 - **Integrated Document Reader:** Click **Read** on any document card to view the reconstructed full text and chunk inspection modal directly in the workspace.
 
-### 6. Side-by-Side Multi-Document Comparison Matrix
+### 7. Side-by-Side Multi-Document Comparison Matrix
 - **Comparative Analysis Engine:** Select two documents to generate a structured comparison matrix across operational, policy, financial, and compliance dimensions.
 - **Presets Available:**
   - Comprehensive Matrix
@@ -157,14 +166,14 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
   - Custom Analysis
 - **One-Click Export:** Download comparison matrices directly to CSV or copy clean Markdown tables to the clipboard.
 
-### 7. Chat UX, Thinking Pipeline & Feedback Loop
+### 8. Chat UX, Thinking Pipeline & Feedback Loop
 - **Dynamic Retrieval Thinking Indicator:** Visual multi-step pipeline indicator showcasing query preprocessing, dense/sparse search, reranking, and synthesis phases.
 - **Message Action Toolbar:** Copy answer text, export formatted Markdown briefs, and inspect citations via interactive slide-out drawer.
 - **Inline Feedback System:** Submit thumbs-up or thumbs-down feedback with categorized reasons (`Inaccurate`, `Incomplete`, `Missing Citation`, `Outdated`, `Off-Topic`).
 - **Spotlight Autocomplete:** Contextual typeahead providing department-specific starter questions with Tab/arrow acceptance.
 - **Enriched Cold-Start Empty State:** Department metrics, quick starters, and recent files.
 
-### 8. Admin Control Center & Analytics
+### 9. Admin Control Center & Analytics
 - **System Metrics Overview:** Total queries, average latency (ms), total documents, active users, and grounding rate.
 - **User Management:** View all registered accounts, role assignments, last login timestamps, and activate/deactivate accounts.
 - **Feedback Management:** Inspect flagged responses, review user comments, and mark feedback items as resolved.
@@ -294,6 +303,9 @@ TEST SUITE SUMMARY: 44/44 Passed (100.0%) | 0 Failed
 
 ### Run Additional Targeted Tests
 ```bash
+# Tier 4 Knowledge Operations & Proactive AI Analytics (6/6 Passed)
+python tests/test_tier4_knowledge_ops.py
+
 # Tier 3 Enterprise Observability & Continuous Eval Loop (4/4 Passed)
 python tests/test_tier3_observability.py
 

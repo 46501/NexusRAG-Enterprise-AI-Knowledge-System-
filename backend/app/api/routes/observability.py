@@ -149,3 +149,4 @@ async def set_eval_schedule_endpoint(
             detail="Demo admin cannot modify schedule intervals.",
         )
     return set_schedule_interval(req.interval)
+

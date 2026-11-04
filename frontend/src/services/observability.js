@@ -31,3 +31,4 @@ export async function setEvalScheduleInterval(interval) {
   const res = await api.post('/admin/observability/eval/schedule', { interval })
   return res.data
 }
+

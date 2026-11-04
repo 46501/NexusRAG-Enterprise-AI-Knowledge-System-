@@ -50,3 +50,4 @@ def trace_rag_query(
         else:
             logger.debug("Local telemetry span: name=%s dept=%s latency=%.1fms",
                          trace_info["name"], department, duration_ms)
+

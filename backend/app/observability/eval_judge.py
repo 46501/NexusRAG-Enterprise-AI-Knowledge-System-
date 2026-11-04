@@ -189,3 +189,4 @@ async def evaluate_benchmark_dataset(
 
     logger.info("Continuous evaluation complete for run_id=%s: %s", run_id, avg_scores)
     return run_id, avg_scores, case_results
+

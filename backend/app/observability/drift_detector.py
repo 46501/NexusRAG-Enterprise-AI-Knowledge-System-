@@ -260,3 +260,4 @@ async def get_observability_overview(db: AsyncSession) -> dict:
             "scores": latest_scores,
         },
     }
+
