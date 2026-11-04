@@ -9,6 +9,12 @@ from app.security.guardrails import (
     sanitize_invisible_characters,
     sanitize_text_for_ingestion,
 )
+from app.security.headers import (
+    DEFAULT_CSP,
+    DEFAULT_PERMISSIONS_POLICY,
+    SecurityHeadersMiddleware,
+    get_default_security_headers,
+)
 from app.security.pii_scrubber import (
     PIIEntity,
     PIIType,
@@ -38,4 +44,8 @@ __all__ = [
     "scrub_sources",
     "scrub_stream",
     "scrub_text",
+    "SecurityHeadersMiddleware",
+    "DEFAULT_CSP",
+    "DEFAULT_PERMISSIONS_POLICY",
+    "get_default_security_headers",
 ]

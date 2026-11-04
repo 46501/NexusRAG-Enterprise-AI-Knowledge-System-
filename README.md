@@ -359,6 +359,13 @@ Evaluation performed over golden enterprise benchmark queries across HR, Enginee
   - **Cryptographic Keys:** Redacts entire RSA, EC, and OpenSSH private key blocks (`[REDACTED_PRIVATE_KEY]`).
   - **Streaming Token Buffer:** Uses an intelligent word-boundary sliding window so secrets split across consecutive SSE tokens are never severed or partially leaked.
   - **Zero Server Overhead:** Pure regex & algorithmic validation executing in microseconds with 0 MB added RAM.
+- **Enterprise HTTP Security Headers Middleware (`app/security/headers.py`):** High-performance ASGI middleware injecting defense-in-depth HTTP headers on all API responses without buffering SSE streams:
+  - **HSTS Enforcement:** `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` enforces HTTPS exclusively.
+  - **Clickjacking Defense:** `X-Frame-Options: DENY` and CSP `frame-ancestors 'none'` prevent unauthorized embedding in iframes.
+  - **MIME Sniffing Prevention:** `X-Content-Type-Options: nosniff` stops malicious executable/script spoofing.
+  - **Content Security Policy (CSP):** Fine-grained directives restricting script, style, font, connect, and media sources (`default-src 'self'`).
+  - **Referrer & Permissions Hardening:** `Referrer-Policy: strict-origin-when-cross-origin` and sandboxed `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()`.
+  - **Anti-Caching for Sensitive Endpoints:** Injects `Cache-Control: no-store, no-cache, must-revalidate` and `Pragma: no-cache` on `/auth/*` and `/admin/*` routes to prevent token/session caching in browser history.
 - **Password Protection:** Salting and hashing via `passlib[bcrypt]` with work factor 12.
 - **Session Architecture:** Dual-mode authentication (HttpOnly cookies with CSRF/SameSite protection + standard Bearer tokens).
 - **Access Control:** User roles (`admin`, `hr`, `engineering`, `finance`) enforced via FastAPI dependencies with immediate `403 Forbidden` on unauthorized department requests.

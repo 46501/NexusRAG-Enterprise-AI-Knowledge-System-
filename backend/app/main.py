@@ -15,6 +15,7 @@ from app.retrieval.dense import load_dense_client
 from app.retrieval.embedder import load_embedder
 from app.retrieval.reranker import load_reranker
 from app.retrieval.sparse import load_sparse_index
+from app.security.headers import SecurityHeadersMiddleware
 from app.state import init_semaphore, limiter
 from app.utils.logger import get_logger
 
@@ -62,6 +63,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(health.router)
 app.include_router(auth.router, prefix="/api/v1")
