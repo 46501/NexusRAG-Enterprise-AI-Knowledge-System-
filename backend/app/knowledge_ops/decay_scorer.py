@@ -107,3 +107,4 @@ async def calculate_document_decay_scores(
     # Sort: most decaying / stale first
     results.sort(key=lambda x: x.freshness_score)
     return results
+

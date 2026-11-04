@@ -677,3 +677,4 @@ export default function KnowledgeOpsTab({ isDemoAdmin = false }) {
     </div>
   )
 }
+

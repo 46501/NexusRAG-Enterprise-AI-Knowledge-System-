@@ -45,3 +45,4 @@ export async function fetchHealthIndex() {
   const res = await api.get('/admin/knowledge-ops/health-index')
   return res.data
 }
+

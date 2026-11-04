@@ -89,3 +89,4 @@ class EnterpriseHealthIndex(BaseModel):
     department_scores: dict[str, dict]
     executive_summary: str
     priority_action_items: list[str]
+

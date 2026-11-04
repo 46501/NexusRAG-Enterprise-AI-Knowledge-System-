@@ -113,3 +113,4 @@ async def generate_demand_forecast(db: AsyncSession) -> list[DemandForecastItem]
 
     logger.info("Generated %d proactive demand forecasts", len(forecasts))
     return forecasts
+

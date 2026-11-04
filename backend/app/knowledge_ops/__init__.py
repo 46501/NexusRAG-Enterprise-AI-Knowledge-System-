@@ -47,3 +47,4 @@ __all__ = [
     "DemandForecastItem",
     "EnterpriseHealthIndex",
 ]
+

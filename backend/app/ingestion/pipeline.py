@@ -49,7 +49,12 @@ def ingest_file(
     logger.info("Ingesting %s as role_access=%s", display_name, role_access)
 
     raw_text = load_document(file_path)
-    chunks = chunk_text(raw_text, doc_title=display_name, department=role_access)
+    from app.security.guardrails import sanitize_text_for_ingestion
+    clean_text, warnings = sanitize_text_for_ingestion(raw_text)
+    if warnings:
+        for w in warnings:
+            logger.warning("Ingestion security notice for %s: %s", display_name, w)
+    chunks = chunk_text(clean_text, doc_title=display_name, department=role_access)
 
     doc_meta = build_doc_meta(file_path, role_access, original_filename=original_filename)
 

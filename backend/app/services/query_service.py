@@ -128,6 +128,29 @@ async def run_query(
         result["sources"] = []
         return result
 
+    # 0. Prompt Injection & Security Guardrails Firewall
+    from app.security.guardrails import inspect_query
+    guardrail_res = inspect_query(query, user_role=str(role.value) if role else None)
+    if not guardrail_res.passed:
+        logger.warning(
+            "Query blocked by Guardrail Firewall: query=%r threat=%s pattern=%s",
+            query[:60],
+            guardrail_res.threat_category,
+            guardrail_res.matched_pattern,
+        )
+        return {
+            "answer": guardrail_res.refusal_message or REFUSAL_TEXT,
+            "sources": [],
+            "confidence_score": None,
+            "follow_up_questions": [
+                "What are the official department travel guidelines?",
+                "How do I submit an HR leave request?",
+                "What is the standard engineering deployment process?",
+            ],
+            "guardrail_blocked": True,
+            "guardrail_category": guardrail_res.threat_category.value if guardrail_res.threat_category else None,
+        }
+
     allowed_roles = get_allowed_collections(role)
     retrieval_query = _build_retrieval_query(query, history)
 
@@ -193,6 +216,23 @@ async def run_query_stream(
     if _is_greeting(query):
         logger.info("Greeting detected, skipping retrieval query=%r", query[:60])
         return generate_stream(query, [], history=history), []
+
+    # 0. Prompt Injection & Security Guardrails Firewall
+    from app.security.guardrails import inspect_query
+    guardrail_res = inspect_query(query, user_role=str(role.value) if role else None)
+    if not guardrail_res.passed:
+        logger.warning(
+            "Query stream blocked by Guardrail Firewall: query=%r threat=%s pattern=%s",
+            query[:60],
+            guardrail_res.threat_category,
+            guardrail_res.matched_pattern,
+        )
+        async def _blocked_stream():
+            msg = guardrail_res.refusal_message or REFUSAL_TEXT
+            for chunk in msg.split(" "):
+                yield chunk + " "
+                await asyncio.sleep(0.01)
+        return _blocked_stream(), []
 
     allowed_roles = get_allowed_collections(role)
     retrieval_query = _build_retrieval_query(query, history)
