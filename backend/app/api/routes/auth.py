@@ -81,6 +81,8 @@ async def login(request: Request, body: LoginRequest, response: Response, db: As
     from app.security.token_blacklist import check_account_lockout, record_failed_login, record_successful_login
     is_locked, remaining_sec = check_account_lockout(body.email, client_ip)
     if is_locked:
+        from app.security.audit_logger import log_account_lockout
+        log_account_lockout(email=body.email, client_ip=client_ip, attempt_count=5)
         mins = max(1, remaining_sec // 60)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -148,6 +150,9 @@ async def logout(
         token = access_token
     if token:
         revoke_token(token, reason="user_logout")
+        from app.security.audit_logger import log_token_revocation
+        client_ip = request.client.host if request.client else "unknown"
+        log_token_revocation(user_email=_.email, reason="user_logout", client_ip=client_ip)
 
     if refresh_token:
         await revoke_refresh_token(db, refresh_token)

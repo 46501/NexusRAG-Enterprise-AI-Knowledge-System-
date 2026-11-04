@@ -45,6 +45,13 @@ async def query(
 ):
     if body.department and current_user.role not in (RoleEnum.admin, RoleEnum.demo_admin):
         if body.department.lower() != current_user.role.value.lower():
+            from app.security.audit_logger import log_unauthorized_access
+            log_unauthorized_access(
+                user_email=current_user.email,
+                user_role=current_user.role.value,
+                target_resource=f"department:{body.department}",
+                endpoint="/api/v1/query",
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to access this department. Please contact your administrator if you need access.",

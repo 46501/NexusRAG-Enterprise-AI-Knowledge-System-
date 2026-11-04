@@ -6,6 +6,7 @@ import UserProfileMenu from '../components/UserProfileMenu'
 import AnalyticsTab from '../components/AnalyticsTab'
 import ObservabilityTab from '../components/ObservabilityTab'
 import KnowledgeOpsTab from '../components/KnowledgeOpsTab'
+import SecurityAuditTab from '../components/SecurityAuditTab'
 import api from '../services/api'
 
 const DEPARTMENTS = ['hr', 'engineering', 'finance']
@@ -141,6 +142,7 @@ function fmtTs(iso) {
 
 const TABS = [
   { key: 'analytics', label: 'Analytics' },
+  { key: 'security', label: 'Security (Tier 5)' },
   { key: 'observability', label: 'Observability & Drift (Tier 3)' },
   { key: 'knowledge_ops', label: 'Knowledge Ops (Tier 4)' },
   { key: 'documents', label: 'Documents' },
@@ -365,6 +367,10 @@ export default function AdminPage() {
             error={analyticsError}
             onRefresh={fetchAnalytics}
           />
+        )}
+
+        {tab === 'security' && (
+          <SecurityAuditTab isDemoAdmin={isDemoAdmin} />
         )}
 
         {tab === 'observability' && (

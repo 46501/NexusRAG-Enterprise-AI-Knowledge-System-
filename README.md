@@ -371,6 +371,12 @@ Evaluation performed over golden enterprise benchmark queries across HR, Enginee
   - **Account-Wide Session Termination:** Supports instant bulk revocation (`revoke_all_user_tokens`) upon admin account deactivation or role updates.
   - **Brute-Force Lockout Defense:** Automatically locks target accounts for 15 minutes after 5 consecutive failed login attempts within a 10-minute sliding window, returning `HTTP 429 Too Many Requests`.
   - **Auto-Expiring In-Memory Store:** Thread-safe, auto-purging data structures with < 1 MB memory footprint that automatically clean expired records.
+- **Dedicated Security Audit Trail & SIEM Console (`app/security/audit_logger.py`):** Enterprise-grade forensic logging and real-time security observability dashboard:
+  - **Comprehensive Threat Event Logging:** Dedicated Supabase PostgreSQL audit trail recording prompt injections, jailbreaks, PII redactions, unauthorized department queries (HTTP 403), brute-force lockouts, and token revocations.
+  - **Zero-Latency Async Logging:** Event recording is decoupled from the request cycle using non-blocking background workers and a 100-event fast in-memory ring-buffer, preventing database latency from impacting user query speed.
+  - **Admin Security Console (Tier 5 Tab):** Executive overview cards displaying 24h & 7d threat totals, critical incident counts, active locked accounts, revoked tokens, and severity distributions.
+  - **Interactive Forensic Log Viewer:** Filter audit events by severity (CRITICAL, HIGH, MEDIUM, LOW, INFO) or threat type, execute real-time text search across queries, endpoints, and user emails, and inspect structured attack payloads in expandable drawer modals.
+  - **One-Click Security Interventions:** Admins can manually unlock brute-force locked accounts and execute emergency session terminations (`Revoke All Sessions`) directly from the UI.
 - **Password Protection:** Salting and hashing via `passlib[bcrypt]` with work factor 12.
 - **Session Architecture:** Dual-mode authentication (HttpOnly cookies with CSRF/SameSite protection + standard Bearer tokens).
 - **Access Control:** User roles (`admin`, `hr`, `engineering`, `finance`) enforced via FastAPI dependencies with immediate `403 Forbidden` on unauthorized department requests.

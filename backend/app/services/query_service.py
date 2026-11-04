@@ -134,9 +134,25 @@ async def run_query(
 
     # Scrub inbound query PII before processing
     safe_query, inbound_pii = scrub_query(query)
+    if inbound_pii:
+        from app.security.audit_logger import log_pii_redaction
+        log_pii_redaction(
+            entity_types=[p.pii_type.value for p in inbound_pii],
+            count=len(inbound_pii),
+            department=str(role.value) if role else None,
+            endpoint="/api/v1/query",
+        )
 
     guardrail_res = inspect_query(safe_query, user_role=str(role.value) if role else None)
     if not guardrail_res.passed:
+        from app.security.audit_logger import log_prompt_injection
+        log_prompt_injection(
+            query=query,
+            threat_category=guardrail_res.threat_category.value if guardrail_res.threat_category else "PROMPT_INJECTION",
+            matched_pattern=guardrail_res.matched_pattern,
+            department=str(role.value) if role else None,
+            endpoint="/api/v1/query",
+        )
         logger.warning(
             "Query blocked by Guardrail Firewall: query=%r threat=%s pattern=%s",
             safe_query[:60],
@@ -231,10 +247,26 @@ async def run_query_stream(
     from app.security.pii_scrubber import scrub_query, scrub_sources, scrub_stream
 
     # Scrub inbound query PII before processing
-    safe_query, _ = scrub_query(query)
+    safe_query, inbound_pii = scrub_query(query)
+    if inbound_pii:
+        from app.security.audit_logger import log_pii_redaction
+        log_pii_redaction(
+            entity_types=[p.pii_type.value for p in inbound_pii],
+            count=len(inbound_pii),
+            department=str(role.value) if role else None,
+            endpoint="/api/v1/query/stream",
+        )
 
     guardrail_res = inspect_query(safe_query, user_role=str(role.value) if role else None)
     if not guardrail_res.passed:
+        from app.security.audit_logger import log_prompt_injection
+        log_prompt_injection(
+            query=query,
+            threat_category=guardrail_res.threat_category.value if guardrail_res.threat_category else "PROMPT_INJECTION",
+            matched_pattern=guardrail_res.matched_pattern,
+            department=str(role.value) if role else None,
+            endpoint="/api/v1/query/stream",
+        )
         logger.warning(
             "Query stream blocked by Guardrail Firewall: query=%r threat=%s pattern=%s",
             safe_query[:60],
