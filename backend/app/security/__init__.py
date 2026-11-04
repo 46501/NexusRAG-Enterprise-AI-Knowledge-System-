@@ -9,6 +9,16 @@ from app.security.guardrails import (
     sanitize_invisible_characters,
     sanitize_text_for_ingestion,
 )
+from app.security.pii_scrubber import (
+    PIIEntity,
+    PIIType,
+    ScrubResult,
+    scrub_answer,
+    scrub_query,
+    scrub_sources,
+    scrub_stream,
+    scrub_text,
+)
 
 __all__ = [
     "ENTERPRISE_REFUSAL_MESSAGE",
@@ -20,4 +30,12 @@ __all__ = [
     "is_system_prompt_probe",
     "sanitize_invisible_characters",
     "sanitize_text_for_ingestion",
+    "PIIEntity",
+    "PIIType",
+    "ScrubResult",
+    "scrub_answer",
+    "scrub_query",
+    "scrub_sources",
+    "scrub_stream",
+    "scrub_text",
 ]

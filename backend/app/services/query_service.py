@@ -130,11 +130,16 @@ async def run_query(
 
     # 0. Prompt Injection & Security Guardrails Firewall
     from app.security.guardrails import inspect_query
-    guardrail_res = inspect_query(query, user_role=str(role.value) if role else None)
+    from app.security.pii_scrubber import scrub_query, scrub_answer, scrub_sources, scrub_stream
+
+    # Scrub inbound query PII before processing
+    safe_query, inbound_pii = scrub_query(query)
+
+    guardrail_res = inspect_query(safe_query, user_role=str(role.value) if role else None)
     if not guardrail_res.passed:
         logger.warning(
             "Query blocked by Guardrail Firewall: query=%r threat=%s pattern=%s",
-            query[:60],
+            safe_query[:60],
             guardrail_res.threat_category,
             guardrail_res.matched_pattern,
         )
@@ -152,11 +157,11 @@ async def run_query(
         }
 
     allowed_roles = get_allowed_collections(role)
-    retrieval_query = _build_retrieval_query(query, history)
+    retrieval_query = _build_retrieval_query(safe_query, history)
 
     try:
         async with _state.get_semaphore():
-            logger.info("RAG query start role=%s query=%r focus_doc=%s", role, query[:60], focus_doc)
+            logger.info("RAG query start role=%s query=%r focus_doc=%s", role, safe_query[:60], focus_doc)
 
             # 1. Agentic Query Planning & Multi-Hop Decomposition
             sub_queries = await decompose_query(retrieval_query, history=history)
@@ -184,22 +189,26 @@ async def run_query(
             expanded_ranked = merge_contiguous_chunks(ranked)
 
             # 5. Generative Synthesis with Self-Reflective Grounding
-            result = await generate(query, expanded_ranked, history=history)
+            result = await generate(safe_query, expanded_ranked, history=history)
     except Exception:
-        logger.exception("RAG query failed role=%s query=%r", role, query[:60])
+        logger.exception("RAG query failed role=%s query=%r", role, safe_query[:60])
         raise
 
     # 6. Self-Correction & Grounding Verification
     if not _CITATION_RE.search(result["answer"]):
         result["sources"] = []
         result["confidence_score"] = None
-        logger.info("No citations in answer, clearing sources query=%r", query[:60])
+        logger.info("No citations in answer, clearing sources query=%r", safe_query[:60])
     else:
         top_scores = [s.get("rerank_score") for s in result.get("sources", []) if s.get("rerank_score") is not None]
         if top_scores:
             result["confidence_score"] = round(sum(top_scores[:3]) / len(top_scores[:3]), 1)
         else:
             result["confidence_score"] = 94.0
+
+    # 7. Outbound PII Redaction & Secret Sanitization
+    result["answer"], _ = scrub_answer(result["answer"])
+    result["sources"] = scrub_sources(result.get("sources", []))
 
     logger.info("RAG query complete role=%s sources=%d", role, len(result["sources"]))
     return result
@@ -219,11 +228,16 @@ async def run_query_stream(
 
     # 0. Prompt Injection & Security Guardrails Firewall
     from app.security.guardrails import inspect_query
-    guardrail_res = inspect_query(query, user_role=str(role.value) if role else None)
+    from app.security.pii_scrubber import scrub_query, scrub_sources, scrub_stream
+
+    # Scrub inbound query PII before processing
+    safe_query, _ = scrub_query(query)
+
+    guardrail_res = inspect_query(safe_query, user_role=str(role.value) if role else None)
     if not guardrail_res.passed:
         logger.warning(
             "Query stream blocked by Guardrail Firewall: query=%r threat=%s pattern=%s",
-            query[:60],
+            safe_query[:60],
             guardrail_res.threat_category,
             guardrail_res.matched_pattern,
         )
@@ -235,11 +249,11 @@ async def run_query_stream(
         return _blocked_stream(), []
 
     allowed_roles = get_allowed_collections(role)
-    retrieval_query = _build_retrieval_query(query, history)
+    retrieval_query = _build_retrieval_query(safe_query, history)
 
     try:
         async with _state.get_semaphore():
-            logger.info("RAG stream start role=%s query=%r focus_doc=%s", role, query[:60], focus_doc)
+            logger.info("RAG stream start role=%s query=%r focus_doc=%s", role, safe_query[:60], focus_doc)
 
             # 1. Agentic Query Planning & Multi-Hop Decomposition
             sub_queries = await decompose_query(retrieval_query, history=history)
@@ -266,7 +280,7 @@ async def run_query_stream(
             # 4. Hierarchical / Parent-Child Context Expansion
             expanded_ranked = merge_contiguous_chunks(ranked)
     except Exception:
-        logger.exception("RAG stream retrieval failed role=%s query=%r", role, query[:60])
+        logger.exception("RAG stream retrieval failed role=%s query=%r", role, safe_query[:60])
         raise
 
     sources = [
@@ -284,4 +298,9 @@ async def run_query_stream(
         for i, c in enumerate(expanded_ranked)
     ]
 
-    return generate_stream(query, expanded_ranked, history=history), sources
+    # Outbound streaming PII scrubber & source chunk sanitization
+    raw_stream = generate_stream(safe_query, expanded_ranked, history=history)
+    safe_stream = scrub_stream(raw_stream)
+    safe_sources = scrub_sources(sources)
+
+    return safe_stream, safe_sources
