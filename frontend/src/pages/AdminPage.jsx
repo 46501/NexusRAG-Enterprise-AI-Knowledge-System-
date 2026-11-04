@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext'
 import BackHomeButton from '../components/BackHomeButton'
 import UserProfileMenu from '../components/UserProfileMenu'
 import AnalyticsTab from '../components/AnalyticsTab'
+import ObservabilityTab from '../components/ObservabilityTab'
 import api from '../services/api'
 
 const DEPARTMENTS = ['hr', 'engineering', 'finance']
@@ -139,6 +140,7 @@ function fmtTs(iso) {
 
 const TABS = [
   { key: 'analytics', label: 'Analytics' },
+  { key: 'observability', label: 'Observability & Drift (Tier 3)' },
   { key: 'documents', label: 'Documents' },
   { key: 'users', label: 'Users' },
   { key: 'eval', label: 'Eval' },
@@ -361,6 +363,10 @@ export default function AdminPage() {
             error={analyticsError}
             onRefresh={fetchAnalytics}
           />
+        )}
+
+        {tab === 'observability' && (
+          <ObservabilityTab isDemoAdmin={isDemoAdmin} />
         )}
 
         {tab === 'documents' && (

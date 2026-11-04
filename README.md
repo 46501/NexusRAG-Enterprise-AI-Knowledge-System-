@@ -87,6 +87,7 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
 | Layer | Technologies & Libraries |
 |---|---|
 | **API & Backend** | FastAPI, Uvicorn, Pydantic v2, Python 3.11 |
+| **Enterprise Observability & Eval** | Telemetry Drift Detection Engine, Native Gemini LLM-as-a-Judge, Regression Delta Matrix, LangSmith Span Tracing |
 | **Autonomous Multi-Agent Layer** | Async Multi-Agent Orchestrator, Policy Compliance Auditor, Risk Assessor, Policy Intelligence Assistant, Executive Council |
 | **Authentication & RBAC** | Dual-mode: HttpOnly cookies + `Authorization: Bearer` headers, bcrypt (`$2b$12$`), python-jose JWT |
 | **Relational Database** | Supabase Managed PostgreSQL, SQLAlchemy 2.0 (async), asyncpg |
@@ -125,21 +126,28 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
   - Multi-surface triggers: Message Bubble `🤖 Audit Scenario` button, Command Palette shortcuts (`⌘A`, `⌘R`, Executive Council), Document Reader header action, and Workspace Starter cards.
   - Strict department RBAC validation ensuring zero cross-tenant knowledge leaks.
 
-### 3. Department Workspaces & Multi-Tenant RBAC Isolation
+### 3. Enterprise Observability & Continuous Eval Loop (Tier 3 Architecture)
+- **Continuous Telemetry Drift Engine:** Sliding-window tracking of Grounding Rate drift, Latency percentiles (P50/P90/P99), User Satisfaction drift, and Knowledge Gap topic clustering with automated root-cause diagnoses.
+- **Dual-Engine LLM-as-a-Judge Eval Loop:** Native Gemini judge (`gemini-3.5-flash-lite` / `gemini-3.5-flash`) + OpenAI judge running RAGAS benchmark across 15+ golden HR, Eng, and Finance test cases with zero extra credentials required.
+- **Regression Delta Matrix & SLA Enforcement:** Evaluates live runs against golden SLA baselines (Faithfulness $\ge 0.90$, Relevancy $\ge 0.80$, Precision $\ge 0.85$, Recall $\ge 0.90$), automatically flagging any performance regression or degradation delta.
+- **LangSmith Native Tracing & Span Enrichment:** Telemetry span instrumentation decorating hybrid retrieval, agent workflows, and query decomposition.
+- **Dedicated Observability Dashboard:** Interactive admin tab (`ObservabilityTab.jsx`) with live drift alert banner, regression matrix scorecards, topic gap clusters, and scheduled continuous eval triggers.
+
+### 4. Department Workspaces & Multi-Tenant RBAC Isolation
 - **Strict Query-Level Isolation:** HR, Engineering, and Finance workspaces operate in complete data silos.
 - **Zero-Leakage Enforcement:**
   - Query parameter overrides (`?department=...`) blocked with `403 Forbidden`.
   - Document content access outside user department blocked with `403 Forbidden`.
   - Focus document selection outside department blocked with `403 Forbidden`.
   - Non-admin upload attempts to other departments blocked with `403 Forbidden`.
-  - Admin endpoints (`/admin/users`, `/admin/analytics`, `/admin/feedbacks`) restricted to Admin roles.
+  - Admin endpoints (`/admin/users`, `/admin/analytics`, `/admin/feedbacks`, `/admin/observability`) restricted to Admin roles.
 
-### 4. Document Sidebar, Reader & Full Filename Display
+### 5. Document Sidebar, Reader & Full Filename Display
 - **Complete Filename Visibility:** Document names and file extensions (`performance_review.txt`, `deployment_guide.txt`) are displayed in full with natural wrapping, clean line breaks, and hover tooltips across all departments.
 - **Sidebar Search & Filtering:** Press `/` to focus the search bar, filter by file type (All, PDF, TXT, MD), and toggle sort order (🕒 Recent vs 🔤 A–Z).
 - **Integrated Document Reader:** Click **Read** on any document card to view the reconstructed full text and chunk inspection modal directly in the workspace.
 
-### 5. Side-by-Side Multi-Document Comparison Matrix
+### 6. Side-by-Side Multi-Document Comparison Matrix
 - **Comparative Analysis Engine:** Select two documents to generate a structured comparison matrix across operational, policy, financial, and compliance dimensions.
 - **Presets Available:**
   - Comprehensive Matrix
@@ -149,14 +157,14 @@ Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`B
   - Custom Analysis
 - **One-Click Export:** Download comparison matrices directly to CSV or copy clean Markdown tables to the clipboard.
 
-### 6. Chat UX, Thinking Pipeline & Feedback Loop
+### 7. Chat UX, Thinking Pipeline & Feedback Loop
 - **Dynamic Retrieval Thinking Indicator:** Visual multi-step pipeline indicator showcasing query preprocessing, dense/sparse search, reranking, and synthesis phases.
 - **Message Action Toolbar:** Copy answer text, export formatted Markdown briefs, and inspect citations via interactive slide-out drawer.
 - **Inline Feedback System:** Submit thumbs-up or thumbs-down feedback with categorized reasons (`Inaccurate`, `Incomplete`, `Missing Citation`, `Outdated`, `Off-Topic`).
 - **Spotlight Autocomplete:** Contextual typeahead providing department-specific starter questions with Tab/arrow acceptance.
 - **Enriched Cold-Start Empty State:** Department metrics, quick starters, and recent files.
 
-### 7. Admin Control Center & Analytics
+### 8. Admin Control Center & Analytics
 - **System Metrics Overview:** Total queries, average latency (ms), total documents, active users, and grounding rate.
 - **User Management:** View all registered accounts, role assignments, last login timestamps, and activate/deactivate accounts.
 - **Feedback Management:** Inspect flagged responses, review user comments, and mark feedback items as resolved.
@@ -286,6 +294,9 @@ TEST SUITE SUMMARY: 44/44 Passed (100.0%) | 0 Failed
 
 ### Run Additional Targeted Tests
 ```bash
+# Tier 3 Enterprise Observability & Continuous Eval Loop (4/4 Passed)
+python tests/test_tier3_observability.py
+
 # Tier 2 Autonomous Multi-Agent Workflows & Executive Council (4/4 Passed)
 python tests/test_tier2_multi_agent.py
 
