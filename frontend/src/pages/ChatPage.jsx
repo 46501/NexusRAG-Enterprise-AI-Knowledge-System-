@@ -134,7 +134,33 @@ export default function ChatPage() {
     setAgentModalOpen(true)
   }
 
-  function handleOpenDocumentReader({ docIdOrName, chunkIndex = null, chunkId = null, snippet = '' }) {
+  function handleOpenDocumentReader(arg) {
+    if (!arg) return
+
+    let docIdOrName = ''
+    let chunkIndex = null
+    let chunkId = null
+    let snippet = ''
+
+    if (typeof arg === 'string') {
+      docIdOrName = arg.trim()
+    } else if (typeof arg === 'object' && arg !== null) {
+      docIdOrName =
+        arg.docIdOrName ||
+        arg.id ||
+        arg.doc_id ||
+        arg.name ||
+        arg.filename ||
+        arg.source ||
+        arg.file_name ||
+        arg.doc?.id ||
+        arg.doc?.name ||
+        ''
+      chunkIndex = arg.chunkIndex ?? arg.chunk_index ?? null
+      chunkId = arg.chunkId ?? arg.chunk_id ?? null
+      snippet = arg.snippet ?? arg.text ?? ''
+    }
+
     setReaderState({
       isOpen: true,
       docIdOrName,
@@ -395,17 +421,17 @@ export default function ChatPage() {
       >
         {/* Header (macOS Titlebar Style) */}
         <header
-          className="flex-shrink-0 flex items-center justify-between px-4 sm:px-5 py-2.5 sm:py-3 z-10 transition-colors"
+          className="flex-shrink-0 flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 z-10 transition-colors min-w-0"
           style={{
             background: isDark ? 'rgba(15, 17, 26, 0.82)' : 'rgba(255, 255, 255, 0.85)',
             backdropFilter: 'blur(16px) saturate(180%)',
             WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-            borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0'
+            borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0'
           }}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-nowrap">
             {/* macOS Window Controls */}
-            <div className="hidden sm:flex items-center gap-1.5 mr-1 select-none">
+            <div className="hidden sm:flex items-center gap-1.5 mr-0.5 select-none shrink-0">
               <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] border border-[#e0443e]/80 inline-block shadow-xs" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] border border-[#dea123]/80 inline-block shadow-xs" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] border border-[#1aab29]/80 inline-block shadow-xs" />
@@ -415,7 +441,7 @@ export default function ChatPage() {
             <button
               type="button"
               onClick={() => setThreadsSidebarOpen((prev) => !prev)}
-              className="p-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center hover:scale-105"
+              className="p-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center hover:scale-105 shrink-0"
               style={{
                 color: threadsSidebarOpen ? (isDark ? '#d8b4fe' : '#7e22ce') : (isDark ? 'rgba(255, 255, 255, 0.65)' : '#64748b'),
                 background: threadsSidebarOpen
@@ -435,25 +461,25 @@ export default function ChatPage() {
 
             <BackHomeButton />
             {d && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <span
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ background: d.dot, boxShadow: `0 0 8px ${d.dot}` }}
                 />
-                <span className="text-sm font-semibold tracking-tight" style={{ color: isDark ? '#fff' : '#0f172a' }}>
+                <span className="text-xs sm:text-sm font-semibold tracking-tight whitespace-nowrap" style={{ color: isDark ? '#fff' : '#0f172a' }}>
                   {DEPT_NAMES[user?.role] ?? user?.role}
                 </span>
-                <span className="hidden md:inline text-[11px] font-medium opacity-40">
+                <span className="hidden xl:inline text-[11px] font-medium opacity-40 whitespace-nowrap">
                   Workspace
                 </span>
               </div>
             )}
 
-            {/* Quick Command Palette Button */}
+            {/* Quick Command Palette Button - Full label on 2xl */}
             <button
               type="button"
               onClick={() => setCommandPaletteOpen(true)}
-              className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer opacity-75 hover:opacity-100"
+              className="hidden 2xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer opacity-75 hover:opacity-100 whitespace-nowrap shrink-0"
               style={{
                 background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
                 border: isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1',
@@ -469,10 +495,29 @@ export default function ChatPage() {
               <kbd className="font-mono text-[9px] px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 opacity-70">⌘K</kbd>
             </button>
 
+            {/* Quick Command Palette Button - Compact on md to 2xl */}
             <button
               type="button"
               onClick={() => setCommandPaletteOpen(true)}
-              className="md:hidden text-[11px] px-2 py-1 rounded-lg font-mono font-semibold"
+              className="hidden md:inline-flex 2xl:hidden items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer opacity-75 hover:opacity-100 whitespace-nowrap shrink-0"
+              style={{
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1',
+                color: isDark ? 'rgba(255, 255, 255, 0.8)' : '#475569',
+              }}
+              title="Command Palette (⌘K)"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <kbd className="font-mono text-[9px] px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 opacity-70">⌘K</kbd>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCommandPaletteOpen(true)}
+              className="md:hidden text-[11px] px-2 py-1 rounded-lg font-mono font-semibold shrink-0"
               style={{
                 background: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9',
                 border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #cbd5e1',
@@ -487,7 +532,7 @@ export default function ChatPage() {
             <button
               type="button"
               onClick={() => handleOpenAgentModal()}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:scale-105 shadow-xs"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:scale-105 shadow-xs whitespace-nowrap shrink-0"
               style={{
                 background: isDark ? 'rgba(168, 85, 247, 0.20)' : '#f5f3ff',
                 color: isDark ? '#d8b4fe' : '#7c3aed',
@@ -497,16 +542,16 @@ export default function ChatPage() {
             >
               <span className="text-sm">🤖</span>
               <span className="hidden sm:inline">Agents</span>
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/30 text-purple-200">
+              <span className="hidden xl:inline text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/30 text-purple-200">
                 Tier 2
               </span>
             </button>
             {messages.length > 0 && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                 <button
                   type="button"
                   onClick={handleNewChat}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer hover:opacity-100 opacity-80"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer hover:opacity-100 opacity-80 whitespace-nowrap shrink-0"
                   style={{
                     background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9',
                     border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
@@ -518,13 +563,14 @@ export default function ChatPage() {
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                   </svg>
-                  <span>New Chat</span>
+                  <span className="hidden lg:inline">New Chat</span>
+                  <span className="hidden sm:inline lg:hidden">New</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setExportOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer hover:opacity-100 opacity-80"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer hover:opacity-100 opacity-80 whitespace-nowrap shrink-0"
                   style={{
                     background: isDark ? 'rgba(99,102,241,0.12)' : '#eef2ff',
                     border: isDark ? '1px solid rgba(99,102,241,0.30)' : '1px solid #c7d2fe',
@@ -537,13 +583,14 @@ export default function ChatPage() {
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                   </svg>
-                  <span>Export & Share</span>
+                  <span className="hidden lg:inline">Export & Share</span>
+                  <span className="hidden sm:inline lg:hidden">Export</span>
                 </button>
               </div>
             )}
             {/* Mobile docs toggle */}
             <button
-              className="md:hidden ml-1 text-xs px-2.5 py-1.5 rounded-xl font-medium transition-all"
+              className="md:hidden ml-1 text-xs px-2.5 py-1.5 rounded-xl font-medium transition-all shrink-0"
               style={{
                 color: docsOpen ? (isDark ? '#fff' : '#0f172a') : (isDark ? 'rgba(255,255,255,0.70)' : '#475569'),
                 border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
@@ -557,7 +604,7 @@ export default function ChatPage() {
             </button>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0 ml-2">
             {/* Unified Enterprise User Profile Menu */}
             <UserProfileMenu
               onOpenCommandPalette={() => setCommandPaletteOpen(true)}
@@ -567,7 +614,7 @@ export default function ChatPage() {
         </header>
 
         {/* Messages */}
-        <div ref={messagesRef} className="flex-1 overflow-y-auto px-5 pt-10 pb-6 chat-scroll">
+        <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 sm:px-6 pt-6 pb-28 chat-scroll min-h-0">
           <div className="max-w-[700px] mx-auto flex flex-col gap-4 min-h-full">
             {messages.length === 0 ? (
               <WorkspaceEmptyState
@@ -622,6 +669,7 @@ export default function ChatPage() {
                     focusDoc={focusDoc}
                   />
                 )}
+                <div className="h-8 shrink-0" />
                 <div ref={bottomRef} />
               </>
             )}
@@ -1027,7 +1075,7 @@ export default function ChatPage() {
       {/* Full-Window Drag & Drop Overlay */}
       {windowDragging && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-8 backdrop-blur-md pointer-events-none transition-all duration-300"
+          className="fixed inset-0 z-[80] flex items-center justify-center p-8 backdrop-blur-md pointer-events-none transition-all duration-300"
           style={{
             background: isDark ? 'rgba(10, 10, 12, 0.78)' : 'rgba(255, 255, 255, 0.82)',
           }}

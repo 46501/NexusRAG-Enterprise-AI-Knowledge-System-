@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { getDocumentContent } from '../services/documents'
+import PdfViewer from './PdfViewer'
 
 const DEPT = {
   hr:          { dot: '#a78bfa', text: '#a78bfa', bg: 'rgba(139,92,246,0.12)', border: 'rgba(139,92,246,0.28)', label: 'Human Resources' },
@@ -24,7 +25,7 @@ export default function DocumentReaderModal({
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [viewMode, setViewMode] = useState('chunks') // 'chunks' | 'fulltext'
+  const [viewMode, setViewMode] = useState('chunks') // 'chunks' | 'fulltext' | 'pdf'
   const [searchQuery, setSearchQuery] = useState('')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [copiedFull, setCopiedFull] = useState(false)
@@ -33,9 +34,37 @@ export default function DocumentReaderModal({
   const chunkRefs = useRef({})
   const searchInputRef = useRef(null)
 
+  // Defensively resolve document identifier whether string or object
+  const resolvedDocIdOrName = useMemo(() => {
+    if (!docIdOrName) return ''
+    if (typeof docIdOrName === 'string') return docIdOrName
+    if (typeof docIdOrName === 'object') {
+      return (
+        docIdOrName.doc_id ||
+        docIdOrName.id ||
+        docIdOrName.name ||
+        docIdOrName.filename ||
+        docIdOrName.file_name ||
+        docIdOrName.source ||
+        ''
+      )
+    }
+    return String(docIdOrName)
+  }, [docIdOrName])
+
+  // Detect if the active document is a PDF
+  const isPdf = useMemo(() => {
+    const raw = (
+      data?.document?.name ||
+      (typeof docIdOrName === 'string' ? docIdOrName : docIdOrName?.name || docIdOrName?.filename) ||
+      ''
+    ).toLowerCase()
+    return raw.endsWith('.pdf') || Boolean(data?.document?.is_pdf)
+  }, [data, docIdOrName])
+
   // Fetch document content when modal opens or document changes
   useEffect(() => {
-    if (!isOpen || !docIdOrName) {
+    if (!isOpen || !resolvedDocIdOrName) {
       setData(null)
       setError(null)
       return
@@ -45,15 +74,24 @@ export default function DocumentReaderModal({
     setLoading(true)
     setError(null)
 
-    getDocumentContent(docIdOrName)
+    getDocumentContent(resolvedDocIdOrName)
       .then((res) => {
         if (!isCancelled) {
           setData(res)
+          const isPdfDoc =
+            res?.document?.name?.toLowerCase()?.endsWith('.pdf') ||
+            Boolean(res?.document?.is_pdf) ||
+            (typeof docIdOrName === 'string' && docIdOrName.toLowerCase().endsWith('.pdf'))
+          if (isPdfDoc && highlightChunkIndex == null && !highlightChunkId && !highlightSnippet) {
+            setViewMode('pdf')
+          } else {
+            setViewMode('chunks')
+          }
         }
       })
       .catch((err) => {
         if (!isCancelled) {
-          setError(err.response?.data?.detail || 'Failed to load document content.')
+          setError(err.response?.data?.detail || err.message || 'Failed to load document content.')
         }
       })
       .finally(() => {
@@ -65,15 +103,25 @@ export default function DocumentReaderModal({
     return () => {
       isCancelled = true
     }
-  }, [isOpen, docIdOrName])
+  }, [isOpen, resolvedDocIdOrName])
 
   // Determine active highlighted chunk index
   const activeHighlightIndex = useMemo(() => {
-    if (highlightChunkIndex != null) return highlightChunkIndex
-    if (!data?.chunks || !highlightChunkId) return null
-    const found = data.chunks.findIndex((c) => c.chunk_id === highlightChunkId)
-    return found !== -1 ? data.chunks[found].chunk_index : null
-  }, [highlightChunkIndex, highlightChunkId, data])
+    if (highlightChunkIndex != null && !isNaN(Number(highlightChunkIndex))) {
+      return Number(highlightChunkIndex)
+    }
+    if (!data?.chunks) return null
+    if (highlightChunkId) {
+      const found = data.chunks.findIndex((c) => c.chunk_id === highlightChunkId)
+      if (found !== -1) return data.chunks[found].chunk_index
+    }
+    if (highlightSnippet && typeof highlightSnippet === 'string') {
+      const snipLower = highlightSnippet.slice(0, 40).toLowerCase()
+      const found = data.chunks.findIndex((c) => c.text?.toLowerCase().includes(snipLower))
+      if (found !== -1) return data.chunks[found].chunk_index
+    }
+    return null
+  }, [highlightChunkIndex, highlightChunkId, highlightSnippet, data])
 
   // Auto-scroll to highlighted chunk when data loads
   useEffect(() => {
@@ -104,22 +152,11 @@ export default function DocumentReaderModal({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
-  if (!isOpen) return null
-
-  const doc = data?.document
-  const deptStyle = DEPT[doc?.department] ?? {
-    dot: '#a855f7',
-    text: '#c084fc',
-    bg: 'rgba(168,85,247,0.12)',
-    border: 'rgba(168,85,247,0.30)',
-    label: doc?.department || 'Enterprise',
-  }
-
-  // Filter chunks or text by search query
+  // Filter chunks or text by search query (ALL HOOKS DECLARED UNCONDITIONALLY BEFORE ANY RETURN)
   const searchLower = searchQuery.trim().toLowerCase()
   const matchingChunkCount = useMemo(() => {
     if (!searchLower || !data?.chunks) return 0
-    return data.chunks.filter((c) => c.text.toLowerCase().includes(searchLower)).length
+    return data.chunks.filter((c) => c.text && c.text.toLowerCase().includes(searchLower)).length
   }, [searchLower, data])
 
   function handleCopyFullText() {
@@ -130,16 +167,18 @@ export default function DocumentReaderModal({
   }
 
   function handleCopyChunk(text, idx) {
+    if (!text) return
     navigator.clipboard.writeText(text)
     setCopiedChunkIdx(idx)
     setTimeout(() => setCopiedChunkIdx(null), 2000)
   }
 
   function handleAskAboutDoc() {
-    if (!doc?.name) return
+    const docName = data?.document?.name || resolvedDocIdOrName
+    if (!docName) return
     onClose()
     if (onAskQuestion) {
-      onAskQuestion(`What are the key policies and guidelines covered in ${doc.name}?`)
+      onAskQuestion(`What are the key policies and guidelines covered in ${docName}?`)
     }
   }
 
@@ -152,6 +191,7 @@ export default function DocumentReaderModal({
 
   // Highlight matches in text
   function renderHighlightedText(text) {
+    if (!text || typeof text !== 'string') return ''
     if (!searchLower) return text
     const parts = text.split(new RegExp(`(${searchLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'))
     return parts.map((part, i) =>
@@ -173,9 +213,24 @@ export default function DocumentReaderModal({
     )
   }
 
+  // React Rules of Hooks: conditional return must strictly be placed AFTER all hooks
+  if (!isOpen) return null
+
+  const doc = data?.document
+  const deptKey = doc?.department || (typeof docIdOrName === 'object' ? docIdOrName?.department : null)
+  const deptStyle = DEPT[deptKey] ?? {
+    dot: '#a855f7',
+    text: '#c084fc',
+    bg: 'rgba(168,85,247,0.12)',
+    border: 'rgba(168,85,247,0.30)',
+    label: deptKey || 'Enterprise',
+  }
+  const displayTitle = doc?.name || resolvedDocIdOrName || 'Document Reader'
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 transition-all"
+      data-testid="document-reader-modal"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-2 sm:p-4 md:p-6 transition-all"
       style={{
         background: isDark ? 'rgba(0, 0, 0, 0.72)' : 'rgba(15, 23, 42, 0.45)',
         backdropFilter: 'blur(14px)',
@@ -236,8 +291,9 @@ export default function DocumentReaderModal({
             </button>
 
             {/* Department Tag */}
-            {doc && (
-              <div className="ml-3 hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+            {(doc?.department || deptKey) && (
+              <div
+                className="ml-3 hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
                 style={{
                   background: deptStyle.bg,
                   color: deptStyle.text,
@@ -256,9 +312,9 @@ export default function DocumentReaderModal({
             <span
               className="text-xs sm:text-sm font-semibold truncate tracking-tight"
               style={{ color: isDark ? '#ffffff' : '#0f172a' }}
-              title={doc?.name || docIdOrName}
+              title={displayTitle}
             >
-              {doc?.name || docIdOrName}
+              {displayTitle}
             </span>
           </div>
 
@@ -267,7 +323,7 @@ export default function DocumentReaderModal({
             {onFocusDoc && (
               <button
                 onClick={() => {
-                  onFocusDoc(doc || { name: docIdOrName })
+                  onFocusDoc(doc || { name: displayTitle })
                   onClose()
                 }}
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:scale-[1.02]"
@@ -287,7 +343,7 @@ export default function DocumentReaderModal({
               <button
                 type="button"
                 onClick={() => {
-                  onCompareDoc(doc || { id: docIdOrName, name: docIdOrName })
+                  onCompareDoc(doc || { id: resolvedDocIdOrName, name: displayTitle })
                   onClose()
                 }}
                 className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:scale-[1.02]"
@@ -307,7 +363,7 @@ export default function DocumentReaderModal({
               <button
                 type="button"
                 onClick={() => {
-                  onAuditDoc({ focusDoc: doc?.name || docIdOrName, persona: 'auditor' })
+                  onAuditDoc({ focusDoc: displayTitle, persona: 'auditor' })
                   onClose()
                 }}
                 className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:scale-[1.02]"
@@ -407,9 +463,29 @@ export default function DocumentReaderModal({
                 borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#cbd5e1',
               }}
             >
+              {isPdf && (
+                <button
+                  data-testid="btn-pdf-view"
+                  onClick={() => setViewMode('pdf')}
+                  className="px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1"
+                  style={{
+                    background: viewMode === 'pdf'
+                      ? (isDark ? 'rgba(255,255,255,0.15)' : '#ffffff')
+                      : 'transparent',
+                    color: viewMode === 'pdf'
+                      ? (isDark ? '#38bdf8' : '#0284c7')
+                      : (isDark ? 'rgba(255,255,255,0.45)' : '#64748b'),
+                    boxShadow: viewMode === 'pdf' ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
+                  }}
+                >
+                  <span>📕</span>
+                  <span>PDF View</span>
+                </button>
+              )}
               <button
+                data-testid="btn-chunk-view"
                 onClick={() => setViewMode('chunks')}
-                className="px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer"
+                className="px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1"
                 style={{
                   background: viewMode === 'chunks'
                     ? (isDark ? 'rgba(255,255,255,0.15)' : '#ffffff')
@@ -420,11 +496,13 @@ export default function DocumentReaderModal({
                   boxShadow: viewMode === 'chunks' ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
                 }}
               >
-                Chunk View ({data?.chunks?.length ?? '…'})
+                <span>📑</span>
+                <span>Chunk View ({data?.chunks?.length ?? '…'})</span>
               </button>
               <button
+                data-testid="btn-continuous-text"
                 onClick={() => setViewMode('fulltext')}
-                className="px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer"
+                className="px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1"
                 style={{
                   background: viewMode === 'fulltext'
                     ? (isDark ? 'rgba(255,255,255,0.15)' : '#ffffff')
@@ -435,7 +513,8 @@ export default function DocumentReaderModal({
                   boxShadow: viewMode === 'fulltext' ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
                 }}
               >
-                Continuous Text
+                <span>📝</span>
+                <span>Continuous Text</span>
               </button>
             </div>
 
@@ -483,39 +562,123 @@ export default function DocumentReaderModal({
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        <div className={`flex-1 ${viewMode === 'pdf' ? 'overflow-hidden p-2 sm:p-4 flex flex-col' : 'overflow-y-auto p-4 sm:p-6 space-y-4'}`}>
           {loading && (
             <div className="flex flex-col items-center justify-center h-64 gap-3">
               <div
-                className={`w-8 h-8 rounded-full border-2 border-t-transparent animate-spin ${
+                className={`w-9 h-9 rounded-full border-2 border-t-transparent animate-spin ${
                   isDark ? 'border-purple-400 border-t-white' : 'border-purple-600 border-t-purple-200'
                 }`}
               />
-              <p className="text-xs font-medium" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : '#64748b' }}>
-                Loading verified document chunks...
+              <p className="text-xs font-semibold" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>
+                Fetching document content: <span className="font-mono text-purple-400">{displayTitle}</span>
+              </p>
+              <p className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : '#64748b' }}>
+                Verifying permissions and loading indexed vector chunks...
               </p>
             </div>
           )}
 
           {error && (
             <div
-              className="p-4 rounded-xl border text-xs"
+              className="p-5 rounded-2xl border text-xs sm:text-sm flex flex-col gap-3"
               style={{
-                background: 'rgba(239, 68, 68, 0.08)',
-                borderColor: 'rgba(239, 68, 68, 0.25)',
+                background: isDark ? 'rgba(239, 68, 68, 0.08)' : 'rgba(239, 68, 68, 0.05)',
+                borderColor: isDark ? 'rgba(239, 68, 68, 0.28)' : 'rgba(239, 68, 68, 0.20)',
                 color: isDark ? '#fca5a5' : '#b91c1c',
               }}
             >
-              <div className="font-semibold mb-1">Unable to view document:</div>
-              <div>{error}</div>
+              <div className="flex items-center gap-2 font-semibold">
+                <span className="text-base">⚠️</span>
+                <span>Unable to load document content</span>
+              </div>
+              <div className="text-xs opacity-90 leading-relaxed font-mono p-2.5 rounded-lg bg-black/10 dark:bg-black/30">
+                {error}
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  onClick={() => {
+                    if (resolvedDocIdOrName) {
+                      setLoading(true)
+                      setError(null)
+                      getDocumentContent(resolvedDocIdOrName)
+                        .then((res) => setData(res))
+                        .catch((err) => setError(err.response?.data?.detail || err.message || 'Failed to load document content.'))
+                        .finally(() => setLoading(false))
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                  style={{
+                    background: isDark ? 'rgba(239,68,68,0.2)' : '#fee2e2',
+                    color: isDark ? '#fca5a5' : '#991b1b',
+                    border: '1px solid rgba(239,68,68,0.3)',
+                  }}
+                >
+                  🔄 Retry
+                </button>
+                <button
+                  onClick={onClose}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                  style={{
+                    background: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
+                    color: isDark ? '#ffffff' : '#334155',
+                  }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           )}
 
-          {!loading && !error && data && viewMode === 'chunks' && (
-            <div className="space-y-4">
-              {data.chunks?.map((chunk) => {
+          {!loading && !error && !data && (
+            <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
+              <div className="text-3xl">📄</div>
+              <p className="text-sm font-medium" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : '#334155' }}>
+                No document data available.
+              </p>
+              <p className="text-xs max-w-sm" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : '#64748b' }}>
+                The document "{displayTitle}" could not be retrieved or has no content.
+              </p>
+            </div>
+          )}
+
+          {!loading && !error && data && viewMode === 'pdf' && (
+            <PdfViewer
+              docIdOrName={resolvedDocIdOrName}
+              filename={displayTitle}
+              isDark={isDark}
+              onFallbackToChunks={() => setViewMode('chunks')}
+            />
+          )}
+
+          {!loading && !error && data && viewMode === 'chunks' && (!data.chunks || data.chunks.length === 0) && (
+            <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
+              <div className="text-3xl">📑</div>
+              <p className="text-sm font-semibold" style={{ color: isDark ? 'rgba(255,255,255,0.85)' : '#1e293b' }}>
+                No discrete chunks found for this document.
+              </p>
+              <p className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : '#64748b' }}>
+                You can switch to continuous text view to read the full document content.
+              </p>
+              <button
+                onClick={() => setViewMode('fulltext')}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all"
+                style={{
+                  background: isDark ? 'rgba(168,85,247,0.2)' : '#f3e8ff',
+                  color: isDark ? '#d8b4fe' : '#7e22ce',
+                  border: isDark ? '1px solid rgba(168,85,247,0.35)' : '1px solid #d8b4fe',
+                }}
+              >
+                Switch to Continuous Text View ↗
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && data && viewMode === 'chunks' && data.chunks?.length > 0 && (
+            <div data-testid="reader-chunks-view" className="space-y-4">
+              {data.chunks.map((chunk) => {
                 const isTargetHighlight = chunk.chunk_index === activeHighlightIndex
-                const hasSearchMatch = searchLower && chunk.text.toLowerCase().includes(searchLower)
+                const hasSearchMatch = searchLower && chunk.text && chunk.text.toLowerCase().includes(searchLower)
                 const isCopied = copiedChunkIdx === chunk.chunk_index
 
                 return (
@@ -540,7 +703,8 @@ export default function DocumentReaderModal({
                     }}
                   >
                     {/* Chunk Card Header */}
-                    <div className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b"
+                    <div
+                      className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b"
                       style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9' }}
                     >
                       <div className="flex items-center gap-2">
@@ -613,6 +777,7 @@ export default function DocumentReaderModal({
 
           {!loading && !error && data && viewMode === 'fulltext' && (
             <div
+              data-testid="reader-fulltext-view"
               className="p-5 sm:p-7 rounded-xl border text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap select-text transition-colors"
               style={{
                 background: isDark ? 'rgba(255, 255, 255, 0.02)' : '#ffffff',
@@ -637,6 +802,15 @@ export default function DocumentReaderModal({
           }}
         >
           <div className="flex items-center gap-3">
+            {viewMode === 'pdf' && isPdf && (
+              <>
+                <span className="font-semibold text-sky-400 flex items-center gap-1">
+                  <span>📕</span>
+                  <span>PDF Document Mode</span>
+                </span>
+                <span>·</span>
+              </>
+            )}
             <span>
               {data?.chunks ? `${data.chunks.length} Vector Chunks` : 'Loading…'}
             </span>
@@ -669,4 +843,3 @@ export default function DocumentReaderModal({
     </div>
   )
 }
-

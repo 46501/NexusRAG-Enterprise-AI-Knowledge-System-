@@ -329,7 +329,7 @@ export default function CommandPalette({
       role="dialog"
       aria-modal="true"
       aria-label="macOS Command Palette"
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] p-4"
+      className="fixed inset-0 z-[60] flex items-start justify-center pt-[12vh] p-4"
       style={{
         background: 'rgba(0, 0, 0, 0.65)',
         backdropFilter: 'blur(8px)',

@@ -144,7 +144,7 @@ export default function DocumentUploadModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 transition-all"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 transition-all"
       style={{
         background: isDark ? 'rgba(0, 0, 0, 0.75)' : 'rgba(15, 23, 42, 0.45)',
         backdropFilter: 'blur(16px)',

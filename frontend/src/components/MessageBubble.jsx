@@ -342,9 +342,9 @@ export default function MessageBubble({
   return (
     <div
       className={`flex flex-col gap-2 ${isUser ? 'items-end' : 'items-start'} group relative`}
-      style={{ maxWidth: 700, width: '100%', animation: 'msgFadeIn 0.2s ease both' }}
+      style={{ maxWidth: 700, width: '100%', animation: 'msgFadeIn 0.2s ease forwards' }}
     >
-      <div className={`relative ${isUser ? 'max-w-[82%]' : 'max-w-[88%] w-fit'}`}>
+      <div className={`relative ${isUser ? 'max-w-[85%]' : 'max-w-[90%] w-fit'} max-w-full`}>
         {/* Floating macOS-Style Action Bar (Top Right of Assistant Bubble) */}
         {!isUser && !streaming && cleanContent && (
           <div
@@ -390,7 +390,12 @@ export default function MessageBubble({
                 type="button"
                 onClick={() => {
                   const first = unique[0]
-                  onOpenReader({ docIdOrName: first.source || first.file_name, chunkIndex: first.chunk_index ?? 0 })
+                  onOpenReader({
+                    docIdOrName: first.doc_id || first.source || first.file_name || first.name,
+                    chunkIndex: first.chunk_index ?? 0,
+                    chunkId: first.chunk_id,
+                    snippet: first.text || '',
+                  })
                 }}
                 className="p-1.5 rounded-lg text-xs transition-transform hover:scale-105 cursor-pointer"
                 style={{
@@ -462,12 +467,14 @@ export default function MessageBubble({
 
         <div
           onClick={handleContentClick}
-          className="text-sm select-text"
+          className="text-sm select-text break-words [overflow-wrap:anywhere]"
           style={{
             padding: isUser ? '12px 18px' : '15px 20px',
             lineHeight: 1.62,
             borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
             letterSpacing: '-0.005em',
+            wordBreak: 'break-word',
+            overflowWrap: 'anywhere',
             ...(isUser
               ? {
                   background: userBg,

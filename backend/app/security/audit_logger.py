@@ -355,3 +355,4 @@ async def list_security_logs(
     ]
 
     return items, total
+

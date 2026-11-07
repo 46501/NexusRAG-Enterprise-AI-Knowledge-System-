@@ -119,7 +119,7 @@ export function parseMarkdownTable(text) {
 
   for (const line of lines) {
     const trimmed = line.trim()
-    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+    if (trimmed.startsWith('|')) {
       inTable = true
       tableLines.push(trimmed)
     } else if (inTable) {
@@ -134,17 +134,20 @@ export function parseMarkdownTable(text) {
   // Line 0 is header
   const headers = tableLines[0]
     .split('|')
-    .slice(1, -1)
     .map((c) => c.trim())
+    .filter(Boolean)
 
-  // Line 1 is separator |---|---|
-  // Lines 2.. are data rows
+  // Find separator line index (contains hyphens like |---|---|)
+  const sepIdx = tableLines.findIndex((l, idx) => idx > 0 && /^[|\s-:]+$/.test(l))
+  const startRow = sepIdx !== -1 ? sepIdx + 1 : 1
+
+  // Data rows
   const rows = []
-  for (let i = 2; i < tableLines.length; i++) {
+  for (let i = startRow; i < tableLines.length; i++) {
     const rowCells = tableLines[i]
       .split('|')
-      .slice(1, -1)
       .map((c) => c.trim())
+      .filter((c, idx, arr) => (idx > 0 && idx < arr.length - 1) || c.length > 0)
     if (rowCells.some((c) => c.length > 0)) {
       rows.push(rowCells)
     }

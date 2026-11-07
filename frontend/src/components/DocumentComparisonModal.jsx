@@ -133,7 +133,14 @@ export default function DocumentComparisonModal({
       setComparisonResult(data)
     } catch (err) {
       console.error('Comparison failed:', err)
-      setError(err.response?.data?.detail || 'Failed to generate comparison. Please try another preset or documents.')
+      const msg =
+        err.response?.data?.detail ||
+        (err.response?.status === 502
+          ? 'Backend retrieval service is currently unavailable or restarting (502 Bad Gateway). Please try again shortly.'
+          : null) ||
+        err.message ||
+        'Failed to generate comparison. Please try another preset or documents.'
+      setError(msg)
     } finally {
       clearTimeout(timer1)
       clearTimeout(timer2)
@@ -155,19 +162,14 @@ export default function DocumentComparisonModal({
     let summary = ''
     let diffs = ''
 
-    if (text.includes('### Executive Summary')) {
-      const parts = text.split('### Executive Summary')
-      if (parts[1]) {
-        const nextHeader = parts[1].search(/###\s+/i)
-        summary = nextHeader !== -1 ? parts[1].slice(0, nextHeader).trim() : parts[1].trim()
-      }
+    const summaryMatch = text.match(/#{1,3}\s*Executive Summary[:\s]*([\s\S]*?)(?=#{1,3}\s+|$)/i)
+    if (summaryMatch && summaryMatch[1]) {
+      summary = summaryMatch[1].trim()
     }
 
-    if (text.includes('### Key Differences') || text.includes('### Key Divergences') || text.includes('### Recommendations')) {
-      const diffIdx = text.search(/###\s+(Key Differences|Key Divergences|Recommendations)/i)
-      if (diffIdx !== -1) {
-        diffs = text.slice(diffIdx).trim()
-      }
+    const diffsMatch = text.match(/#{1,3}\s*(?:Key Differences|Key Divergences|Recommendations)[:\s]*([\s\S]*)$/i)
+    if (diffsMatch && diffsMatch[0]) {
+      diffs = diffsMatch[0].trim()
     }
 
     return { summary, diffs }
@@ -211,7 +213,7 @@ export default function DocumentComparisonModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 select-none"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-5 select-none"
       style={{
         background: isDark ? 'rgba(0, 0, 0, 0.78)' : 'rgba(15, 23, 42, 0.45)',
         backdropFilter: 'blur(20px)',
@@ -541,7 +543,11 @@ export default function DocumentComparisonModal({
           {/* Right Action Buttons */}
           {comparisonResult && activeTab === 'matrix' && (
             <div className="flex items-center gap-2">
-              <GroundingConfidenceBadge score={comparisonResult.confidence_score} />
+              <GroundingConfidenceBadge
+                confidenceScore={comparisonResult.confidence_score}
+                sources={comparisonResult.sources || []}
+                department={userRole}
+              />
 
               <button
                 type="button"
@@ -779,6 +785,21 @@ export default function DocumentComparisonModal({
                           </tbody>
                         </table>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Fallback formatted view if no table could be parsed */}
+                  {!parsedTable && comparisonResult.answer && (
+                    <div
+                      data-testid="comparison-fallback-text"
+                      className="p-5 rounded-2xl border text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap select-text"
+                      style={{
+                        background: isDark ? 'rgba(255, 255, 255, 0.02)' : '#ffffff',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
+                        color: isDark ? 'rgba(255,255,255,0.85)' : '#1e293b',
+                      }}
+                    >
+                      {comparisonResult.answer}
                     </div>
                   )}
 

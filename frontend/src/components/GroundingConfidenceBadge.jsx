@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useTheme } from '../context/ThemeContext'
 
 export default function GroundingConfidenceBadge({
@@ -27,22 +28,15 @@ export default function GroundingConfidenceBadge({
     }
   }
 
-  // Close popover when clicking outside or pressing Escape
+  // Close modal when pressing Escape
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false)
-      }
-    }
     function handleKeyDown(e) {
       if (e.key === 'Escape') setIsOpen(false)
     }
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
       window.addEventListener('keydown', handleKeyDown)
     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen])
@@ -125,167 +119,197 @@ export default function GroundingConfidenceBadge({
         </span>
       </button>
 
-      {/* Interactive macOS Frosted Popover Card */}
-      {isOpen && (
+      {/* Interactive macOS Frosted Grounding Verification Modal (Portaled) */}
+      {isOpen && typeof document !== 'undefined' && createPortal(
         <div
-          className="absolute z-40 left-0 top-full mt-2 w-72 sm:w-80 rounded-2xl shadow-2xl p-4 text-xs select-none transition-all border animate-popoverIn"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="grounding-modal-title"
+          className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6"
           style={{
-            background: isDark ? 'rgba(18, 20, 28, 0.94)' : 'rgba(255, 255, 255, 0.97)',
-            backdropFilter: 'blur(28px)',
-            borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0',
-            boxShadow: isDark
-              ? '0 20px 48px -10px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06)'
-              : '0 20px 48px -10px rgba(15,23,42,0.18), 0 0 0 1px rgba(0,0,0,0.04)',
+            background: isDark ? 'rgba(0, 0, 0, 0.68)' : 'rgba(15, 23, 42, 0.45)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            animation: 'fadeIn 0.15s ease-out',
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsOpen(false)
           }}
         >
-          {/* Popover Header */}
-          <div className="flex items-center justify-between pb-3 border-b"
-            style={{ borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9' }}
+          <div
+            ref={containerRef}
+            className="w-full max-w-sm sm:max-w-md rounded-2xl shadow-2xl p-5 sm:p-6 text-xs select-none transition-all border animate-popoverIn flex flex-col max-h-[90vh] overflow-hidden relative"
+            style={{
+              background: isDark ? 'rgba(18, 20, 28, 0.98)' : 'rgba(255, 255, 255, 0.99)',
+              backdropFilter: 'blur(28px)',
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.14)' : '#e2e8f0',
+              boxShadow: isDark
+                ? '0 25px 60px -12px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)'
+                : '0 25px 60px -12px rgba(15,23,42,0.22), 0 0 0 1px rgba(0,0,0,0.06)',
+            }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm">{tier.icon}</span>
-              <div>
-                <h4 className="font-semibold text-xs leading-none" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>
-                  Grounding Verification
-                </h4>
-                <p className="text-[10px] mt-0.5" style={{ color: isDark ? 'rgba(255,255,255,0.40)' : '#64748b' }}>
-                  Enterprise RAG Trust Score
+            {/* Modal Header */}
+            <div
+              className="flex items-center justify-between pb-3.5 border-b shrink-0"
+              style={{ borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9' }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">{tier.icon}</span>
+                <div>
+                  <h4 id="grounding-modal-title" className="font-semibold text-sm leading-none" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>
+                    Grounding Verification
+                  </h4>
+                  <p className="text-[11px] mt-1" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : '#64748b' }}>
+                    Enterprise RAG Trust Score
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-xs cursor-pointer transition-colors hover:scale-105"
+                style={{
+                  color: isDark ? 'rgba(255,255,255,0.60)' : '#64748b',
+                  background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9',
+                }}
+                title="Close (Esc)"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable Content Body */}
+            <div className="flex-1 overflow-y-auto py-3 space-y-3 pr-0.5">
+              {/* Meter Bar Section */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold" style={{ color: textColor }}>
+                    {score}% {tier.level} Confidence
+                  </span>
+                  <span className="text-[11px] font-mono" style={{ color: isDark ? 'rgba(255,255,255,0.40)' : '#94a3b8' }}>
+                    Score: {score} / 100
+                  </span>
+                </div>
+
+                {/* Meter Progress Bar */}
+                <div
+                  className="w-full h-2 rounded-full overflow-hidden"
+                  style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-500 ease-out"
+                    style={{
+                      width: `${Math.min(Math.max(score, 5), 100)}%`,
+                      background: tier.barGradient,
+                      boxShadow: `0 0 10px ${textColor}55`,
+                    }}
+                  />
+                </div>
+
+                <p className="text-[11.5px] leading-relaxed pt-1" style={{ color: isDark ? 'rgba(255,255,255,0.70)' : '#475569' }}>
+                  {tier.summary}
                 </p>
+              </div>
+
+              {/* Signal Breakdown Grid */}
+              <div
+                className="p-3 rounded-xl border space-y-2 text-xs"
+                style={{
+                  background: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc',
+                  borderColor: isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <span style={{ color: isDark ? 'rgba(255,255,255,0.50)' : '#64748b' }}>
+                    Authoritative Sources:
+                  </span>
+                  <span className="font-semibold font-mono" style={{ color: isDark ? '#fff' : '#0f172a' }}>
+                    {sources.length} {sources.length === 1 ? 'passage' : 'passages'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span style={{ color: isDark ? 'rgba(255,255,255,0.50)' : '#64748b' }}>
+                    Top Matched File:
+                  </span>
+                  <span className="font-semibold truncate max-w-[180px] sm:max-w-[220px]" style={{ color: isDark ? '#fff' : '#0f172a' }} title={topSource}>
+                    {topSource}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span style={{ color: isDark ? 'rgba(255,255,255,0.50)' : '#64748b' }}>
+                    RBAC Clearance:
+                  </span>
+                  <span className="font-semibold capitalize text-emerald-500 flex items-center gap-1">
+                    <span>✓</span>
+                    <span>{department} Only</span>
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span style={{ color: isDark ? 'rgba(255,255,255,0.50)' : '#64748b' }}>
+                    Retrieval Pipeline:
+                  </span>
+                  <span className="font-mono text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.70)' : '#475569' }}>
+                    Dense + BM25s
+                  </span>
+                </div>
               </div>
             </div>
 
-            <button
-              onClick={() => setIsOpen(false)}
-              className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] cursor-pointer transition-colors"
-              style={{
-                color: isDark ? 'rgba(255,255,255,0.40)' : '#94a3b8',
-                background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9',
-              }}
-              title="Close"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Meter Bar Section */}
-          <div className="py-3 space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold" style={{ color: textColor }}>
-                {score}% {tier.level} Confidence
-              </span>
-              <span className="text-[10px] font-mono" style={{ color: isDark ? 'rgba(255,255,255,0.40)' : '#94a3b8' }}>
-                Score: {score} / 100
-              </span>
-            </div>
-
-            {/* Meter Progress Bar */}
+            {/* Quick Actions Footer */}
             <div
-              className="w-full h-2 rounded-full overflow-hidden"
-              style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }}
+              className="pt-3 border-t shrink-0 flex items-center gap-2"
+              style={{ borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9' }}
             >
-              <div
-                className="h-full rounded-full transition-all duration-500 ease-out"
-                style={{
-                  width: `${Math.min(Math.max(score, 5), 100)}%`,
-                  background: tier.barGradient,
-                  boxShadow: `0 0 10px ${textColor}55`,
-                }}
-              />
-            </div>
+              {onOpenCitation && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false)
+                    onOpenCitation(1, sources)
+                  }}
+                  className="flex-1 py-2 px-3 rounded-xl text-center font-medium text-xs transition-all cursor-pointer border hover:opacity-100 opacity-90"
+                  style={{
+                    background: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
+                    borderColor: isDark ? 'rgba(255,255,255,0.12)' : '#cbd5e1',
+                    color: isDark ? '#ffffff' : '#0f172a',
+                  }}
+                >
+                  Inspect Sources ↗
+                </button>
+              )}
 
-            <p className="text-[11px] leading-relaxed pt-1" style={{ color: isDark ? 'rgba(255,255,255,0.65)' : '#475569' }}>
-              {tier.summary}
-            </p>
-          </div>
-
-          {/* Signal Breakdown Grid */}
-          <div
-            className="p-2.5 rounded-xl border space-y-1.5 my-1 text-[11px]"
-            style={{
-              background: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc',
-              borderColor: isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0',
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <span style={{ color: isDark ? 'rgba(255,255,255,0.45)' : '#64748b' }}>
-                Authoritative Sources:
-              </span>
-              <span className="font-semibold font-mono" style={{ color: isDark ? '#fff' : '#0f172a' }}>
-                {sources.length} {sources.length === 1 ? 'passage' : 'passages'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span style={{ color: isDark ? 'rgba(255,255,255,0.45)' : '#64748b' }}>
-                Top Matched File:
-              </span>
-              <span className="font-semibold truncate max-w-[150px]" style={{ color: isDark ? '#fff' : '#0f172a' }} title={topSource}>
-                {topSource}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span style={{ color: isDark ? 'rgba(255,255,255,0.45)' : '#64748b' }}>
-                RBAC Clearance:
-              </span>
-              <span className="font-semibold capitalize text-emerald-500">
-                ✓ {department} Only
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span style={{ color: isDark ? 'rgba(255,255,255,0.45)' : '#64748b' }}>
-                Retrieval Pipeline:
-              </span>
-              <span className="font-mono text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.70)' : '#475569' }}>
-                Dense + BM25s
-              </span>
+              {onOpenReader && sources && sources.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false)
+                    const first = sources[0]
+                    onOpenReader({
+                      docIdOrName: first?.doc_id || first?.source || first?.file_name || first?.name,
+                      chunkIndex: first?.chunk_index ?? 0,
+                      chunkId: first?.chunk_id,
+                      snippet: first?.text || '',
+                    })
+                  }}
+                  className="flex-1 py-2 px-3 rounded-xl text-center font-semibold text-xs transition-all cursor-pointer border shadow-xs hover:scale-[1.02] active:scale-[0.98]"
+                  style={{
+                    background: isDark ? 'rgba(168,85,247,0.22)' : 'rgba(124,58,237,0.12)',
+                    borderColor: isDark ? 'rgba(168,85,247,0.40)' : 'rgba(124,58,237,0.30)',
+                    color: isDark ? '#d8b4fe' : '#7c3aed',
+                  }}
+                >
+                  Open Reader 📖
+                </button>
+              )}
             </div>
           </div>
-
-          {/* Quick Actions Footer */}
-          <div className="pt-2.5 flex items-center gap-2">
-            {onOpenCitation && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false)
-                  onOpenCitation(1, sources)
-                }}
-                className="flex-1 py-1.5 px-2 rounded-lg text-center font-medium text-[11px] transition-colors cursor-pointer border"
-                style={{
-                  background: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
-                  borderColor: isDark ? 'rgba(255,255,255,0.12)' : '#cbd5e1',
-                  color: isDark ? '#ffffff' : '#0f172a',
-                }}
-              >
-                Inspect Sources ↗
-              </button>
-            )}
-
-            {onOpenReader && sources[0] && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false)
-                  onOpenReader({
-                    docIdOrName: sources[0].doc_id || sources[0].source,
-                    chunkIndex: sources[0].chunk_index,
-                    chunkId: sources[0].chunk_id,
-                  })
-                }}
-                className="flex-1 py-1.5 px-2 rounded-lg text-center font-medium text-[11px] transition-colors cursor-pointer border"
-                style={{
-                  background: isDark ? 'rgba(168,85,247,0.18)' : 'rgba(124,58,237,0.10)',
-                  borderColor: isDark ? 'rgba(168,85,247,0.35)' : 'rgba(124,58,237,0.25)',
-                  color: isDark ? '#d8b4fe' : '#7c3aed',
-                }}
-              >
-                Open Reader 📖
-              </button>
-            )}
-          </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <style>{`

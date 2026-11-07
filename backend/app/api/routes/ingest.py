@@ -54,6 +54,13 @@ async def ingest_document(
     temp_path = _TEMP_DIR / f"{uuid.uuid4()}{suffix}"
     temp_path.write_bytes(contents)
 
+    # Persist copy to backend/data/{department}/{filename} for in-app reader & PDF preview
+    dest_dir = Path("backend/data") / role_access
+    if not dest_dir.exists():
+        dest_dir = Path("data") / role_access
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    (dest_dir / file.filename).write_bytes(contents)
+
     try:
         doc_id, chunk_count = await ingest_upload(
             file_path=temp_path,

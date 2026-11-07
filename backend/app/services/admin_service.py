@@ -14,6 +14,7 @@ from app.db.postgres import AsyncSessionLocal
 from app.retrieval.dense import get_client as get_qdrant_client
 from app.state import rag_slots_in_use
 from app.utils.logger import get_logger
+from app.utils.pdf_generator import generate_document_pdf
 
 _s = get_settings()
 
@@ -50,14 +51,30 @@ async def get_document_content(
     doc_id_or_name: str,
 ) -> dict:
     doc = None
+    clean_target = (doc_id_or_name or "").strip()
     try:
-        parsed_uuid = uuid.UUID(doc_id_or_name)
+        parsed_uuid = uuid.UUID(clean_target)
         doc = await db.get(Document, parsed_uuid)
     except (ValueError, TypeError):
         pass
 
     if doc is None:
-        q = select(Document).where(Document.name == doc_id_or_name)
+        q = select(Document).where(Document.name == clean_target)
+        res = await db.scalars(q)
+        doc = res.first()
+
+    if doc is None:
+        # Try stripping path prefixes if passed (e.g. "data/hr/leave_policy.txt" -> "leave_policy.txt")
+        base_name = Path(clean_target).name
+        if base_name and base_name != clean_target:
+            q = select(Document).where(Document.name == base_name)
+            res = await db.scalars(q)
+            doc = res.first()
+
+    if doc is None:
+        # Try case-insensitive matching
+        clean_base = Path(clean_target).name or clean_target
+        q = select(Document).where(Document.name.ilike(clean_base))
         res = await db.scalars(q)
         doc = res.first()
 
@@ -118,6 +135,9 @@ async def get_document_content(
     if not raw_text:
         raw_text = "\n\n".join(c["text"] for c in chunks)
 
+    is_pdf = doc.name.lower().endswith(".pdf")
+    file_type = "pdf" if is_pdf else ("md" if doc.name.lower().endswith(".md") else "txt")
+
     return {
         "document": {
             "id": str(doc.id),
@@ -125,10 +145,66 @@ async def get_document_content(
             "department": doc.department.value,
             "chunk_count": doc.chunk_count or len(chunks),
             "uploaded_at": doc.uploaded_at.isoformat() if doc.uploaded_at else None,
+            "is_pdf": is_pdf,
+            "file_type": file_type,
+            "file_url": f"/api/v1/documents/{doc.id}/file",
         },
         "chunks": chunks,
         "full_text": raw_text,
     }
+
+
+async def get_document_file_bytes(
+    db: AsyncSession,
+    doc_id_or_name: str,
+    as_pdf: bool = False,
+) -> tuple[bytes, str, str, Document]:
+    """Retrieve raw file bytes, content-type, filename, and document record.
+    Supports native PDFs, on-the-fly PDF generation, and text files.
+    """
+    data = await get_document_content(db, doc_id_or_name)
+    doc_id = data["document"]["id"]
+    doc = await db.get(Document, uuid.UUID(doc_id))
+    if not doc:
+        raise ValueError(f"Document not found: {doc_id_or_name}")
+
+    filename = doc.name
+    is_pdf = filename.lower().endswith(".pdf")
+
+    # 1. Search for file on disk
+    file_bytes: bytes | None = None
+    for base_dir in [Path("data"), Path("backend/data"), Path("/app/data")]:
+        cand = base_dir / doc.department.value / filename
+        if cand.is_file():
+            try:
+                file_bytes = cand.read_bytes()
+                break
+            except Exception as e:
+                logger.warning("Error reading file %s: %s", cand, e)
+
+    # 2. If it's a PDF or requested as PDF
+    if is_pdf or as_pdf:
+        if file_bytes and file_bytes.startswith(b"%PDF"):
+            return file_bytes, "application/pdf", filename, doc
+        # Generate valid PDF from document text and chunks
+        logger.info("Generating standard PDF for document %s", filename)
+        pdf_name = filename if is_pdf else f"{Path(filename).stem}.pdf"
+        generated_pdf = generate_document_pdf(
+            title=doc.name,
+            department=doc.department.value,
+            content_text=data["full_text"],
+            chunks=data["chunks"],
+        )
+        return generated_pdf, "application/pdf", pdf_name, doc
+
+    # 3. For TXT or MD files
+    if file_bytes:
+        media_type = "text/markdown" if filename.lower().endswith(".md") else "text/plain; charset=utf-8"
+        return file_bytes, media_type, filename, doc
+
+    # Fallback to full_text bytes
+    raw_str = data["full_text"] or ""
+    return raw_str.encode("utf-8"), "text/plain; charset=utf-8", filename, doc
 
 
 async def _rebuild_bm25() -> None:

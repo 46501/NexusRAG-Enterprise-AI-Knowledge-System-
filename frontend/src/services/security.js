@@ -24,3 +24,4 @@ export async function revokeAllUserSessions(userId) {
   const res = await api.post('/admin/security/revoke-user-sessions', { user_id: userId })
   return res.data
 }
+

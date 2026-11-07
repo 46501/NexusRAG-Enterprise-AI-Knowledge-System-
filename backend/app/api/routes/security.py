@@ -117,3 +117,4 @@ async def revoke_user_sessions_endpoint(
         "success": True,
         "message": f"All sessions for user '{body.user_id}' have been revoked.",
     }
+

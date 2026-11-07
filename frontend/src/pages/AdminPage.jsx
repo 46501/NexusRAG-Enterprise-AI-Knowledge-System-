@@ -7,6 +7,7 @@ import AnalyticsTab from '../components/AnalyticsTab'
 import ObservabilityTab from '../components/ObservabilityTab'
 import KnowledgeOpsTab from '../components/KnowledgeOpsTab'
 import SecurityAuditTab from '../components/SecurityAuditTab'
+import DocumentReaderModal from '../components/DocumentReaderModal'
 import api from '../services/api'
 
 const DEPARTMENTS = ['hr', 'engineering', 'finance']
@@ -163,6 +164,7 @@ export default function AdminPage() {
   const [docs, setDocs] = useState(null)
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState(null)
+  const [readerDoc, setReaderDoc] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const [deleteError, setDeleteError] = useState(null)
   const [uploadFile, setUploadFile] = useState(null)
@@ -478,24 +480,34 @@ export default function AdminPage() {
                             <td className={`px-6 py-3.5 ${isDark ? 'text-white/50' : 'text-slate-600'}`}>{doc.chunk_count}</td>
                             <td className={`px-6 py-3.5 ${isDark ? 'text-white/40' : 'text-slate-500'} text-xs whitespace-nowrap`}>{fmtDate(doc.uploaded_at)}</td>
                             <td className="px-6 py-3.5 text-right" style={{ overflow: 'visible' }}>
-                              {isDemoAdmin ? (
-                                <Tooltip text="Demo accounts have read-only access">
-                                  <button
-                                    disabled
-                                    className="text-xs text-rose-500/30 disabled:opacity-30 cursor-not-allowed"
-                                  >
-                                    Delete
-                                  </button>
-                                </Tooltip>
-                              ) : (
+                              <div className="flex items-center justify-end gap-3">
                                 <button
-                                  onClick={() => deleteDoc(doc.id)}
-                                  disabled={deletingId === doc.id}
-                                  className="text-xs text-rose-500 hover:text-rose-600 disabled:opacity-30 transition-colors"
+                                  type="button"
+                                  onClick={() => setReaderDoc(doc.id || doc.name)}
+                                  className="text-xs text-purple-400 hover:text-purple-300 font-semibold transition-colors cursor-pointer"
+                                  title={`Open ${doc.name} in Reader`}
                                 >
-                                  {deletingId === doc.id ? 'Deleting…' : 'Delete'}
+                                  Read ↗
                                 </button>
-                              )}
+                                {isDemoAdmin ? (
+                                  <Tooltip text="Demo accounts have read-only access">
+                                    <button
+                                      disabled
+                                      className="text-xs text-rose-500/30 disabled:opacity-30 cursor-not-allowed"
+                                    >
+                                      Delete
+                                    </button>
+                                  </Tooltip>
+                                ) : (
+                                  <button
+                                    onClick={() => deleteDoc(doc.id)}
+                                    disabled={deletingId === doc.id}
+                                    className="text-xs text-rose-500 hover:text-rose-600 disabled:opacity-30 transition-colors"
+                                  >
+                                    {deletingId === doc.id ? 'Deleting…' : 'Delete'}
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -670,6 +682,12 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      <DocumentReaderModal
+        isOpen={!!readerDoc}
+        onClose={() => setReaderDoc(null)}
+        docIdOrName={readerDoc}
+      />
     </div>
   )
 }

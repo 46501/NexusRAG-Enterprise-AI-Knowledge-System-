@@ -5,6 +5,20 @@ export async function getDocumentContent(docIdOrName) {
   return response.data
 }
 
+export async function getDocumentFileBlob(docIdOrName) {
+  const response = await api.get(`/documents/${encodeURIComponent(docIdOrName)}/file`, {
+    responseType: 'blob',
+  })
+  return response.data
+}
+
+export async function getDocumentPdfBlob(docIdOrName) {
+  const response = await api.get(`/documents/${encodeURIComponent(docIdOrName)}/pdf`, {
+    responseType: 'blob',
+  })
+  return response.data
+}
+
 export async function uploadDocument(file, department = null) {
   const formData = new FormData()
   formData.append('file', file)
@@ -21,6 +35,8 @@ export async function uploadDocument(file, department = null) {
 
 export default {
   getDocumentContent,
+  getDocumentFileBlob,
+  getDocumentPdfBlob,
   uploadDocument,
 }
 

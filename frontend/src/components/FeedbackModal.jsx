@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useTheme } from '../context/ThemeContext'
 
 const FEEDBACK_REASONS = [
@@ -55,15 +56,16 @@ export default function FeedbackModal({
     }
   }
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="feedback-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[75] flex items-center justify-center p-4"
       style={{
         background: 'rgba(0, 0, 0, 0.65)',
         backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
         animation: 'fadeIn 0.15s ease-out',
       }}
       onClick={(e) => {
@@ -243,5 +245,10 @@ export default function FeedbackModal({
       `}</style>
     </div>
   )
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body)
+  }
+  return modalContent
 }
 

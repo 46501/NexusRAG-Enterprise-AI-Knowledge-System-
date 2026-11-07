@@ -46,7 +46,7 @@ export default function CitationDrawer({ isOpen, onClose, sources = [], activeIn
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-[55] flex justify-end">
       {/* Backdrop */}
       <div
         onClick={onClose}
@@ -164,7 +164,7 @@ export default function CitationDrawer({ isOpen, onClose, sources = [], activeIn
                   onClick={() => {
                     if (onOpenDocumentReader) {
                       onOpenDocumentReader({
-                        docIdOrName: currentSource.doc_id || currentSource.source,
+                        docIdOrName: currentSource.doc_id || currentSource.source || currentSource.file_name || currentSource.name,
                         chunkIndex: currentSource.chunk_index,
                         chunkId: currentSource.chunk_id,
                         snippet: currentSource.text,
@@ -233,11 +233,11 @@ export default function CitationDrawer({ isOpen, onClose, sources = [], activeIn
               </label>
 
               <div className="flex items-center gap-2">
-                {currentSource.source && onOpenDocumentReader && (
+                {(currentSource.source || currentSource.file_name || currentSource.doc_id) && onOpenDocumentReader && (
                   <button
                     onClick={() => {
                       onOpenDocumentReader({
-                        docIdOrName: currentSource.doc_id || currentSource.source,
+                        docIdOrName: currentSource.doc_id || currentSource.source || currentSource.file_name || currentSource.name,
                         chunkIndex: currentSource.chunk_index,
                         chunkId: currentSource.chunk_id,
                         snippet: currentSource.text,

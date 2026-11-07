@@ -15,11 +15,12 @@ DEFAULT_CSP = (
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
     "font-src 'self' https://fonts.gstatic.com data:; "
     "img-src 'self' data: blob: https:; "
-    "connect-src 'self' https: wss: http://localhost:*; "
-    "frame-ancestors 'none'; "
+    "connect-src 'self' https: wss: http://localhost:* blob:; "
+    "frame-src 'self' blob:; "
+    "frame-ancestors 'self'; "
     "form-action 'self'; "
     "base-uri 'self'; "
-    "object-src 'none';"
+    "object-src 'self' blob:;"
 )
 
 DEFAULT_PERMISSIONS_POLICY = (
@@ -93,9 +94,12 @@ class SecurityHeadersMiddleware:
                 if "x-content-type-options" not in headers:
                     headers["x-content-type-options"] = self.content_type_options
 
-                # 2. Clickjacking defense
+                # 2. Clickjacking defense (allow same-origin for in-app PDF/file viewer)
                 if "x-frame-options" not in headers:
-                    headers["x-frame-options"] = self.frame_options
+                    if path.endswith("/file") or path.endswith("/pdf"):
+                        headers["x-frame-options"] = "SAMEORIGIN"
+                    else:
+                        headers["x-frame-options"] = self.frame_options
 
                 # 3. Content Security Policy (CSP)
                 if "content-security-policy" not in headers:
