@@ -1092,9 +1092,18 @@ export default function LandingPage() {
           boxSizing: "border-box",
         }}
       >
-        <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: isDark ? "rgba(255,255,255,0.75)" : "#334155", margin: "0 0 56px 0" }}>
+        <h2
+          style={{
+            fontSize: "1.25rem",
+            fontWeight: 700,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            color: isDark ? "#ffffff" : "#0f172a",
+            margin: "0 0 36px 0"
+          }}
+        >
           How it works
-        </p>
+        </h2>
         <div className="how-it-works-grid">
           {STEPS.map((step) => (
             <div
@@ -1127,9 +1136,18 @@ export default function LandingPage() {
           boxSizing: "border-box",
         }}
       >
-        <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: isDark ? "rgba(255,255,255,0.75)" : "#334155", margin: "0 0 48px 0" }}>
+        <h2
+          style={{
+            fontSize: "1.25rem",
+            fontWeight: 700,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            color: isDark ? "#ffffff" : "#0f172a",
+            margin: "0 0 36px 0"
+          }}
+        >
           Built on
-        </p>
+        </h2>
         <div className="built-on-grid">
           {TECH_GROUPS.map((group) => (
             <div
