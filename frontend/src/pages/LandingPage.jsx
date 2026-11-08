@@ -1094,12 +1094,12 @@ export default function LandingPage() {
       >
         <h2
           style={{
-            fontSize: "1.25rem",
-            fontWeight: 700,
-            letterSpacing: "0.06em",
+            fontSize: "clamp(1.75rem, 3.2vw, 2.25rem)",
+            fontWeight: 800,
+            letterSpacing: "0.04em",
             textTransform: "uppercase",
             color: isDark ? "#ffffff" : "#0f172a",
-            margin: "0 0 36px 0",
+            margin: "0 0 44px 0",
             textAlign: "center"
           }}
         >
@@ -1139,12 +1139,12 @@ export default function LandingPage() {
       >
         <h2
           style={{
-            fontSize: "1.25rem",
-            fontWeight: 700,
-            letterSpacing: "0.06em",
+            fontSize: "clamp(1.75rem, 3.2vw, 2.25rem)",
+            fontWeight: 800,
+            letterSpacing: "0.04em",
             textTransform: "uppercase",
             color: isDark ? "#ffffff" : "#0f172a",
-            margin: "0 0 36px 0",
+            margin: "0 0 44px 0",
             textAlign: "center"
           }}
         >
