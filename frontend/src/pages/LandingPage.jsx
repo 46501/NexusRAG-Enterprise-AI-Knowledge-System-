@@ -703,7 +703,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div style={{ background: isDark ? "#0f1115" : "#f8fafc", color: isDark ? "#fff" : "#0f172a", fontFamily: FONT, overflowX: "hidden", minHeight: "100vh" }}>
+    <div style={{ background: isDark ? "#0f1115" : "#f8fafc", color: isDark ? "#fff" : "#0f172a", fontFamily: FONT, overflowX: "clip", minHeight: "100vh" }}>
       <style>{`
         .how-it-works-grid {
           display: grid;
@@ -827,7 +827,8 @@ export default function LandingPage() {
           .built-on-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
         }
         @media (max-width: 479px) {
-          .landing-header { padding: 12px 20px !important; }
+          .landing-header { padding: 12px 16px !important; }
+          .landing-nav-actions { gap: 8px !important; }
           .hero-section { padding: 40px 20px !important; }
           .how-it-works-section { padding: 56px 20px !important; }
           .how-it-works-step { padding: 24px 20px !important; }
@@ -836,144 +837,163 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* ── TOP NAV BAR ───────────────────────────────────── */}
+      {/* ── TOP NAV BAR (STICKY) ────────────────────────── */}
       <header
-        className="landing-header"
+        className="landing-header-wrapper"
         style={{
-          borderBottom: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e2e8f0",
-          background: isDark ? "transparent" : "rgba(255,255,255,0.85)",
-          backdropFilter: "blur(8px)",
-          padding: "16px 48px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          maxWidth: 1160,
-          margin: "0 auto",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
           width: "100%",
-          boxSizing: "border-box",
+          background: isDark ? "rgba(15, 17, 21, 0.90)" : "rgba(248, 250, 252, 0.90)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderBottom: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e2e8f0",
+          boxShadow: isDark
+            ? "0 4px 20px -2px rgba(0, 0, 0, 0.45)"
+            : "0 2px 12px -2px rgba(0, 0, 0, 0.06)",
+          transition: "background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 8,
-              background: "rgba(139,92,246,0.15)",
-              border: "1px solid rgba(139,92,246,0.3)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#a78bfa",
-              fontSize: "0.85rem",
-              fontWeight: 700,
-            }}
-          >
-            N
+        <div
+          className="landing-header"
+          style={{
+            padding: "16px 48px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            maxWidth: 1160,
+            margin: "0 auto",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                background: "rgba(139,92,246,0.15)",
+                border: "1px solid rgba(139,92,246,0.3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#a78bfa",
+                fontSize: "0.85rem",
+                fontWeight: 700,
+              }}
+            >
+              N
+            </div>
+            <span style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "-0.01em", color: isDark ? "#fff" : "#0f172a" }}>
+              NexusRAG
+            </span>
           </div>
-          <span style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "-0.01em", color: isDark ? "#fff" : "#0f172a" }}>
-            NexusRAG
-          </span>
-        </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          {user ? (
-            <>
-              <span
-                style={{
-                  fontSize: "0.8rem",
-                  fontWeight: 500,
-                  color: isDark ? "rgba(255,255,255,0.9)" : "#334155",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {user.full_name || user.email}
-              </span>
+          <div className="landing-nav-actions" style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            {user ? (
+              <>
+                <span
+                  style={{
+                    fontSize: "0.8rem",
+                    fontWeight: 500,
+                    color: isDark ? "rgba(255,255,255,0.9)" : "#334155",
+                    letterSpacing: "-0.01em",
+                    maxWidth: 160,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {user.full_name || user.email}
+                </span>
 
-              <span
-                style={{
-                  fontSize: "0.65rem",
-                  padding: "3px 10px",
-                  borderRadius: 6,
-                  background: isDark ? "rgba(255,255,255,0.08)" : "rgba(124,58,237,0.08)",
-                  border: isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(124,58,237,0.2)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  color: isDark ? "#a78bfa" : "#7c3aed",
-                  fontWeight: 600,
-                }}
-              >
-                {user.role}
-              </span>
+                <span
+                  style={{
+                    fontSize: "0.65rem",
+                    padding: "3px 10px",
+                    borderRadius: 6,
+                    background: isDark ? "rgba(255,255,255,0.08)" : "rgba(124,58,237,0.08)",
+                    border: isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(124,58,237,0.2)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: isDark ? "#a78bfa" : "#7c3aed",
+                    fontWeight: 600,
+                  }}
+                >
+                  {user.role}
+                </span>
 
-              {/* Theme toggle placed directly between department badge and Sign Out button */}
-              <ThemeToggle />
+                {/* Theme toggle placed directly between department badge and Sign Out button */}
+                <ThemeToggle />
 
-              <button
-                type="button"
-                onClick={async () => {
-                  await logout();
-                  navigate("/login");
-                }}
-                style={{
-                  background: "transparent",
-                  color: isDark ? "rgba(255,255,255,0.5)" : "#64748b",
-                  border: isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #cbd5e1",
-                  borderRadius: 8,
-                  padding: "6px 12px",
-                  fontSize: "0.75rem",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = isDark ? "#fff" : "#0f172a";
-                  e.currentTarget.style.borderColor = isDark ? "rgba(255,255,255,0.3)" : "#94a3b8";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = isDark ? "rgba(255,255,255,0.5)" : "#64748b";
-                  e.currentTarget.style.borderColor = isDark ? "rgba(255,255,255,0.12)" : "#cbd5e1";
-                }}
-              >
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <>
-              <ThemeToggle />
-              <button
-                type="button"
-                onClick={() => navigate("/login")}
-                style={{
-                  background: "transparent",
-                  color: isDark ? "#fff" : "#0f172a",
-                  border: isDark ? "1px solid rgba(255,255,255,0.15)" : "1px solid #cbd5e1",
-                  borderRadius: 8,
-                  padding: "6px 14px",
-                  fontSize: "0.78rem",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                }}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/signup")}
-                style={{
-                  background: "#7c3aed",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "6px 14px",
-                  fontSize: "0.78rem",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Sign Up
-              </button>
-            </>
-          )}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await logout();
+                    navigate("/login");
+                  }}
+                  style={{
+                    background: "transparent",
+                    color: isDark ? "rgba(255,255,255,0.5)" : "#64748b",
+                    border: isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #cbd5e1",
+                    borderRadius: 8,
+                    padding: "6px 12px",
+                    fontSize: "0.75rem",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = isDark ? "#fff" : "#0f172a";
+                    e.currentTarget.style.borderColor = isDark ? "rgba(255,255,255,0.3)" : "#94a3b8";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = isDark ? "rgba(255,255,255,0.5)" : "#64748b";
+                    e.currentTarget.style.borderColor = isDark ? "rgba(255,255,255,0.12)" : "#cbd5e1";
+                  }}
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <ThemeToggle />
+                <button
+                  type="button"
+                  onClick={() => navigate("/login")}
+                  style={{
+                    background: "transparent",
+                    color: isDark ? "#fff" : "#0f172a",
+                    border: isDark ? "1px solid rgba(255,255,255,0.15)" : "1px solid #cbd5e1",
+                    borderRadius: 8,
+                    padding: "6px 14px",
+                    fontSize: "0.78rem",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/signup")}
+                  style={{
+                    background: "#7c3aed",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "6px 14px",
+                    fontSize: "0.78rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Sign Up
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
