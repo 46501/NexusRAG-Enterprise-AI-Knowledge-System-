@@ -1185,13 +1185,33 @@ export default function LandingPage() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
+          gap: "16px",
           maxWidth: 1160,
           margin: "0 auto",
           width: "100%",
           boxSizing: "border-box",
         }}
       >
-        <span style={{ fontSize: "0.72rem", color: isDark ? "rgba(255,255,255,0.18)" : "#94a3b8" }}>rag.shikharjain.com</span>
+        <span
+          style={{
+            fontSize: "0.82rem",
+            fontWeight: 600,
+            letterSpacing: "-0.01em",
+            color: isDark ? "rgba(255,255,255,0.85)" : "#1e293b",
+          }}
+        >
+          Om Ashok Kulkarni
+        </span>
+        <span
+          style={{
+            fontSize: "0.75rem",
+            color: isDark ? "rgba(255,255,255,0.38)" : "#64748b",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          &copy; 2026 NexusRAG. Built by Om Ashok Kulkarni. All rights reserved.
+        </span>
       </footer>
 
     </div>
