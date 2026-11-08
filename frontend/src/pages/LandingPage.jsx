@@ -1100,7 +1100,7 @@ export default function LandingPage() {
             textTransform: "uppercase",
             color: isDark ? "#ffffff" : "#0f172a",
             margin: "0 0 44px 0",
-            textAlign: "center"
+            textAlign: "left"
           }}
         >
           How it works
@@ -1145,7 +1145,7 @@ export default function LandingPage() {
             textTransform: "uppercase",
             color: isDark ? "#ffffff" : "#0f172a",
             margin: "0 0 44px 0",
-            textAlign: "center"
+            textAlign: "left"
           }}
         >
           Built on
