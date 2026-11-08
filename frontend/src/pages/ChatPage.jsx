@@ -15,7 +15,8 @@ import DocumentUploadModal from '../components/DocumentUploadModal'
 import DocumentComparisonModal from '../components/DocumentComparisonModal'
 import AgentSidecarModal from '../components/AgentSidecarModal'
 import WorkspaceEmptyState from '../components/WorkspaceEmptyState'
-import ThreadHistorySidebar from '../components/ThreadHistorySidebar'
+import WorkspaceHeader from '../components/WorkspaceHeader'
+import ThreadHistorySidebar, { PinIcon } from '../components/ThreadHistorySidebar'
 import {
   getThreads,
   saveThread,
@@ -55,7 +56,73 @@ export default function ChatPage() {
   const { messages, thinking, sendQuery, clearMessages, setMessages } = useQuery()
   const bottomRef = useRef(null)
   const messagesRef = useRef(null)
-  const [docsOpen, setDocsOpen] = useState(false)
+  // Left Sidebar (Chat Threads) State
+  const [threadsSidebarPinned, setThreadsSidebarPinned] = useState(() => {
+    if (typeof window === 'undefined') return true
+    const saved = localStorage.getItem('nexusrag_threads_pinned')
+    if (saved !== null) return saved === 'true'
+    return window.innerWidth >= 1280
+  })
+  const [threadsMobileDrawerOpen, setThreadsMobileDrawerOpen] = useState(false)
+
+  // Right Sidebar (Documents) State
+  const [docsSidebarPinned, setDocsSidebarPinned] = useState(() => {
+    if (typeof window === 'undefined') return true
+    const saved = localStorage.getItem('nexusrag_docs_pinned')
+    if (saved !== null) return saved === 'true'
+    return window.innerWidth >= 1280
+  })
+  const [docsMobileDrawerOpen, setDocsMobileDrawerOpen] = useState(false)
+  const [docsSidebarHovered, setDocsSidebarHovered] = useState(false)
+  const docsHoverTimeoutRef = useRef(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    function checkMobile() {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  function handleToggleThreadsPin() {
+    setThreadsSidebarPinned((prev) => {
+      const next = !prev
+      try { localStorage.setItem('nexusrag_threads_pinned', String(next)) } catch (_) {}
+      return next
+    })
+  }
+
+  function handleToggleDocsPin() {
+    setDocsSidebarPinned((prev) => {
+      const next = !prev
+      try { localStorage.setItem('nexusrag_docs_pinned', String(next)) } catch (_) {}
+      return next
+    })
+  }
+
+  function handleDocsMouseEnter() {
+    if (isMobile) return
+    const isHoverSupported = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 1024
+    if (!isHoverSupported) return
+    if (docsHoverTimeoutRef.current) clearTimeout(docsHoverTimeoutRef.current)
+    docsHoverTimeoutRef.current = setTimeout(() => {
+      setDocsSidebarHovered(true)
+    }, 60)
+  }
+
+  function handleDocsMouseLeave() {
+    if (isMobile) return
+    const isHoverSupported = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 1024
+    if (!isHoverSupported) return
+    if (docsHoverTimeoutRef.current) clearTimeout(docsHoverTimeoutRef.current)
+    docsHoverTimeoutRef.current = setTimeout(() => {
+      setDocsSidebarHovered(false)
+    }, 180)
+  }
+
+  const isDocsExpanded = isMobile ? docsMobileDrawerOpen : (docsSidebarPinned || docsSidebarHovered)
   const [docs, setDocs] = useState([])
   const [docsLoading, setDocsLoading] = useState(true)
   const [selectedDoc, setSelectedDoc] = useState(null)
@@ -66,7 +133,6 @@ export default function ChatPage() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [droppedFile, setDroppedFile] = useState(null)
   const [windowDragging, setWindowDragging] = useState(false)
-  const [threadsSidebarOpen, setThreadsSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1280)
   const [threads, setThreads] = useState([])
   const [activeThreadId, setActiveThreadIdState] = useState(() => getActiveThreadId(user?.id, user?.role))
   const [comparisonModalOpen, setComparisonModalOpen] = useState(false)
@@ -314,8 +380,8 @@ export default function ChatPage() {
     setActiveThreadId(user?.id, user?.role, thread.id)
     setMessages(thread.messages || [])
     setFocusDoc(thread.focusDoc || null)
-    if (window.innerWidth < 768) {
-      setThreadsSidebarOpen(false)
+    if (isMobile) {
+      setThreadsMobileDrawerOpen(false)
     }
   }
 
@@ -324,8 +390,8 @@ export default function ChatPage() {
     setActiveThreadId(user?.id, user?.role, null)
     clearMessages()
     setFocusDoc(null)
-    if (window.innerWidth < 768) {
-      setThreadsSidebarOpen(false)
+    if (isMobile) {
+      setThreadsMobileDrawerOpen(false)
     }
   }
 
@@ -351,7 +417,7 @@ export default function ChatPage() {
     handleNewChat()
   }
 
-  // Global Keyboard Shortcuts (⌘K for palette, ⌘U for upload, ⌘S for threads, ⌘N for new chat)
+  // Global Keyboard Shortcuts (⌘K palette, ⌘U upload, ⌘S left sidebar, ⌘D right docs, ⌘N new chat, ⌘M compare)
   useEffect(() => {
     function handleKeyDown(e) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -362,7 +428,18 @@ export default function ChatPage() {
         setUploadModalOpen((prev) => !prev)
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
         e.preventDefault()
-        setThreadsSidebarOpen((prev) => !prev)
+        if (isMobile) {
+          setThreadsMobileDrawerOpen((prev) => !prev)
+        } else {
+          handleToggleThreadsPin()
+        }
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'd') {
+        e.preventDefault()
+        if (isMobile) {
+          setDocsMobileDrawerOpen((prev) => !prev)
+        } else {
+          handleToggleDocsPin()
+        }
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
         e.preventDefault()
         handleNewChat()
@@ -375,8 +452,12 @@ export default function ChatPage() {
         !document.activeElement?.isContentEditable
       ) {
         e.preventDefault()
-        setDocsOpen(true)
-        setTimeout(() => docSearchInputRef.current?.focus(), 50)
+        if (isMobile) {
+          setDocsMobileDrawerOpen(true)
+        } else {
+          setDocsSidebarPinned(true)
+        }
+        setTimeout(() => docSearchInputRef.current?.focus(), 80)
       } else if (e.key === 'Escape' && document.activeElement === docSearchInputRef.current) {
         e.preventDefault()
         if (docSearchQuery) {
@@ -388,233 +469,63 @@ export default function ChatPage() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [threads, activeThreadId])
+  }, [threads, activeThreadId, isMobile])
 
   return (
     <div
-      className="flex h-screen overflow-hidden transition-colors"
+      className="flex flex-col h-screen overflow-hidden transition-colors"
       style={{
         background: isDark ? '#0a0a0a' : '#f8fafc',
         color: isDark ? '#fff' : '#0f172a',
         fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif"
       }}
     >
-
-      {/* ── LEFT: Thread History Sidebar ──────────────────── */}
-      <ThreadHistorySidebar
-        isOpen={threadsSidebarOpen}
-        onClose={() => setThreadsSidebarOpen(false)}
-        threads={threads}
-        activeThreadId={activeThreadId}
-        onSelectThread={handleSelectThread}
-        onNewChat={handleNewChat}
-        onRenameThread={handleRenameThread}
-        onDeleteThread={handleDeleteThread}
-        onClearAll={handleClearAllThreads}
+      {/* ── TOP: Workspace Full-Width Header (Always uncompressed and independent of sidebars) ── */}
+      <WorkspaceHeader
         userRole={user?.role}
+        isDark={isDark}
+        threadsSidebarPinned={threadsSidebarPinned}
+        docsSidebarPinned={docsSidebarPinned}
+        onToggleThreadsPin={handleToggleThreadsPin}
+        onToggleDocsPin={handleToggleDocsPin}
+        threadsMobileOpen={threadsMobileDrawerOpen}
+        docsMobileOpen={docsMobileDrawerOpen}
+        onToggleThreadsMobile={() => setThreadsMobileDrawerOpen((v) => !v)}
+        onToggleDocsMobile={() => setDocsMobileDrawerOpen((v) => !v)}
+        onOpenAgentModal={handleOpenAgentModal}
+        onNewChat={handleNewChat}
+        onOpenExport={() => setExportOpen(true)}
+        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+        onOpenComparison={handleOpenComparison}
+        onOpenUpload={() => setUploadModalOpen(true)}
+        isMobile={isMobile}
       />
 
-      {/* ── CENTER: Chat column ───────────────────────────── */}
-      <div
-        className="flex flex-col min-w-0 overflow-hidden"
-        style={{ flex: 1, borderRight: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e2e8f0' }}
-      >
-        {/* Header (macOS Titlebar Style) */}
-        <header
-          className="flex-shrink-0 flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 z-10 transition-colors min-w-0"
-          style={{
-            background: isDark ? 'rgba(15, 17, 26, 0.82)' : 'rgba(255, 255, 255, 0.85)',
-            backdropFilter: 'blur(16px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-            borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0'
-          }}
+      {/* ── WORKSPACE BODY: Left Sidebar + Center Chat Area + Right Sidebar ── */}
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
+        {/* ── LEFT: Thread History Sidebar ──────────────────── */}
+        <ThreadHistorySidebar
+          isOpen={threadsMobileDrawerOpen}
+          onClose={() => setThreadsMobileDrawerOpen(false)}
+          isPinned={threadsSidebarPinned}
+          onTogglePin={handleToggleThreadsPin}
+          threads={threads}
+          activeThreadId={activeThreadId}
+          onSelectThread={handleSelectThread}
+          onNewChat={handleNewChat}
+          onRenameThread={handleRenameThread}
+          onDeleteThread={handleDeleteThread}
+          onClearAll={handleClearAllThreads}
+          userRole={user?.role}
+        />
+
+        {/* ── CENTER: Chat column ───────────────────────────── */}
+        <div
+          className="flex flex-col min-w-0 overflow-hidden"
+          style={{ flex: 1, borderRight: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e2e8f0' }}
         >
-          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-nowrap">
-            {/* macOS Window Controls */}
-            <div className="hidden sm:flex items-center gap-1.5 mr-0.5 select-none shrink-0">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] border border-[#e0443e]/80 inline-block shadow-xs" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] border border-[#dea123]/80 inline-block shadow-xs" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] border border-[#1aab29]/80 inline-block shadow-xs" />
-            </div>
-
-            {/* macOS Sidebar Toggle (Threads / History) */}
-            <button
-              type="button"
-              onClick={() => setThreadsSidebarOpen((prev) => !prev)}
-              className="p-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center hover:scale-105 shrink-0"
-              style={{
-                color: threadsSidebarOpen ? (isDark ? '#d8b4fe' : '#7e22ce') : (isDark ? 'rgba(255, 255, 255, 0.65)' : '#64748b'),
-                background: threadsSidebarOpen
-                  ? (isDark ? 'rgba(168, 85, 247, 0.18)' : '#f3e8ff')
-                  : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9'),
-                border: threadsSidebarOpen
-                  ? (isDark ? '1px solid rgba(168, 85, 247, 0.35)' : '1px solid #d8b4fe')
-                  : (isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1'),
-              }}
-              title={`Toggle Chat Threads Sidebar (${threadsSidebarOpen ? 'Hide' : 'Show'}) (⌘S)`}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <line x1="9" y1="3" x2="9" y2="21" />
-              </svg>
-            </button>
-
-            <BackHomeButton />
-            {d && (
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <span
-                  className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ background: d.dot, boxShadow: `0 0 8px ${d.dot}` }}
-                />
-                <span className="text-xs sm:text-sm font-semibold tracking-tight whitespace-nowrap" style={{ color: isDark ? '#fff' : '#0f172a' }}>
-                  {DEPT_NAMES[user?.role] ?? user?.role}
-                </span>
-                <span className="hidden xl:inline text-[11px] font-medium opacity-40 whitespace-nowrap">
-                  Workspace
-                </span>
-              </div>
-            )}
-
-            {/* Quick Command Palette Button - Full label on 2xl */}
-            <button
-              type="button"
-              onClick={() => setCommandPaletteOpen(true)}
-              className="hidden 2xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer opacity-75 hover:opacity-100 whitespace-nowrap shrink-0"
-              style={{
-                background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
-                border: isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1',
-                color: isDark ? 'rgba(255, 255, 255, 0.8)' : '#475569',
-              }}
-              title="Search commands, policies, and actions (⌘K / Ctrl+K)"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <span>Commands</span>
-              <kbd className="font-mono text-[9px] px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 opacity-70">⌘K</kbd>
-            </button>
-
-            {/* Quick Command Palette Button - Compact on md to 2xl */}
-            <button
-              type="button"
-              onClick={() => setCommandPaletteOpen(true)}
-              className="hidden md:inline-flex 2xl:hidden items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer opacity-75 hover:opacity-100 whitespace-nowrap shrink-0"
-              style={{
-                background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
-                border: isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1',
-                color: isDark ? 'rgba(255, 255, 255, 0.8)' : '#475569',
-              }}
-              title="Command Palette (⌘K)"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <kbd className="font-mono text-[9px] px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 opacity-70">⌘K</kbd>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCommandPaletteOpen(true)}
-              className="md:hidden text-[11px] px-2 py-1 rounded-lg font-mono font-semibold shrink-0"
-              style={{
-                background: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9',
-                border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #cbd5e1',
-                color: isDark ? 'rgba(255, 255, 255, 0.75)' : '#475569',
-              }}
-              title="Command Palette (⌘K)"
-            >
-              ⌘K
-            </button>
-
-            {/* Autonomous Multi-Agent Workflows Button */}
-            <button
-              type="button"
-              onClick={() => handleOpenAgentModal()}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:scale-105 shadow-xs whitespace-nowrap shrink-0"
-              style={{
-                background: isDark ? 'rgba(168, 85, 247, 0.20)' : '#f5f3ff',
-                color: isDark ? '#d8b4fe' : '#7c3aed',
-                border: isDark ? '1px solid rgba(168, 85, 247, 0.40)' : '1px solid #ddd6fe',
-              }}
-              title="Launch Autonomous Policy Compliance & Risk Auditor (Tier 2)"
-            >
-              <span className="text-sm">🤖</span>
-              <span className="hidden sm:inline">Agents</span>
-              <span className="hidden xl:inline text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/30 text-purple-200">
-                Tier 2
-              </span>
-            </button>
-            {messages.length > 0 && (
-              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={handleNewChat}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer hover:opacity-100 opacity-80 whitespace-nowrap shrink-0"
-                  style={{
-                    background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9',
-                    border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
-                    color: isDark ? 'rgba(255,255,255,0.85)' : '#334155',
-                  }}
-                  title="Start a fresh conversation thread (⌘N)"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  <span className="hidden lg:inline">New Chat</span>
-                  <span className="hidden sm:inline lg:hidden">New</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setExportOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer hover:opacity-100 opacity-80 whitespace-nowrap shrink-0"
-                  style={{
-                    background: isDark ? 'rgba(99,102,241,0.12)' : '#eef2ff',
-                    border: isDark ? '1px solid rgba(99,102,241,0.30)' : '1px solid #c7d2fe',
-                    color: isDark ? '#c7d2fe' : '#4f46e5',
-                  }}
-                  title="Export session as PDF, Markdown, or Slack brief (0 MB RAM)"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  <span className="hidden lg:inline">Export & Share</span>
-                  <span className="hidden sm:inline lg:hidden">Export</span>
-                </button>
-              </div>
-            )}
-            {/* Mobile docs toggle */}
-            <button
-              className="md:hidden ml-1 text-xs px-2.5 py-1.5 rounded-xl font-medium transition-all shrink-0"
-              style={{
-                color: docsOpen ? (isDark ? '#fff' : '#0f172a') : (isDark ? 'rgba(255,255,255,0.70)' : '#475569'),
-                border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
-                background: docsOpen ? (isDark ? 'rgba(255,255,255,0.10)' : '#e2e8f0') : (isDark ? 'rgba(255,255,255,0.04)' : '#ffffff'),
-                cursor: 'pointer'
-              }}
-              onClick={() => setDocsOpen((v) => !v)}
-              title="Toggle Documents Panel"
-            >
-              📄 Docs
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0 ml-2">
-            {/* Unified Enterprise User Profile Menu */}
-            <UserProfileMenu
-              onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-              onExport={() => setExportOpen(true)}
-            />
-          </div>
-        </header>
-
-        {/* Messages */}
-        <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 sm:px-6 pt-6 pb-28 chat-scroll min-h-0">
+          {/* Messages */}
+          <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 sm:px-6 pt-6 pb-28 chat-scroll min-h-0">
           <div className="max-w-[700px] mx-auto flex flex-col gap-4 min-h-full">
             {messages.length === 0 ? (
               <WorkspaceEmptyState
@@ -702,323 +613,565 @@ export default function ChatPage() {
         </div>
       </div>
 
+      {/* Mobile Drawer Backdrop for Documents */}
+      {isMobile && docsMobileDrawerOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 transition-opacity"
+          onClick={() => setDocsMobileDrawerOpen(false)}
+        />
+      )}
+
       {/* ── RIGHT: Documents panel ──────────────────────── */}
       <aside
-        className={`flex-col flex-shrink-0 md:w-[300px] lg:w-[310px] transition-colors ${docsOpen ? 'flex fixed inset-0 z-50 w-full md:relative md:inset-auto md:z-auto' : 'hidden md:flex'}`}
-        style={{ background: isDark ? '#0f0f0f' : '#ffffff', borderLeft: isDark ? 'none' : '1px solid #e2e8f0' }}
+        onMouseEnter={handleDocsMouseEnter}
+        onMouseLeave={handleDocsMouseLeave}
+        className={`flex flex-col flex-shrink-0 transition-[width] duration-200 ease-in-out select-none overflow-hidden ${
+          isMobile
+            ? docsMobileDrawerOpen
+              ? 'fixed inset-y-0 right-0 z-50 w-[340px] max-w-[85vw] shadow-2xl'
+              : 'w-0 overflow-hidden opacity-0 pointer-events-none hidden'
+            : isDocsExpanded
+              ? 'w-[340px] relative z-20'
+              : 'w-[60px] relative z-20'
+        }`}
+        style={{
+          background: isDark ? 'rgba(15, 17, 23, 0.98)' : '#ffffff',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderLeft: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+          boxShadow: isMobile && docsMobileDrawerOpen
+            ? isDark
+              ? '-12px 0 32px rgba(0,0,0,0.6)'
+              : '-12px 0 32px rgba(15,23,42,0.12)'
+            : isDocsExpanded && !docsSidebarPinned && !isMobile
+              ? isDark
+                ? '-8px 0 24px rgba(0,0,0,0.45)'
+                : '-8px 0 24px rgba(15,23,42,0.08)'
+              : 'none',
+        }}
       >
-        {/* Panel header */}
-        <div className="px-4 py-3.5" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0' }}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.1em]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>
-              Documents
-            </p>
-            <div className="flex items-center gap-1.5">
+        {!isDocsExpanded && !isMobile ? (
+          /* ── COLLAPSED VIEW (60px) ────────────────────────── */
+          <div className="flex flex-col items-center h-full w-[60px] shrink-0 py-3 justify-between select-none">
+            {/* Top Navigation & Action Controls */}
+            <div className="flex flex-col items-center gap-2.5 w-full px-2">
+              {/* Expand / Pin Toggle Button */}
               <button
                 type="button"
-                onClick={() => handleOpenComparison()}
-                className="text-[10px] px-2 py-0.5 rounded font-semibold transition-all hover:scale-105 cursor-pointer flex items-center gap-1 shadow-xs"
+                onClick={handleToggleDocsPin}
+                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs"
                 style={{
-                  background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
+                  background: isDark ? 'rgba(56, 189, 248, 0.16)' : '#f0f9ff',
                   color: isDark ? '#38bdf8' : '#0284c7',
                   border: isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #bae6fd',
                 }}
-                title="Compare documents side-by-side in a matrix (⌘M)"
+                title="Expand Documents Sidebar (Hover to preview, Click to Pin) (⌘D)"
               >
-                <span>📊</span>
-                <span>Compare</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
               </button>
+
+              {/* Pin Toggle */}
+              <button
+                type="button"
+                onClick={handleToggleDocsPin}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
+                style={{
+                  background: docsSidebarPinned
+                    ? (isDark ? 'rgba(56, 189, 248, 0.20)' : '#f0f9ff')
+                    : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9'),
+                  color: docsSidebarPinned
+                    ? (isDark ? '#38bdf8' : '#0284c7')
+                    : (isDark ? 'rgba(255, 255, 255, 0.55)' : '#64748b'),
+                  border: docsSidebarPinned
+                    ? (isDark ? '1px solid rgba(56, 189, 248, 0.40)' : '1px solid #bae6fd')
+                    : (isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1'),
+                }}
+                title={docsSidebarPinned ? "Sidebar is pinned. Click to unpin (auto-collapse)" : "Pin Documents Sidebar open"}
+              >
+                <PinIcon pinned={docsSidebarPinned} size={13} />
+              </button>
+
+              <div className="w-6 h-px my-0.5" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }} />
+
+              {/* Upload Button */}
               <button
                 type="button"
                 onClick={() => setUploadModalOpen(true)}
-                className="text-[10px] px-2 py-0.5 rounded font-semibold transition-all hover:scale-105 cursor-pointer flex items-center gap-1 shadow-xs"
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
                 style={{
-                  background: isDark ? 'rgba(168, 85, 247, 0.20)' : '#f3e8ff',
-                  color: isDark ? '#d8b4fe' : '#7e22ce',
-                  border: isDark ? '1px solid rgba(168, 85, 247, 0.35)' : '1px solid #d8b4fe',
+                  background: isDark ? 'rgba(168, 85, 247, 0.16)' : '#f5f3ff',
+                  color: isDark ? '#d8b4fe' : '#7c3aed',
+                  border: isDark ? '1px solid rgba(168, 85, 247, 0.30)' : '1px solid #ddd6fe',
                 }}
-                title="Upload & index new corporate file (⌘U)"
+                title="Upload & index new file (⌘U)"
               >
-                <span>+</span>
-                <span>Upload</span>
+                <span className="text-sm font-bold leading-none">+</span>
               </button>
-              <button
-                className="md:hidden text-[11px] px-2 py-0.5 rounded"
-                style={{
-                  color: isDark ? 'rgba(255,255,255,0.35)' : '#475569',
-                  border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
-                  background: 'none',
-                  cursor: 'pointer'
-                }}
-                onClick={() => setDocsOpen(false)}
-              >
-                ✕ Close
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            {d && <span className="w-1.5 h-1.5 rounded-full" style={{ background: d.dot }} />}
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: d?.text }}>
-              {user?.role}
-            </span>
-            <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.30)' : '#64748b' }}>
-              · {filteredDocs.length !== docs.length ? `${filteredDocs.length} of ${docs.length} files` : `${docs.length} files`}
-            </span>
-          </div>
-        </div>
 
-        {/* Search & Filter Bar */}
-        <div
-          className="px-3 py-2 space-y-1.5 border-b select-none"
-          style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0' }}
-        >
-          {/* Search Input Box */}
-          <div className="relative flex items-center">
-            <svg
-              className="absolute left-2.5 w-3.5 h-3.5 pointer-events-none opacity-40"
-              style={{ color: isDark ? '#fff' : '#0f172a' }}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <circle cx="11" cy="11" r="8" strokeWidth="2" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            <input
-              ref={docSearchInputRef}
-              type="text"
-              value={docSearchQuery}
-              onChange={(e) => setDocSearchQuery(e.target.value)}
-              placeholder="Filter files... (Press /)"
-              className={`w-full text-xs pl-8 pr-7 py-1.5 rounded-lg border outline-none transition-all placeholder:text-[11px] ${isDark
-                  ? 'bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-purple-400/50 focus:bg-white/[0.06]'
-                  : 'bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-purple-500/50 focus:bg-white'
-                }`}
-            />
-            {docSearchQuery ? (
+              {/* Compare Button */}
               <button
                 type="button"
-                onClick={() => setDocSearchQuery('')}
-                className="absolute right-2 text-xs opacity-50 hover:opacity-100 cursor-pointer p-0.5"
-                title="Clear search (Esc)"
+                onClick={() => handleOpenComparison()}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
+                style={{
+                  background: isDark ? 'rgba(56, 189, 248, 0.14)' : '#f0f9ff',
+                  color: isDark ? '#38bdf8' : '#0284c7',
+                  border: isDark ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid #bae6fd',
+                }}
+                title="Compare documents side-by-side (⌘M)"
               >
-                ✕
+                <span className="text-xs">📊</span>
               </button>
-            ) : (
-              <kbd className="absolute right-2 font-mono text-[9px] px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 opacity-40 pointer-events-none select-none">
-                /
-              </kbd>
-            )}
-          </div>
 
-          {/* Type Filter Chips & Sort Toggle */}
-          <div className="flex items-center justify-between gap-1">
-            {/* Type Chips */}
-            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
-              {[
-                { key: 'all', label: 'All', count: docCounts.all },
-                { key: 'pdf', label: 'PDF', count: docCounts.pdf },
-                { key: 'txt', label: 'TXT', count: docCounts.txt },
-                { key: 'md', label: 'MD', count: docCounts.md },
-              ].map(({ key, label, count }) => {
-                if (key !== 'all' && count === 0) return null
-                const isActive = docTypeFilter === key
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setDocTypeFilter(key)}
-                    className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 ${isActive
-                        ? isDark
-                          ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-xs'
-                          : 'bg-purple-100 text-purple-700 border border-purple-200 shadow-xs'
-                        : isDark
-                          ? 'text-white/40 hover:text-white/70 hover:bg-white/5 border border-transparent'
-                          : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent'
-                      }`}
-                  >
-                    <span>{label}</span>
-                    <span className="text-[9px] opacity-60">({count})</span>
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Sort Toggle Button */}
-            <button
-              type="button"
-              onClick={() => setDocSortOrder((prev) => (prev === 'recent' ? 'alpha' : 'recent'))}
-              className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 shrink-0 ${isDark
-                  ? 'text-white/50 hover:text-white hover:bg-white/5 border border-white/10'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
-                }`}
-              title={`Sort: ${docSortOrder === 'recent' ? 'Newest first (Click for A-Z)' : 'Alphabetical (Click for Newest)'}`}
-            >
-              <span>{docSortOrder === 'recent' ? '🕒 Recent' : '🔤 A–Z'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Doc list */}
-        <div className="flex-1 overflow-y-auto p-2 doc-scroll">
-          {docsLoading ? (
-            <div className="flex items-center gap-2 px-2 py-3">
-              <div className={`w-3 h-3 rounded-full border border-t-transparent animate-spin ${isDark ? 'border-white/30 border-t-white' : 'border-slate-300 border-t-slate-700'}`} />
-              <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8' }}>Loading…</span>
-            </div>
-          ) : docs.length === 0 ? (
-            <p className="px-2 text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>No documents found.</p>
-          ) : filteredDocs.length === 0 ? (
-            <div className="px-3 py-8 text-center space-y-2">
-              <p className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.50)' : '#64748b' }}>
-                No files match <span className="font-semibold text-purple-400">"{docSearchQuery}"</span>
-              </p>
+              {/* Search Trigger Button */}
               <button
                 type="button"
                 onClick={() => {
-                  setDocSearchQuery('')
-                  setDocTypeFilter('all')
+                  handleToggleDocsPin()
+                  setTimeout(() => docSearchInputRef.current?.focus(), 80)
                 }}
-                className="text-[11px] font-medium text-purple-400 hover:underline cursor-pointer"
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
+                style={{
+                  background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
+                  color: isDark ? 'rgba(255, 255, 255, 0.65)' : '#64748b',
+                  border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #cbd5e1',
+                }}
+                title="Search and filter documents (/)"
               >
-                Clear filter
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
               </button>
+
+              <div className="w-6 h-px my-0.5" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }} />
+
+              {/* Scrollable list of Document Icons */}
+              <div className="flex flex-col items-center gap-1.5 w-full overflow-y-auto no-scrollbar max-h-[calc(100vh-290px)] py-1">
+                {docs.length === 0 ? (
+                  <span className="text-[10px] opacity-30 select-none">∅</span>
+                ) : (
+                  docs.map((doc) => {
+                    const isSelected = selectedDoc === doc.id
+                    const isFocused = focusDoc?.id === doc.id
+                    const icon = doc.name.endsWith('.pdf') ? '📕' : doc.name.endsWith('.md') ? '📝' : '📄'
+                    return (
+                      <button
+                        key={doc.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDoc(doc.id)
+                          handleOpenDocumentReader({ docIdOrName: doc.id })
+                        }}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer relative hover:scale-110"
+                        style={{
+                          background: isFocused
+                            ? (isDark ? 'rgba(168, 85, 247, 0.25)' : '#f3e8ff')
+                            : isSelected
+                              ? (isDark ? 'rgba(56, 189, 248, 0.18)' : '#e0f2fe')
+                              : (isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc'),
+                          border: isFocused
+                            ? (isDark ? '1px solid rgba(168, 85, 247, 0.50)' : '1px solid #c084fc')
+                            : isSelected
+                              ? (isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #7dd3fc')
+                              : (isDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid #e2e8f0'),
+                        }}
+                        title={`${doc.name}\n${doc.chunk_count} chunks · Uploaded ${fmtDate(doc.uploaded_at)}\n(Click to read)`}
+                      >
+                        <span className="text-xs">{icon}</span>
+                        {isFocused && (
+                          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-purple-500 ring-2 ring-white dark:ring-black" />
+                        )}
+                      </button>
+                    )
+                  })
+                )}
+              </div>
             </div>
-          ) : (
-            <ul className="space-y-1.5">
-              {filteredDocs.map((doc) => (
-                <li key={doc.id}>
-                  <div
-                    className={`w-full text-left p-2.5 rounded-[12px] transition-all group border ${selectedDoc === doc.id
-                        ? isDark
-                          ? 'bg-purple-500/15 border-purple-500/40 shadow-xs'
-                          : 'bg-purple-50 border-purple-200 shadow-xs'
-                        : isDark
-                          ? 'border-transparent hover:bg-white/[0.04]'
-                          : 'border-transparent hover:bg-slate-100'
-                      }`}
-                    style={{
-                      borderLeft: `3px solid ${selectedDoc === doc.id ? (d?.dot ?? 'transparent') : 'transparent'}`,
-                    }}
-                    title={doc.name}
-                  >
-                    {/* Row 1: Complete Filename with icon (natural wrap, no truncation ellipsis) */}
-                    <div
-                      onClick={() => {
-                        setSelectedDoc(doc.id)
-                        handleOpenDocumentReader({ docIdOrName: doc.id })
+
+            {/* Bottom Info: Department badge & File count */}
+            <div className="flex flex-col items-center gap-1.5 w-full pt-2" style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0' }}>
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold"
+                style={{
+                  background: d ? d.bg : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
+                  color: d ? d.text : (isDark ? '#fff' : '#0f172a'),
+                  border: d ? `1px solid ${d.dot}40` : (isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1'),
+                }}
+                title={`${docs.length} documents indexed for ${DEPT_NAMES[user?.role] || user?.role}`}
+              >
+                {docs.length}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* ── EXPANDED VIEW (340px) ────────────────────────── */
+          <div className="flex flex-col h-full w-[340px] shrink-0">
+            {/* Panel header */}
+            <div className="px-4 py-3.5" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0' }}>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>
+                  Documents
+                </p>
+                <div className="flex items-center gap-1.5">
+                  {/* Pin Button on Desktop */}
+                  {!isMobile && (
+                    <button
+                      type="button"
+                      onClick={handleToggleDocsPin}
+                      className="w-6 h-6 rounded-md flex items-center justify-center text-xs transition-all cursor-pointer hover:scale-105"
+                      style={{
+                        background: docsSidebarPinned
+                          ? (isDark ? 'rgba(56, 189, 248, 0.20)' : '#f0f9ff')
+                          : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9'),
+                        color: docsSidebarPinned
+                          ? (isDark ? '#38bdf8' : '#0284c7')
+                          : (isDark ? 'rgba(255, 255, 255, 0.55)' : '#64748b'),
+                        border: docsSidebarPinned
+                          ? (isDark ? '1px solid rgba(56, 189, 248, 0.40)' : '1px solid #bae6fd')
+                          : (isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1'),
                       }}
-                      className="cursor-pointer mb-2 group/title"
-                      title={`${doc.name} (Click to open in reader)`}
+                      title={docsSidebarPinned ? "Sidebar is pinned open (Click to unpin)" : "Pin Documents sidebar open"}
                     >
-                      <div className="flex items-start gap-2">
-                        <span className="text-sm shrink-0 mt-0.5 select-none">
-                          {doc.name.endsWith('.pdf') ? '📕' : doc.name.endsWith('.md') ? '📝' : '📄'}
-                        </span>
-                        <p
-                          className="text-xs font-semibold leading-snug break-words [overflow-wrap:anywhere] transition-colors group-hover/title:text-purple-400"
-                          style={{
-                            color: selectedDoc === doc.id
-                              ? (isDark ? '#fff' : '#0f172a')
-                              : (isDark ? 'rgba(255,255,255,0.92)' : '#1e293b'),
-                          }}
-                        >
-                          {doc.name}
-                        </p>
-                      </div>
-                    </div>
+                      <PinIcon pinned={docsSidebarPinned} size={11} />
+                    </button>
+                  )}
 
-                    {/* Row 2: Metadata (left) & Actions (right) */}
-                    <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-black/5 dark:border-white/5 select-none">
-                      {/* Metadata */}
-                      <div className="flex items-center gap-1.5 text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.40)' : '#64748b' }}>
-                        <span className="font-mono font-medium">{doc.chunk_count} chunks</span>
-                        <span className="opacity-40">·</span>
-                        <span>{fmtDate(doc.uploaded_at)}</span>
-                      </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenComparison()}
+                    className="text-[10px] px-2 py-0.5 rounded font-semibold transition-all hover:scale-105 cursor-pointer flex items-center gap-1 shadow-xs"
+                    style={{
+                      background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
+                      color: isDark ? '#38bdf8' : '#0284c7',
+                      border: isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #bae6fd',
+                    }}
+                    title="Compare documents side-by-side in a matrix (⌘M)"
+                  >
+                    <span>📊</span>
+                    <span>Compare</span>
+                  </button>
 
-                      {/* Action Controls */}
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setFocusDoc(focusDoc?.id === doc.id ? null : doc)
-                          }}
-                          className={`text-[10px] px-2 py-0.5 rounded font-semibold transition-all cursor-pointer flex items-center gap-1 ${focusDoc?.id === doc.id
-                              ? 'ring-1 shadow-xs'
-                              : 'hover:scale-105 opacity-80 group-hover:opacity-100'
-                            }`}
-                          style={{
-                            background: focusDoc?.id === doc.id
-                              ? (isDark ? 'rgba(168, 85, 247, 0.25)' : '#f3e8ff')
-                              : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
-                            color: focusDoc?.id === doc.id
-                              ? (isDark ? '#d8b4fe' : '#7e22ce')
-                              : (isDark ? 'rgba(255,255,255,0.75)' : '#475569'),
-                            borderColor: focusDoc?.id === doc.id
-                              ? (isDark ? 'rgba(168, 85, 247, 0.45)' : '#d8b4fe')
-                              : 'transparent',
-                          }}
-                          title={focusDoc?.id === doc.id ? "Clear focus (Search all)" : `Focus queries on ${doc.name}`}
-                        >
-                          <span>🎯</span>
-                          <span>{focusDoc?.id === doc.id ? 'Focused' : 'Focus'}</span>
-                        </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadModalOpen(true)}
+                    className="text-[10px] px-2 py-0.5 rounded font-semibold transition-all hover:scale-105 cursor-pointer flex items-center gap-1 shadow-xs"
+                    style={{
+                      background: isDark ? 'rgba(168, 85, 247, 0.20)' : '#f3e8ff',
+                      color: isDark ? '#d8b4fe' : '#7e22ce',
+                      border: isDark ? '1px solid rgba(168, 85, 247, 0.35)' : '1px solid #d8b4fe',
+                    }}
+                    title="Upload & index new corporate file (⌘U)"
+                  >
+                    <span>+</span>
+                    <span>Upload</span>
+                  </button>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleOpenComparison(doc, null)
-                          }}
-                          className="text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all cursor-pointer hover:scale-105 opacity-80 group-hover:opacity-100"
-                          style={{
-                            background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
-                            color: isDark ? '#38bdf8' : '#0284c7',
-                            border: isDark ? '1px solid rgba(56, 189, 248, 0.30)' : '1px solid #bae6fd',
-                          }}
-                          title={`Compare ${doc.name} side-by-side with another file`}
-                        >
-                          📊
-                        </button>
+                  {/* Collapse button on Desktop or Close on Mobile */}
+                  {isMobile ? (
+                    <button
+                      className="text-[11px] px-2 py-0.5 rounded cursor-pointer"
+                      style={{
+                        color: isDark ? 'rgba(255,255,255,0.35)' : '#475569',
+                        border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
+                        background: 'none',
+                      }}
+                      onClick={() => setDocsMobileDrawerOpen(false)}
+                    >
+                      ✕ Close
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setDocsSidebarPinned(false)}
+                      className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] transition-all cursor-pointer opacity-60 hover:opacity-100 hover:scale-105"
+                      style={{
+                        background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
+                        border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #cbd5e1',
+                        color: isDark ? '#fff' : '#0f172a',
+                      }}
+                      title="Collapse sidebar (Hover to expand)"
+                    >
+                      ▶
+                    </button>
+                  )}
+                </div>
+              </div>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
+              <div className="flex items-center gap-1.5">
+                {d && <span className="w-1.5 h-1.5 rounded-full" style={{ background: d.dot }} />}
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: d?.text }}>
+                  {user?.role}
+                </span>
+                <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.30)' : '#64748b' }}>
+                  · {filteredDocs.length !== docs.length ? `${filteredDocs.length} of ${docs.length} files` : `${docs.length} files`}
+                </span>
+              </div>
+            </div>
+
+            {/* Search & Filter Bar */}
+            <div
+              className="px-3 py-2 space-y-1.5 border-b select-none"
+              style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0' }}
+            >
+              {/* Search Input Box */}
+              <div className="relative flex items-center">
+                <svg
+                  className="absolute left-2.5 w-3.5 h-3.5 pointer-events-none opacity-40"
+                  style={{ color: isDark ? '#fff' : '#0f172a' }}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <circle cx="11" cy="11" r="8" strokeWidth="2" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <input
+                  ref={docSearchInputRef}
+                  type="text"
+                  value={docSearchQuery}
+                  onChange={(e) => setDocSearchQuery(e.target.value)}
+                  placeholder="Filter files... (Press /)"
+                  className={`w-full text-xs pl-8 pr-7 py-1.5 rounded-lg border outline-none transition-all placeholder:text-[11px] ${
+                    isDark
+                      ? 'bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-purple-400/50 focus:bg-white/[0.06]'
+                      : 'bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-purple-500/50 focus:bg-white'
+                  }`}
+                />
+                {docSearchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => setDocSearchQuery('')}
+                    className="absolute right-2 text-xs opacity-50 hover:opacity-100 cursor-pointer p-0.5"
+                    title="Clear search (Esc)"
+                  >
+                    ✕
+                  </button>
+                ) : (
+                  <kbd className="absolute right-2 font-mono text-[9px] px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 opacity-40 pointer-events-none select-none">
+                    /
+                  </kbd>
+                )}
+              </div>
+
+              {/* Type Filter Chips & Sort Toggle */}
+              <div className="flex items-center justify-between gap-1">
+                {/* Type Chips */}
+                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+                  {[
+                    { key: 'all', label: 'All', count: docCounts.all },
+                    { key: 'pdf', label: 'PDF', count: docCounts.pdf },
+                    { key: 'txt', label: 'TXT', count: docCounts.txt },
+                    { key: 'md', label: 'MD', count: docCounts.md },
+                  ].map(({ key, label, count }) => {
+                    if (key !== 'all' && count === 0) return null
+                    const isActive = docTypeFilter === key
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setDocTypeFilter(key)}
+                        className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 ${
+                          isActive
+                            ? isDark
+                              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-xs'
+                              : 'bg-purple-100 text-purple-700 border border-purple-200 shadow-xs'
+                            : isDark
+                              ? 'text-white/40 hover:text-white/70 hover:bg-white/5 border border-transparent'
+                              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent'
+                        }`}
+                      >
+                        <span>{label}</span>
+                        <span className="text-[9px] opacity-60">({count})</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Sort Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setDocSortOrder((prev) => (prev === 'recent' ? 'alpha' : 'recent'))}
+                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                    isDark
+                      ? 'text-white/50 hover:text-white hover:bg-white/5 border border-white/10'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                  title={`Sort: ${docSortOrder === 'recent' ? 'Newest first (Click for A-Z)' : 'Alphabetical (Click for Newest)'}`}
+                >
+                  <span>{docSortOrder === 'recent' ? '🕒 Recent' : '🔤 A–Z'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Doc list */}
+            <div className="flex-1 overflow-y-auto p-2 doc-scroll">
+              {docsLoading ? (
+                <div className="flex items-center gap-2 px-2 py-3">
+                  <div className={`w-3 h-3 rounded-full border border-t-transparent animate-spin ${isDark ? 'border-white/30 border-t-white' : 'border-slate-300 border-t-slate-700'}`} />
+                  <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8' }}>Loading…</span>
+                </div>
+              ) : docs.length === 0 ? (
+                <p className="px-2 text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>No documents found.</p>
+              ) : filteredDocs.length === 0 ? (
+                <div className="px-3 py-8 text-center space-y-2">
+                  <p className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.50)' : '#64748b' }}>
+                    No files match <span className="font-semibold text-purple-400">"{docSearchQuery}"</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDocSearchQuery('')
+                      setDocTypeFilter('all')
+                    }}
+                    className="text-[11px] font-medium text-purple-400 hover:underline cursor-pointer"
+                  >
+                    Clear filter
+                  </button>
+                </div>
+              ) : (
+                <ul className="space-y-1.5">
+                  {filteredDocs.map((doc) => (
+                    <li key={doc.id}>
+                      <div
+                        className={`w-full text-left p-2.5 rounded-[12px] transition-all group border ${
+                          selectedDoc === doc.id
+                            ? isDark
+                              ? 'bg-purple-500/15 border-purple-500/40 shadow-xs'
+                              : 'bg-purple-50 border-purple-200 shadow-xs'
+                            : isDark
+                              ? 'border-transparent hover:bg-white/[0.04]'
+                              : 'border-transparent hover:bg-slate-100'
+                        }`}
+                        style={{
+                          borderLeft: `3px solid ${selectedDoc === doc.id ? (d?.dot ?? 'transparent') : 'transparent'}`,
+                        }}
+                        title={doc.name}
+                      >
+                        {/* Row 1: Complete Filename with icon (natural wrap, no truncation ellipsis) */}
+                        <div
+                          onClick={() => {
                             setSelectedDoc(doc.id)
                             handleOpenDocumentReader({ docIdOrName: doc.id })
                           }}
-                          className="text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all cursor-pointer hover:scale-105 opacity-80 group-hover:opacity-100"
-                          style={{
-                            background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
-                            color: isDark ? 'rgba(255,255,255,0.75)' : '#475569',
-                          }}
-                          title={`Open ${doc.name} in Document Reader`}
+                          className="cursor-pointer mb-2 group/title"
+                          title={`${doc.name} (Click to open in reader)`}
                         >
-                          Read ↗
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-sm shrink-0 mt-0.5 select-none">
+                              {doc.name.endsWith('.pdf') ? '📕' : doc.name.endsWith('.md') ? '📝' : '📄'}
+                            </span>
+                            <p
+                              className="text-xs font-semibold leading-snug break-words [overflow-wrap:anywhere] transition-colors group-hover/title:text-purple-400"
+                              style={{
+                                color: selectedDoc === doc.id
+                                  ? (isDark ? '#fff' : '#0f172a')
+                                  : (isDark ? 'rgba(255,255,255,0.92)' : '#1e293b'),
+                              }}
+                            >
+                              {doc.name}
+                            </p>
+                          </div>
+                        </div>
 
-        {/* Footer */}
-        <div className="px-4 py-3" style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0' }}>
-          <button
-            onClick={logout}
-            className="text-[11px] transition-colors hover:underline"
-            style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#64748b', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            Sign out
-          </button>
-        </div>
+                        {/* Row 2: Metadata (left) & Actions (right) */}
+                        <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-black/5 dark:border-white/5 select-none">
+                          {/* Metadata */}
+                          <div className="flex items-center gap-1.5 text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.40)' : '#64748b' }}>
+                            <span className="font-mono font-medium">{doc.chunk_count} chunks</span>
+                            <span className="opacity-40">·</span>
+                            <span>{fmtDate(doc.uploaded_at)}</span>
+                          </div>
+
+                          {/* Action Controls */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setFocusDoc(focusDoc?.id === doc.id ? null : doc)
+                              }}
+                              className={`text-[10px] px-2 py-0.5 rounded font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                                focusDoc?.id === doc.id
+                                  ? 'ring-1 shadow-xs'
+                                  : 'hover:scale-105 opacity-80 group-hover:opacity-100'
+                              }`}
+                              style={{
+                                background: focusDoc?.id === doc.id
+                                  ? (isDark ? 'rgba(168, 85, 247, 0.25)' : '#f3e8ff')
+                                  : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
+                                color: focusDoc?.id === doc.id
+                                  ? (isDark ? '#d8b4fe' : '#7e22ce')
+                                  : (isDark ? 'rgba(255,255,255,0.75)' : '#475569'),
+                                borderColor: focusDoc?.id === doc.id
+                                  ? (isDark ? 'rgba(168, 85, 247, 0.45)' : '#d8b4fe')
+                                  : 'transparent',
+                              }}
+                              title={focusDoc?.id === doc.id ? "Clear focus (Search all)" : `Focus queries on ${doc.name}`}
+                            >
+                              <span>🎯</span>
+                              <span>{focusDoc?.id === doc.id ? 'Focused' : 'Focus'}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleOpenComparison(doc, null)
+                              }}
+                              className="text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all cursor-pointer hover:scale-105 opacity-80 group-hover:opacity-100"
+                              style={{
+                                background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
+                                color: isDark ? '#38bdf8' : '#0284c7',
+                                border: isDark ? '1px solid rgba(56, 189, 248, 0.30)' : '1px solid #bae6fd',
+                              }}
+                              title={`Compare ${doc.name} side-by-side with another file`}
+                            >
+                              📊
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedDoc(doc.id)
+                                handleOpenDocumentReader({ docIdOrName: doc.id })
+                              }}
+                              className="text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all cursor-pointer hover:scale-105 opacity-80 group-hover:opacity-100"
+                              style={{
+                                background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
+                                color: isDark ? 'rgba(255,255,255,0.75)' : '#475569',
+                              }}
+                              title={`Open ${doc.name} in Document Reader`}
+                            >
+                              Read ↗
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 py-3" style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0' }}>
+              <button
+                onClick={logout}
+                className="text-[11px] transition-colors hover:underline cursor-pointer"
+                style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#64748b', background: 'none', border: 'none', fontFamily: 'inherit' }}
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        )}
       </aside>
+    </div>
 
       {/* Interactive Citation Inspector Drawer */}
       <CitationDrawer
@@ -1045,11 +1198,11 @@ export default function ChatPage() {
         onSelectPrompt={(prompt) => sendQuery(prompt, true, focusDoc?.name || focusDoc)}
         onNewChat={handleNewChat}
         onExport={() => setExportOpen(true)}
-        onToggleDocs={() => setDocsOpen((v) => !v)}
+        onToggleDocs={() => (isMobile ? setDocsMobileDrawerOpen((v) => !v) : handleToggleDocsPin())}
         onOpenDocument={(doc) => handleOpenDocumentReader({ docIdOrName: doc.id || doc.name })}
         onFocusDoc={(doc) => setFocusDoc(doc)}
         onOpenUpload={() => setUploadModalOpen(true)}
-        onToggleThreads={() => setThreadsSidebarOpen((v) => !v)}
+        onToggleThreads={() => (isMobile ? setThreadsMobileDrawerOpen((v) => !v) : handleToggleThreadsPin())}
         onSelectThread={handleSelectThread}
         onOpenComparison={handleOpenComparison}
         onOpenAgentModal={handleOpenAgentModal}
