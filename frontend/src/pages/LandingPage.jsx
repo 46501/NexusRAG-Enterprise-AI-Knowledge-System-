@@ -116,44 +116,50 @@ const TECH_GROUPS = [
   {
     label: "RETRIEVAL",
     items: [
-      { name: "Qdrant", desc: "Vector store" },
-      { name: "BM25s", desc: "Sparse retrieval" },
+      { name: "Qdrant", desc: "Cloud vector store" },
+      { name: "BM25s", desc: "Sparse lexical retrieval" },
       { name: "Hybrid Search", desc: "BM25 + dense fusion" },
       { name: "RRF Fusion", desc: "Reciprocal rank fusion" },
-      { name: "bge-small", desc: "Embeddings" },
+      { name: "bge-small-en", desc: "Semantic embeddings" },
     ],
   },
   {
     label: "GENERATION",
     items: [
-      { name: "GPT-4o-mini", desc: "Answer generation" },
-      { name: "cross-encoder", desc: "Result reranking" },
+      { name: "Google Gemini", desc: "Answer generation" },
+      { name: "gemini-3.5-flash", desc: "Foundation LLM engine" },
+      { name: "Cross-Encoder", desc: "MiniLM neural reranking" },
+      { name: "Streaming SSE", desc: "Real-time token synthesis" },
+      { name: "Grounding Verifier", desc: "Citation trust verification" },
     ],
   },
   {
     label: "INFRASTRUCTURE",
     items: [
       { name: "FastAPI", desc: "Async Python API" },
-      { name: "PostgreSQL", desc: "User store" },
-      { name: "React", desc: "Frontend" },
-      { name: "Traefik", desc: "Reverse proxy + TLS" },
+      { name: "Supabase PostgreSQL", desc: "Cloud user & auth store" },
+      { name: "React 18 & Vite", desc: "Frontend architecture" },
+      { name: "Render & Vercel", desc: "Cloud & edge deployment" },
       { name: "Docker", desc: "Containerized deployment" },
-      { name: "JWT", desc: "Auth tokens" },
     ],
   },
   {
     label: "SECURITY",
     items: [
       { name: "RBAC", desc: "Role-gated retrieval" },
-      { name: "HttpOnly Cookies", desc: "XSS protection" },
-      { name: "Rate Limiting", desc: "Brute force protection" },
+      { name: "Prompt Guardrails", desc: "Injection & firewall guard" },
+      { name: "PII Scrubber", desc: "Real-time data redaction" },
+      { name: "Audit Trail", desc: "Tamper-evident security logs" },
+      { name: "HttpOnly Cookies", desc: "XSS-safe JWT revocation" },
     ],
   },
   {
     label: "OBSERVABILITY",
     items: [
-      { name: "LangSmith", desc: "Query tracing" },
-      { name: "RAGAS", desc: "RAG evaluation" },
+      { name: "LangSmith", desc: "Query tracing & telemetry" },
+      { name: "RAGAS", desc: "Evaluation framework" },
+      { name: "Trust Scoring", desc: "0-100% confidence meter" },
+      { name: "Feedback Loop", desc: "User citation telemetry" },
     ],
   },
 ];
