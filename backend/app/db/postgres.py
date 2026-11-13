@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -15,8 +16,9 @@ engine = create_async_engine(
         "statement_cache_size": 0,
         "prepared_statement_cache_size": 0,
     },
-    pool_size=5,
-    max_overflow=10,
+    # Lean connection pool prevents socket/buffer memory exhaustion on 512MB RAM
+    pool_size=int(os.getenv("DB_POOL_SIZE", "3")),
+    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "3")),
     pool_pre_ping=True,
     echo=_settings.app_env == "development",
 )

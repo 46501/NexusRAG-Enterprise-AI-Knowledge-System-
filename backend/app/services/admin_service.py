@@ -259,6 +259,8 @@ async def _rebuild_bm25() -> None:
 
     from app.retrieval.sparse import reload_sparse_index
     await asyncio.to_thread(reload_sparse_index)
+    import gc
+    gc.collect()
     logger.info(
         "BM25 rebuild: complete — %d chunks, %d unique documents in new index",
         len(corpus_texts),

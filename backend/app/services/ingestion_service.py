@@ -1,9 +1,11 @@
 import asyncio
+import gc
 import uuid
 from pathlib import Path
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from sqlalchemy.pool import NullPool
 
 from app.config import get_settings
 from app.ingestion.pipeline import ingest_file, rebuild_bm25_index
@@ -19,7 +21,8 @@ _SYNC_DB_URL = (
 
 
 def _run_ingest_sync(file_path: Path, role_access: str, uploader_id: str, original_filename: str) -> tuple[str, int]:
-    engine = create_engine(_SYNC_DB_URL)
+    # NullPool prevents holding persistent DB connections/buffers in memory
+    engine = create_engine(_SYNC_DB_URL, poolclass=NullPool)
     with Session(engine) as db:
         doc_id = ingest_file(
             file_path=file_path,
@@ -34,6 +37,7 @@ def _run_ingest_sync(file_path: Path, role_access: str, uploader_id: str, origin
         chunk_count = doc_rec.chunk_count if doc_rec else 0
         db.commit()
     engine.dispose()
+    gc.collect()
     return doc_id, chunk_count
 
 

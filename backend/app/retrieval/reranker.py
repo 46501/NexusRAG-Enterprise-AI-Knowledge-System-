@@ -41,7 +41,8 @@ def rerank(query: str, hits: list[dict], top_k: int = 5) -> list[dict]:
     if os.getenv("ENABLE_RERANKER", "false").lower() == "true":
         try:
             pairs = [[query, hit["text"]] for hit in hits]
-            scores = get_reranker().predict(pairs, show_progress_bar=False)
+            with torch.inference_mode():
+                scores = get_reranker().predict(pairs, batch_size=8, show_progress_bar=False)
             ranked = sorted(zip(scores, hits), key=lambda x: x[0], reverse=True)
             results = []
             for score, hit in ranked[:top_k]:
@@ -49,6 +50,8 @@ def rerank(query: str, hits: list[dict], top_k: int = 5) -> list[dict]:
                 entry["rerank_score"] = float(score)
                 results.append(entry)
             logger.info("Reranker selected %d results from %d candidates", len(results), len(hits))
+            import gc
+            gc.collect()
             return results
         except Exception as e:
             logger.warning("Reranker failed, falling back to hybrid RRF scores: %s", e)

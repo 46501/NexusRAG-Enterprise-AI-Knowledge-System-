@@ -62,31 +62,41 @@ def ingest_file(
         client = QdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key, check_compatibility=False, timeout=10.0)
     else:
         client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port, check_compatibility=False, timeout=10.0)
-    texts = [c.contextual_text for c in chunks]
-    vectors = embed(texts)
 
-    _ensure_collection(client, vector_size=len(vectors[0]))
+    # Process and upsert chunks in slices of 16 to avoid large in-memory tensor arrays
+    INGEST_BATCH_SIZE = 16
+    total_chunks = len(chunks)
+    vector_dim = None
 
-    points = [
-        PointStruct(
-            id=str(uuid.uuid4()),
-            vector=vectors[i],
-            payload={
-                "text": chunks[i].text,
-                "contextual_text": chunks[i].contextual_text,
-                "section": chunks[i].section,
-                "context_prefix": chunks[i].context_prefix,
-                "chunk_index": chunks[i].chunk_index,
-                "total_chunks": len(chunks),
-                "doc_id": doc_meta.doc_id,
-                "source": doc_meta.source,
-                "role_access": doc_meta.role_access,
-            },
-        )
-        for i in range(len(chunks))
-    ]
-    client.upsert(collection_name=_s.qdrant_collection, points=points)
-    logger.info("Upserted %d chunks to Qdrant for doc_id=%s", len(points), doc_meta.doc_id)
+    for start_idx in range(0, total_chunks, INGEST_BATCH_SIZE):
+        chunk_slice = chunks[start_idx : start_idx + INGEST_BATCH_SIZE]
+        texts_slice = [c.contextual_text for c in chunk_slice]
+        vectors_slice = embed(texts_slice)
+        if vector_dim is None and vectors_slice:
+            vector_dim = len(vectors_slice[0])
+            _ensure_collection(client, vector_size=vector_dim)
+
+        points_slice = [
+            PointStruct(
+                id=str(uuid.uuid4()),
+                vector=vectors_slice[j],
+                payload={
+                    "text": chunk_slice[j].text,
+                    "contextual_text": chunk_slice[j].contextual_text,
+                    "section": chunk_slice[j].section,
+                    "context_prefix": chunk_slice[j].context_prefix,
+                    "chunk_index": chunk_slice[j].chunk_index,
+                    "total_chunks": total_chunks,
+                    "doc_id": doc_meta.doc_id,
+                    "source": doc_meta.source,
+                    "role_access": doc_meta.role_access,
+                },
+            )
+            for j in range(len(chunk_slice))
+        ]
+        client.upsert(collection_name=_s.qdrant_collection, points=points_slice)
+
+    logger.info("Upserted %d chunks to Qdrant for doc_id=%s in batches of %d", total_chunks, doc_meta.doc_id, INGEST_BATCH_SIZE)
 
     doc_record = Document(
         id=uuid.UUID(doc_meta.doc_id),
@@ -112,35 +122,36 @@ def rebuild_bm25_index(db: Session | None = None) -> None:
         client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port, check_compatibility=False, timeout=10.0)
 
     offset = None
-    all_points = []
     while True:
         batch, next_offset = client.scroll(
             collection_name=_s.qdrant_collection,
             scroll_filter=None,
-            limit=1000,
+            limit=500,
             offset=offset,
             with_payload=True,
             with_vectors=False,
         )
-        all_points.extend(batch)
+        for point in batch:
+            payload = point.payload or {}
+            corpus_texts.append(payload.get("contextual_text") or payload.get("text", ""))
+            doc_metadata.append({
+                "id": str(point.id),
+                "text": payload.get("text", ""),
+                "contextual_text": payload.get("contextual_text", ""),
+                "section": payload.get("section", ""),
+                "doc_id": payload.get("doc_id"),
+                "source": payload.get("source"),
+                "role_access": payload.get("role_access"),
+                "chunk_index": payload.get("chunk_index"),
+                "total_chunks": payload.get("total_chunks"),
+            })
         if next_offset is None:
             break
         offset = next_offset
 
-    for point in all_points:
-        payload = point.payload or {}
-        corpus_texts.append(payload.get("contextual_text") or payload.get("text", ""))
-        doc_metadata.append({
-            "id": str(point.id),
-            "text": payload.get("text", ""),
-            "contextual_text": payload.get("contextual_text", ""),
-            "section": payload.get("section", ""),
-            "doc_id": payload.get("doc_id"),
-            "source": payload.get("source"),
-            "role_access": payload.get("role_access"),
-            "chunk_index": payload.get("chunk_index"),
-            "total_chunks": payload.get("total_chunks"),
-        })
-
     save_sparse_index(corpus_texts, doc_metadata)
-    logger.info("BM25 index rebuilt with %d chunks", len(corpus_texts))
+    from app.retrieval.sparse import reload_sparse_index
+    reload_sparse_index()
+    import gc
+    gc.collect()
+    logger.info("BM25 index rebuilt and reloaded with %d chunks", len(corpus_texts))

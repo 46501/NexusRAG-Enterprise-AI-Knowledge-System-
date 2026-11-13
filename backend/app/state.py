@@ -1,9 +1,11 @@
 import asyncio
+import os
 
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-RAG_SEMAPHORE_MAX = 5
+# Safe concurrency ceiling on memory-constrained containers (e.g. Render 512MB free tier)
+RAG_SEMAPHORE_MAX = int(os.getenv("RAG_SEMAPHORE_MAX", "2"))
 
 limiter = Limiter(key_func=get_remote_address)
 
