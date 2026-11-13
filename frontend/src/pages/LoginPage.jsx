@@ -63,14 +63,8 @@ export default function LoginPage() {
     }
   }
 
-  function handleQuickDemo(demoEmail, demoPassword) {
-    setEmail(demoEmail)
-    setPassword(demoPassword)
-    setError(null)
-  }
-
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0a] text-white' : 'bg-[#f8fafc] text-slate-900'} flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden transition-colors`}>
+    <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0a] text-white' : 'bg-[#f8fafc] text-slate-900'} flex flex-col justify-center items-center px-4 py-8 relative overflow-hidden transition-colors`}>
       {/* Theme toggle in top right */}
       <div className="absolute top-5 right-5 z-20">
         <ThemeToggle />
@@ -81,9 +75,9 @@ export default function LoginPage() {
       <div className={`absolute bottom-1/4 right-1/4 w-80 h-80 ${isDark ? 'bg-blue-600/10' : 'bg-sky-400/15'} rounded-full blur-3xl pointer-events-none`} />
 
       {/* Main card */}
-      <div className={`w-full max-w-md ${isDark ? 'bg-[#111318] border-white/10 shadow-2xl' : 'bg-white border-slate-200 shadow-xl shadow-slate-200/50'} border rounded-2xl p-7 sm:p-9 relative z-10 transition-colors`}>
+      <div className={`w-full max-w-md ${isDark ? 'bg-[#111318] border-white/10 shadow-2xl' : 'bg-white border-slate-200 shadow-xl shadow-slate-200/50'} border rounded-2xl p-7 sm:p-8 relative z-10 transition-colors`}>
         {/* Brand header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-7">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-500 mb-3 shadow-inner">
             <svg
               className="w-6 h-6"
@@ -106,7 +100,7 @@ export default function LoginPage() {
 
         {/* Error message banner */}
         {error && (
-          <div className="mb-6 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs flex items-start gap-2.5">
+          <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs flex items-start gap-2.5">
             <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -164,7 +158,7 @@ export default function LoginPage() {
                 ) : (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268-2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
                 )}
               </button>
@@ -201,65 +195,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Demo Accounts Quick-Fill Section */}
-        <div className={`mt-6 pt-5 border-t ${isDark ? 'border-white/[0.08]' : 'border-slate-200'}`}>
-          <p className={`text-[11px] font-medium uppercase tracking-wider ${isDark ? 'text-white/40' : 'text-slate-400'} mb-2.5 text-center`}>
-            Or select a demo account
-          </p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('hr@demo.com', 'hr-demo-2026')}
-              className={`px-2.5 py-1.5 rounded-lg border text-left transition-all ${
-                isDark
-                  ? 'bg-white/[0.03] hover:bg-violet-500/10 border-white/5 hover:border-violet-500/20 text-white/70 hover:text-violet-300'
-                  : 'bg-slate-50 hover:bg-violet-50/70 border-slate-200 hover:border-violet-300 text-slate-700 hover:text-violet-800'
-              }`}
-            >
-              <div className="font-semibold text-[11px] text-violet-500">HR Dept</div>
-              <div className={`text-[10px] ${isDark ? 'text-white/40' : 'text-slate-400'} truncate`}>hr@demo.com</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('engineering@demo.com', 'eng-demo-2026')}
-              className={`px-2.5 py-1.5 rounded-lg border text-left transition-all ${
-                isDark
-                  ? 'bg-white/[0.03] hover:bg-sky-500/10 border-white/5 hover:border-sky-500/20 text-white/70 hover:text-sky-300'
-                  : 'bg-slate-50 hover:bg-sky-50/70 border-slate-200 hover:border-sky-300 text-slate-700 hover:text-sky-800'
-              }`}
-            >
-              <div className="font-semibold text-[11px] text-sky-500">Engineering</div>
-              <div className={`text-[10px] ${isDark ? 'text-white/40' : 'text-slate-400'} truncate`}>engineering@demo.com</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('finance@demo.com', 'fin-demo-2026')}
-              className={`px-2.5 py-1.5 rounded-lg border text-left transition-all ${
-                isDark
-                  ? 'bg-white/[0.03] hover:bg-emerald-500/10 border-white/5 hover:border-emerald-500/20 text-white/70 hover:text-emerald-300'
-                  : 'bg-slate-50 hover:bg-emerald-50/70 border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-800'
-              }`}
-            >
-              <div className="font-semibold text-[11px] text-emerald-500">Finance</div>
-              <div className={`text-[10px] ${isDark ? 'text-white/40' : 'text-slate-400'} truncate`}>finance@demo.com</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('admin@example.com', 'admin-demo-2026')}
-              className={`px-2.5 py-1.5 rounded-lg border text-left transition-all ${
-                isDark
-                  ? 'bg-white/[0.03] hover:bg-amber-500/10 border-white/5 hover:border-amber-500/20 text-white/70 hover:text-amber-300'
-                  : 'bg-slate-50 hover:bg-amber-50/70 border-slate-200 hover:border-amber-300 text-slate-700 hover:text-amber-800'
-              }`}
-            >
-              <div className="font-semibold text-[11px] text-amber-500">Admin</div>
-              <div className={`text-[10px] ${isDark ? 'text-white/40' : 'text-slate-400'} truncate`}>admin@example.com</div>
-            </button>
-          </div>
-        </div>
-
         {/* Signup Link */}
-        <div className={`mt-6 text-center text-xs ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
+        <div className={`mt-6 pt-5 border-t text-center text-xs ${isDark ? 'border-white/[0.08] text-white/50' : 'border-slate-200 text-slate-500'}`}>
           Don't have an account?{' '}
           <Link
             to="/signup"

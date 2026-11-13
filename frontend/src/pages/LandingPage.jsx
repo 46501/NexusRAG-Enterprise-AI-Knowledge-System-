@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
-import { getMe, login } from "../services/auth";
 
 const FONT = "'Inter', ui-sans-serif, system-ui, sans-serif";
 const MONO = "'JetBrains Mono', 'Fira Mono', 'Consolas', monospace";
@@ -20,7 +19,6 @@ const MOCK_CONVOS = {
     chipText: "#a78bfa",
     label: "hr",
     name: "Human Resources",
-    email: "hr@demo.com",
     question: "What is the parental leave policy?",
     answer:
       "Apex Systems provides 16 weeks of fully paid parental leave for primary caregivers and 8 weeks for secondary caregivers. Leave may begin up to 2 weeks before the expected due date. Both birth and adoptive parents are eligible, and leave can be taken in one continuous block or split into two periods within the first year.",
@@ -35,7 +33,6 @@ const MOCK_CONVOS = {
     chipText: "#38bdf8",
     label: "engineering",
     name: "Engineering",
-    email: "engineering@demo.com",
     question: "How does the deployment pipeline work?",
     answer:
       "All production deployments go through a three-stage pipeline: CI runs tests and builds the artifact, staging receives the build for smoke tests and canary validation, then a manual approval gate triggers the production rollout. Rollbacks are automated — if error rate exceeds 1% within 10 minutes of deploy, the previous artifact is redeployed without human intervention.",
@@ -50,7 +47,6 @@ const MOCK_CONVOS = {
     chipText: "#34d399",
     label: "finance",
     name: "Finance",
-    email: "finance@demo.com",
     question: "What is the expense reimbursement limit?",
     answer:
       "Individual contributors may approve purchases up to $500 per transaction within an approved budget line. People managers have authority up to $5,000, directors up to $25,000, and VPs up to $100,000. Any transaction exceeding $500,000 requires CEO and board approval. Approval must be obtained before committing — retroactive approval is not permitted.",
@@ -61,32 +57,24 @@ const MOCK_CONVOS = {
 
 const DEPTS = [
   {
-    email: "hr@demo.com",
-    password: "hr-demo-2026",
     key: "hr",
     name: "Human Resources",
     accent: "#8b5cf6",
     tagline: "Policies, benefits, compensation, and employee handbooks.",
   },
   {
-    email: "engineering@demo.com",
-    password: "eng-demo-2026",
     key: "engineering",
     name: "Engineering",
     accent: "#0ea5e9",
     tagline: "Runbooks, architecture decisions, and incident postmortems.",
   },
   {
-    email: "finance@demo.com",
-    password: "fin-demo-2026",
     key: "finance",
     name: "Finance",
     accent: "#10b981",
     tagline: "Budget policy, expense guidelines, and audit documentation.",
   },
   {
-    email: "admin@example.com",
-    password: "admin-demo-2026",
     key: "admin",
     name: "Admin Panel",
     accent: "#94a3b8",
@@ -568,7 +556,7 @@ function MockChatWindow({ deptKey }) {
   );
 }
 
-function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
+function HeroDeptCard({ dept, onEnter, active, onHover, onLeave }) {
   const { isDark } = useTheme();
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
@@ -580,7 +568,7 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
 
   return (
     <div
-      onClick={() => loading === null && onEnter(dept)}
+      onClick={() => onEnter(dept)}
       onMouseEnter={() => { setHovered(true); onHover(); }}
       onMouseLeave={() => { setHovered(false); setPressed(false); onLeave(); }}
       onMouseDown={() => setPressed(true)}
@@ -597,11 +585,11 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
         display: "flex",
         alignItems: "center",
         gap: 14,
-        cursor: loading !== null ? "not-allowed" : "pointer",
+        cursor: "pointer",
         transition: "background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s",
         transform: hovered && !pressed ? "scale(1.005)" : pressed ? "scale(0.99)" : "scale(1)",
         boxShadow: !isDark ? (hovered ? "0 4px 12px rgba(0,0,0,0.04)" : "0 1px 3px rgba(0,0,0,0.02)") : "none",
-        opacity: loading !== null && loading !== dept.email ? 0.4 : 1,
+        opacity: 1,
         userSelect: "none",
       }}
     >
@@ -618,7 +606,7 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: "0.8rem", fontWeight: 600, color: isDark ? (isHighlighted ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.60)") : (isHighlighted ? "#0f172a" : "#475569"), letterSpacing: "-0.01em" }}>
-          {loading === dept.email ? "Signing in…" : dept.name}
+          {dept.name}
         </div>
         <div style={{ fontSize: "0.72rem", color: isDark ? (isHighlighted ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.30)") : (isHighlighted ? "#475569" : "#64748b"), marginTop: 2, lineHeight: 1.4 }}>
           {dept.tagline}
@@ -630,8 +618,8 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
           fontSize: "0.72rem",
           fontWeight: 500,
           color: dept.accent,
-          opacity: hovered && loading !== dept.email ? 1 : 0,
-          transform: hovered && loading !== dept.email ? "translateX(0)" : "translateX(-10px)",
+          opacity: hovered ? 1 : 0,
+          transform: hovered ? "translateX(0)" : "translateX(-10px)",
           transition: "opacity 0.15s, transform 0.15s",
           flexShrink: 0,
           whiteSpace: "nowrap",
@@ -644,11 +632,9 @@ function HeroDeptCard({ dept, onEnter, loading, active, onHover, onLeave }) {
 }
 
 export default function LandingPage() {
-  const { user, setUser, logout } = useAuth();
+  const { user } = useAuth();
   const { isDark } = useTheme();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(null);
-  const [error, setError] = useState(null);
   const [activeDept, setActiveDept] = useState("hr");
   const hoverTimerRef = useRef(null);
 
@@ -662,9 +648,7 @@ export default function LandingPage() {
     clearTimeout(hoverTimerRef.current);
   }
 
-  async function handleEnter(dept) {
-    setError(null);
-
+  function handleEnter(dept) {
     // 1. If already authenticated: navigate according to department RBAC
     if (user) {
       if (user.role === "admin" || user.role === "demo_admin") {
@@ -686,20 +670,8 @@ export default function LandingPage() {
       return;
     }
 
-    // 2. Unauthenticated visitor -> Quick demo login
-    setLoading(dept.email);
-    try {
-      await logout();
-      await login(dept.email, dept.password);
-      const me = await getMe();
-      setUser(me);
-      const dest = me.role === "admin" ? "/admin-panel" : me.role === "demo_admin" ? "/demo-admin" : "/chat";
-      navigate(dest);
-    } catch {
-      setError("Demo login failed. Make sure demo users are seeded.");
-    } finally {
-      setLoading(null);
-    }
+    // 2. Unauthenticated visitor -> Redirect to login page
+    navigate("/login");
   }
 
   return (
@@ -1080,17 +1052,12 @@ export default function LandingPage() {
                   key={dept.key}
                   dept={dept}
                   onEnter={handleEnter}
-                  loading={loading}
                   active={activeDept === dept.key}
                   onHover={() => handleCardHover(dept.key)}
                   onLeave={handleCardLeave}
                 />
               ))}
             </div>
-
-            {error && (
-              <p style={{ marginTop: 16, fontSize: "0.75rem", color: "#f87171" }}>{error}</p>
-            )}
           </div>
 
           {/* right */}
