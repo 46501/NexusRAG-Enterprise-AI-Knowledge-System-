@@ -348,49 +348,8 @@ export default function PdfViewer({
           </button>
         </div>
 
-        {/* View Mode & Actions */}
+        {/* Actions */}
         <div className="flex items-center gap-1.5">
-          <div
-            className="flex items-center p-0.5 rounded-lg border text-[11px]"
-            style={{
-              background: isDark ? 'rgba(0,0,0,0.30)' : '#e2e8f0',
-              borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#cbd5e1',
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setRenderMode('all')}
-              className="px-2 py-0.5 rounded-md font-medium transition-all cursor-pointer"
-              style={{
-                background: renderMode === 'all'
-                  ? (isDark ? 'rgba(255,255,255,0.15)' : '#ffffff')
-                  : 'transparent',
-                color: renderMode === 'all'
-                  ? (isDark ? '#fff' : '#0f172a')
-                  : (isDark ? 'rgba(255,255,255,0.45)' : '#64748b'),
-              }}
-              title="Continuous Multi-Page Scrolling"
-            >
-              Continuous
-            </button>
-            <button
-              type="button"
-              onClick={() => setRenderMode('single')}
-              className="px-2 py-0.5 rounded-md font-medium transition-all cursor-pointer"
-              style={{
-                background: renderMode === 'single'
-                  ? (isDark ? 'rgba(255,255,255,0.15)' : '#ffffff')
-                  : 'transparent',
-                color: renderMode === 'single'
-                  ? (isDark ? '#fff' : '#0f172a')
-                  : (isDark ? 'rgba(255,255,255,0.45)' : '#64748b'),
-              }}
-              title="Single Page Presentation"
-            >
-              Single
-            </button>
-          </div>
-
           {blobUrl && (
             <button
               type="button"
