@@ -1,3 +1,4 @@
+import re
 from collections.abc import AsyncIterator
 
 from google import genai
@@ -13,13 +14,10 @@ _client: genai.Client | None = None
 
 SYSTEM_INSTRUCTION = (
     "You are an enterprise AI knowledge assistant for corporate documents and policies.\n"
-    "EVALUATION & GROUNDING RULES:\n"
-    "1. If the message is a greeting or very short casual pleasantry (e.g. 'hi', 'hello', 'thanks'), respond warmly and invite questions about company documents without citing sources.\n"
-    "2. For all document questions, answer accurately and comprehensively using ONLY the provided Context.\n"
-    "3. Every factual statement or policy detail must be explicitly cited using the bracketed source number, e.g. [1] or [1][2].\n"
-    "4. RETRIEVAL SUFFICIENCY & SELF-REFLECTION: If the provided Context does not contain the answer, or only partially answers a multi-part question, explicitly state what is not found in the documents (e.g. 'The documents do not specify...'). Never fabricate or extrapolate unstated policies.\n"
-    "5. If the request is a completely off-topic casual query unrelated to work (e.g. write a poem, tell a joke, current weather), respond with: 'I can only answer questions based on your department\'s documents.'\n\n"
-    "At the end of your response based on documents, provide 2 to 3 concise relevant follow-up questions formatted exactly as:\n"
+    "1. Answer accurately and comprehensively using ONLY the provided Context.\n"
+    "2. Every factual statement or policy detail must be explicitly cited using the bracketed source number, e.g. [1] or [1][2].\n"
+    "3. RETRIEVAL SUFFICIENCY: If the Context does not contain the answer, or only partially answers a question, explicitly state what is not found in the documents. Never fabricate unstated policies.\n"
+    "4. At the end of your response based on documents, provide 2 to 3 concise relevant follow-up questions formatted exactly as:\n"
     "---FOLLOW_UPS---\n"
     "- [First follow-up question]\n"
     "- [Second follow-up question]\n"
@@ -99,16 +97,11 @@ def _build_context(chunks: list[dict]) -> str:
     context_parts = []
     for i, chunk in enumerate(chunks, 1):
         meta = chunk.get("metadata", {})
-        dept = meta.get("role_access", "unknown")
         source = meta.get("source", "unknown")
         sec = meta.get("section")
-        range_info = meta.get("chunk_index_range")
-        extra_parts = [f"department={dept}", f"source={source}"]
-        if sec:
-            extra_parts.append(f"section={sec}")
-        if range_info:
-            extra_parts.append(f"chunks={range_info}")
-        context_parts.append(f"[{i}] ({', '.join(extra_parts)})\n{chunk['text']}")
+        sec_info = f" - Section: {sec}" if sec else ""
+        cleaned_text = re.sub(r"\n{3,}", "\n\n", chunk.get("text", "").strip())
+        context_parts.append(f"[{i}] Source: {source}{sec_info}\n{cleaned_text}")
     return "\n\n".join(context_parts)
 
 
@@ -160,20 +153,12 @@ async def generate(
 
     context = _build_context(chunks)
     sources = _extract_sources(chunks)
-    prompt = (
-        f"Context:\n{context}\n\n"
-        f"Question: {query}\n\n"
-        "At the end of your response based on the documents, provide 2 to 3 concise relevant follow-up questions formatted exactly as:\n"
-        "---FOLLOW_UPS---\n"
-        "- [First follow-up question]\n"
-        "- [Second follow-up question]\n"
-        "- [Third follow-up question]"
-    )
+    prompt = f"Context:\n{context}\n\nQuestion: {query}"
 
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
         temperature=0.2,
-        max_output_tokens=2048,
+        max_output_tokens=1024,
     )
 
     models_to_try = [_s.gemini_model]
@@ -249,20 +234,12 @@ async def generate_stream(
         return
 
     context = _build_context(chunks)
-    prompt = (
-        f"Context:\n{context}\n\n"
-        f"Question: {query}\n\n"
-        "At the end of your response based on the documents, provide 2 to 3 concise relevant follow-up questions formatted exactly as:\n"
-        "---FOLLOW_UPS---\n"
-        "- [First follow-up question]\n"
-        "- [Second follow-up question]\n"
-        "- [Third follow-up question]"
-    )
+    prompt = f"Context:\n{context}\n\nQuestion: {query}"
 
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
         temperature=0.2,
-        max_output_tokens=2048,
+        max_output_tokens=1024,
     )
 
     models_to_try = [_s.gemini_model]

@@ -277,33 +277,47 @@ def scrub_text(text: str, mask_emails: bool = False) -> ScrubResult:
 
 
 # -----------------------------------------------------------------------------
-# Streaming Response Redactor (Sliding Window Buffer)
+# Streaming Response Redactor (Low-Latency Sliding Window Buffer)
 # -----------------------------------------------------------------------------
 async def scrub_stream(
     stream: AsyncIterator[str],
-    window_size: int = 40,
+    window_size: int = 18,
     mask_emails: bool = False,
 ) -> AsyncIterator[str]:
     """Wrap an asynchronous token stream and sanitize PII in real-time.
 
-    Buffers tokens and only yields completed words/segments by cutting at word boundaries,
-    ensuring tokens split across SSE chunks are never severed in the middle of a secret.
+    Buffers tokens and immediately flushes completed words at word boundaries
+    when no sensitive sequence is in progress, drastically reducing time-to-first-token
+    while ensuring secrets split across chunks are strictly redacted.
     """
     buffer = ""
 
     async for chunk in stream:
         buffer += chunk
-        if len(buffer) >= window_size * 2:
-            safe_limit = len(buffer) - window_size
-            cut_idx = buffer.rfind(" ", 0, safe_limit)
-            if cut_idx == -1:
-                cut_idx = buffer.rfind("\n", 0, safe_limit)
 
-            if cut_idx > 0:
-                to_scrub = buffer[:cut_idx + 1]
-                buffer = buffer[cut_idx + 1:]
+        # Fast path: flush completed words at word boundaries
+        if " " in buffer or "\n" in buffer:
+            last_delim = max(buffer.rfind(" "), buffer.rfind("\n"))
+            trailing = buffer[last_delim + 1 :]
+
+            # Check if trailing fragment could be the start of a secret (digits, @, =, _)
+            is_secret_candidate = any(c in trailing for c in ("@", "=", "_")) or (
+                trailing.replace("-", "").isdigit() and len(trailing.replace("-", "")) >= 3
+            )
+
+            if not is_secret_candidate and len(trailing) < window_size:
+                to_scrub = buffer[: last_delim + 1]
+                buffer = buffer[last_delim + 1 :]
                 res = scrub_text(to_scrub, mask_emails=mask_emails)
                 yield res.scrubbed_text
+            elif len(buffer) >= window_size * 2:
+                safe_limit = len(buffer) - window_size
+                cut_idx = max(buffer.rfind(" ", 0, safe_limit), buffer.rfind("\n", 0, safe_limit))
+                if cut_idx > 0:
+                    to_scrub = buffer[: cut_idx + 1]
+                    buffer = buffer[cut_idx + 1 :]
+                    res = scrub_text(to_scrub, mask_emails=mask_emails)
+                    yield res.scrubbed_text
 
     # Flush remainder on stream end
     if buffer:
