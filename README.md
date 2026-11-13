@@ -12,7 +12,7 @@
   <a href="https://nexus-rag-enterprise-ai-knowledge-s.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-Vercel-black?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
   <a href="https://nexusrag-enterprise-ai-knowledge-system.onrender.com/health"><img src="https://img.shields.io/badge/API_Status-Render-46E3B7?style=for-the-badge&logo=render" alt="API Status" /></a>
   <a href="https://github.com/46501/NexusRAG-Enterprise-AI-Knowledge-System-"><img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" alt="Repository" /></a>
-  <img src="https://img.shields.io/badge/QA_Audit-129%2F129_Passed_(100%25)-success?style=for-the-badge&logo=checkmarx" alt="QA Passed" />
+  <img src="https://img.shields.io/badge/Automated_QA-129%2F129_Tests_Passed-success?style=for-the-badge&logo=checkmarx" alt="QA Passed" />
   <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" />
 </p>
 
@@ -26,18 +26,18 @@
 | **Production API (Render)** | [https://nexusrag-enterprise-ai-knowledge-system.onrender.com](https://nexusrag-enterprise-ai-knowledge-system.onrender.com/health) |
 | **Vector Database** | Qdrant Cloud Managed Cluster (`rag_documents`) |
 | **Relational Database** | Supabase PostgreSQL Managed Cluster |
-| **LLM Engine** | Google Gemini (`gemini-3.5-flash-lite` with automatic failover) |
-| **Embeddings** | `BAAI/bge-small-en-v1.5` (384-dimensional dense vectors) |
+| **LLM Engine** | Google Gemini (configured via `GEMINI_MODEL`, e.g., `gemini-2.5-flash` or `gemini-3.5-flash-lite`, with multi-model automatic failover) |
+| **Embeddings** | `BAAI/bge-small-en-v1.5` (384-dimensional dense vectors, CPU-optimized) |
 | **Sparse Lexical Search** | BM25s (in-process sparse CSC matrix) |
-| **Neural Reranker** | Cross-Encoder (`ms-marco-MiniLM-L-6-v2`) |
+| **Neural Reranker** | Cross-Encoder (`ms-marco-MiniLM-L-6-v2`, optional via `ENABLE_RERANKER`) |
 
-### Verified Department Credentials (Test Accounts)
-| Department | Work Email | Password | Access Scope |
-| :--- | :--- | :--- | :--- |
-| **HR** | `hr@demo.com` | `hr-demo-2026` | Parental leave, benefits, compensation, handbook, onboarding policies |
-| **Engineering** | `engineering@demo.com` | `eng-demo-2026` | System architecture, deployment runbooks, APIs, incident response, SLOs |
-| **Finance** | `finance@demo.com` | `fin-demo-2026` | Budget policies, expenditure thresholds, financial audits, per diem rules |
-| **Admin** | `admin@example.com` | `admin-demo-2026` | Global cross-department access, user controls, observability, security logs |
+### Authentication & Access
+
+NexusRAG uses authenticated, role-based access control for **Human Resources**, **Engineering**, **Finance**, and **System Administrator** workspaces.
+
+Access requires authorized account credentials. Public demo credentials are intentionally not published to protect account security and departmental data isolation.
+
+For a complete walkthrough of the user workflows, refer to the [Live Application Showcase](#-live-application-showcase) below.
 
 ---
 
@@ -62,15 +62,15 @@
 ## 💡 Project Overview
 
 ### The Enterprise Knowledge Problem
-Enterprises struggle with fragmented documents scattered across departments. Standard search engines rely on simple keyword queries that miss semantic context, while vanilla LLM solutions are vulnerable to hallucinations, lack verified citations, and dangerously leak confidential HR or financial data across tenant boundaries.
+Enterprises struggle with fragmented documents scattered across departments. Standard keyword search engines miss semantic context, while unconstrained LLM solutions risk hallucinations, lack verified citations, and inadvertently expose sensitive HR or financial data across tenant boundaries.
 
 ### How NexusRAG Solves It
 **NexusRAG** is an enterprise-grade AI knowledge platform built to solve these exact enterprise hurdles through:
-1. **Cryptographic & Vector-Layer RBAC Isolation:** Role-based access control is enforced at the **Qdrant vector query layer** and PostgreSQL filter level. Chunks from unauthorized departments are filtered out *before* scoring, ensuring restricted corporate data never touches the LLM context window.
+1. **Vector-Layer RBAC Isolation:** Role-based access control is enforced at the **Qdrant vector query layer** and PostgreSQL filter level. Chunks from unauthorized departments are filtered out *before* scoring based on validated JWT role claims, ensuring restricted corporate data never touches the LLM context window.
 2. **Contextual Hybrid Retrieval:** Pairs dense semantic embeddings (`BAAI/bge-small-en-v1.5`) with sparse lexical indexing (`BM25s`) via **Reciprocal Rank Fusion (RRF)**, ensuring high accuracy for both natural language questions and exact policy IDs/acronyms.
-3. **Cross-Encoder Neural Reranking:** Applies `ms-marco-MiniLM-L-6-v2` across fused candidate chunks to evaluate deep query-passage interactions, discarding irrelevant context.
+3. **Cross-Encoder Neural Reranking:** Supports `ms-marco-MiniLM-L-6-v2` across candidate chunks to evaluate deep query-passage interactions, discarding irrelevant context.
 4. **Verifiable Citations with Continuous PDF Viewing:** Every generated claim includes interactive bracketed citations (`[1]`, `[2]`). Clicking a citation opens the **Document Reader** with continuous vertical page rendering, exact chunk clause highlighting, and readable text copying with zero binary leakage.
-5. **Production AI Defense:** Real-time prompt injection firewall, automated PII scrubbing (with Luhn-validated credit card and SSN redaction), and brute-force account lockout.
+5. **Defense-in-Depth AI Guardrails:** Real-time prompt injection filtering, automated PII scrubbing (with Luhn-validated credit card and SSN redaction), and brute-force account lockout.
 
 ---
 
@@ -157,24 +157,24 @@ flowchart TD
 
     subgraph SecurityGateway ["Security & API Gateway (FastAPI)"]
         AuthGuard["Dual Auth Guard\n(JWT Bearer & HttpOnly Cookies)"]
-        RBAC["Strict Multi-Tenant RBAC\n(HR / Engineering / Finance / Admin)"]
-        Firewall["AI Guardrail Firewall\n(Prompt Injection & Jailbreak Defense)"]
-        PII["Real-Time PII Scrubber\n(Luhn Check & SSN Masking)"]
+        RBAC["Multi-Tenant RBAC Enforcement\n(HR / Engineering / Finance / Admin)"]
+        Firewall["AI Guardrail Firewall\n(Prompt Injection & Threat Filtering)"]
+        PII["Real-Time PII Scrubber\n(Luhn Check & Sensitive Data Masking)"]
         RateLimit["Rate Limiting\n(SlowAPI Concurrency Control)"]
     end
 
     subgraph RetrievalEngine ["Hybrid Retrieval & Reranking Engine"]
-        DenseQdrant["Dense Vector Search\n(Qdrant Cloud + BGE-small-en-v1.5)\n[Strict Role Filter Applied]"]
+        DenseQdrant["Dense Vector Search\n(Qdrant Cloud + BGE-small-en-v1.5)\n[role_access Filter Applied]"]
         SparseBM25["Sparse Lexical Search\n(BM25s CSC Sparse Matrix)\n[Exact Token & Code Match]"]
         RRF["Reciprocal Rank Fusion\n(Multi-Query Merging & Normalization)"]
         Reranker["Cross-Encoder Neural Reranking\n(ms-marco-MiniLM-L-6-v2)"]
     end
 
     subgraph GenerationLayer ["Synthesis & Evaluation Layer"]
-        Gemini["Google Gemini LLM\n(gemini-3.5-flash-lite / gemini-3.5-flash)"]
+        Gemini["Google Gemini LLM\n(gemini-2.5-flash / gemini-3.5-flash-lite)"]
         CRAG["Anti-Hallucination Guard\n(Retrieval Sufficiency Check)"]
         Streamer["Server-Sent Events (SSE)\n(Real-Time Progressive Token Streaming)"]
-        RAGAS["RAGAS Evaluation Loop\n(Faithfulness, Relevancy, Precision, Recall)"]
+        RAGAS["RAGAS Evaluation Framework\n(Faithfulness, Relevancy, Precision, Recall)"]
     end
 
     subgraph StorageLayer ["Persistence & Cloud Infrastructure"]
@@ -220,7 +220,7 @@ The NexusRAG retrieval and synthesis workflow processes every inquiry through ni
       │
       ▼
 1. Security Screening & PII Sanitization
-   ├─ Checks query against Prompt Injection & Jailbreak Classifier (<1ms)
+   ├─ Evaluates query against injection classifier and pattern heuristics (<1ms)
    └─ Masks payment cards (Luhn valid), SSNs, and credentials to [REDACTED_*]
       │
       ▼
@@ -231,16 +231,16 @@ The NexusRAG retrieval and synthesis workflow processes every inquiry through ni
       ▼
 3. Role-Isolated Hybrid Retrieval (Dual-Channel)
    ├─ Channel A (Dense): BAAI/bge-small-en-v1.5 cosine search in Qdrant Cloud
-   │  └─ Enforces mandatory payload filter: department == user.department
+   │  └─ Enforces mandatory payload filter: role_access in allowed_roles
    └─ Channel B (Sparse): BM25s sparse lexical search over in-memory CSC matrix
       │
       ▼
 4. Reciprocal Rank Fusion (RRF)
-   └─ Combines ranked outputs: RRF_score(d) = ∑ (1 / (60 + rank_i(d)))
+   └─ Combines ranked outputs: RRF_score(d) = ∑ (1 / (60 + rank_i(d) + 1))
       │
       ▼
 5. Neural Cross-Encoder Reranking
-   └─ Evaluates top-25 chunks with ms-marco-MiniLM-L-6-v2; retains top-5 chunks
+   └─ Evaluates candidate chunks with ms-marco-MiniLM-L-6-v2 (when enabled via ENABLE_RERANKER)
       │
       ▼
 6. Parent-Child Chunk Expansion
@@ -256,7 +256,7 @@ The NexusRAG retrieval and synthesis workflow processes every inquiry through ni
       │
       ▼
 9. Server-Sent Events (SSE) Streaming
-   └─ Streams tokens progressively to the client with sub-300ms Time-To-First-Token (TTFT)
+   └─ Streams tokens progressively to the client as generated chunks arrive
 ```
 
 ---
@@ -266,18 +266,18 @@ The NexusRAG retrieval and synthesis workflow processes every inquiry through ni
 | Layer | Technology | Version | Purpose / Architecture Role |
 | :--- | :--- | :--- | :--- |
 | **Frontend Framework** | **React** | `18.2.0` | Declarative component UI with stateful workspaces and responsive layouts |
-| **Build Tooling** | **Vite** | `6.4.2` | Ultra-fast client bundler and HMR dev server |
+| **Build Tooling** | **Vite** | `6.4.2` | Fast client bundler and HMR dev server |
 | **Styling & Theme** | **Tailwind CSS** | `3.4.1` | Utility-first styling with comprehensive Dark/Light design tokens |
 | **PDF Rendering** | **PDF.js** | `4.10.38` | Continuous vertical canvas rendering and binary document parsing |
-| **Backend Framework** | **FastAPI** | `0.110.0` | High-performance asynchronous Python API with automatic OpenAPI specs |
+| **Backend Framework** | **FastAPI** | `0.110.0` | Asynchronous Python API with automatic OpenAPI documentation |
 | **ASGI Server** | **Uvicorn** | `0.29.0` | Production ASGI web server running async event loops |
 | **Relational Database** | **PostgreSQL (Supabase)**| `15.x` | Managed user store, document metadata, audit logs, and feedback |
 | **Database ORM** | **SQLAlchemy 2.0 + asyncpg**| `2.0.28` | Asynchronous database operations and connection pooling |
 | **Vector Database** | **Qdrant Cloud** | `1.8.x` | Managed cloud vector database storing 384-dimensional dense vectors |
-| **Semantic Embeddings** | **BAAI/bge-small-en-v1.5** | HuggingFace | 384-dimensional cosine similarity embeddings |
+| **Semantic Embeddings** | **BAAI/bge-small-en-v1.5** | HuggingFace | 384-dimensional cosine similarity embeddings (CPU-optimized) |
 | **Lexical Search** | **BM25s** | `0.1.10` | In-process sparse CSC lexical retrieval for exact keywords and IDs |
 | **Neural Reranker** | **Cross-Encoder** | MiniLM-L6 | `cross-encoder/ms-marco-MiniLM-L-6-v2` neural rank scorer |
-| **LLM Engine** | **Google Gemini** | `gemini-3.5` | `gemini-3.5-flash-lite` primary with failover to `gemini-3.5-flash` |
+| **LLM Engine** | **Google Gemini** | Configurable | Primary generation model configured via `GEMINI_MODEL` with failover |
 | **Security & Auth** | **python-jose + passlib** | `3.3.0` | JWT token rotation (HS256) and bcrypt password hashing (`$2b$12$`) |
 | **Rate Limiting** | **SlowAPI** | `0.1.9` | Per-client rate limiting and concurrency throttling |
 | **E2E Browser Testing**| **Playwright** | `1.57.0` | Multi-viewport automated browser testing across desktop and mobile |
@@ -290,35 +290,33 @@ The NexusRAG retrieval and synthesis workflow processes every inquiry through ni
 NexusRAG implements enterprise defense-in-depth across six distinct layers:
 
 ### 1. Multi-Tenant Vector RBAC Query Isolation
-Document isolation is not filtered in application memory after retrieval. Instead, every vector query sent to Qdrant contains a cryptographically validated payload filter derived from the user's verified JWT claims:
+Document isolation is enforced at the database level rather than filtered in post-retrieval application code. Every vector query sent to Qdrant contains a payload filter derived directly from the user's verified JWT claims:
 ```python
 # Enforced at Qdrant vector search level (backend/app/retrieval/dense.py)
-query_filter = Filter(
-    must=[
-        FieldCondition(
-            key="department",
-            match=MatchValue(value=user.department.lower())
-        )
-    ]
-)
+must_conditions = [
+    FieldCondition(
+        key="role_access",
+        match=MatchAny(any=allowed_roles),
+    )
+]
 ```
-Employees in Human Resources can never receive chunks from Engineering runbooks or Finance spreadsheets, even under deliberate prompt injection.
+Employees in Human Resources cannot retrieve chunks from Engineering runbooks or Finance spreadsheets, even under deliberate adversarial prompting.
 
 ### 2. AI Guardrail Firewall (`app/security/guardrails.py`)
-- **Direct Prompt Injection Defense:** Neutralizes jailbreak patterns (`ignore previous instructions`, `DAN`, `developer mode`).
+- **Direct Prompt Injection Defense:** Detects and neutralizes common override patterns (`ignore previous instructions`, `DAN`, `developer mode`).
 - **System Prompt Exfiltration Blocker:** Blocks attempts to leak internal system prompts, grounding rules, or delimiter schemas.
 - **Fence & Delimiter Tampering Protection:** Strips fake prompt tokens (`<|im_start|>`, `<<SYS>>`, `---END CONTEXT---`).
-- **Zero False Positives:** Validated across legitimate technical documentation queries without false triggers.
+- **Low False-Positive Design:** Rule patterns designed to minimize false positives on standard technical, policy, and compliance inquiries.
 
 ### 3. Real-Time PII & Secret Scrubber (`app/security/pii_scrubber.py`)
-- **Payment Card Defense:** Redacts Visa, Mastercard, AMEX, and Discover numbers using Luhn checksum validation, preventing false positives on product or invoice IDs.
+- **Payment Card Defense:** Redacts Visa, Mastercard, AMEX, and Discover numbers using Luhn checksum validation to avoid false positives on serial or tracking numbers.
 - **Identity & Credential Masking:** Automatically masks US Social Security Numbers (`[REDACTED_SSN]`), API keys (`sk-...`, `AIza...`, `AKIA...`), and private SSH/RSA keys.
-- **Streaming Window Buffer:** Uses a sliding word-boundary window ensuring sensitive tokens split across consecutive SSE packets are never leaked.
+- **Streaming Window Buffer:** Uses a sliding word-boundary window to prevent secrets split across consecutive SSE packets from leaking.
 
 ### 4. Brute-Force Lockout & Session Revocation
 - **Automatic Account Lockout:** 5 consecutive failed login attempts within a 10-minute sliding window trigger a 15-minute lock (`HTTP 423 Locked`).
-- **Instant Token Revocation:** Logs out users immediately via unique JTI (JWT ID) blacklisting in Redis/in-memory store, preventing 60-minute replay attacks.
-- **Admin Unlock Console:** System administrators can inspect locked accounts and execute one-click unlocks from the UI.
+- **Instant Token Revocation:** Logs out users immediately via unique JTI (JWT ID) blacklisting in an in-memory/cache store.
+- **Admin Unlock Console:** System administrators can inspect locked accounts and execute unlocks directly from the UI.
 
 ### 5. Enterprise HTTP Security Headers Middleware
 - `X-Content-Type-Options: nosniff` (MIME spoofing defense)
@@ -330,7 +328,7 @@ Employees in Human Resources can never receive chunks from Engineering runbooks 
 
 ## 🧪 Comprehensive Testing & QA Verification
 
-NexusRAG has completed an exhaustive 14-phase automated and manual verification audit with a **100% test pass rate across 129 automated tests**:
+NexusRAG was evaluated across an automated testing and end-to-end QA verification audit:
 
 ```text
 ========================================================================================
@@ -339,26 +337,29 @@ NexusRAG has completed an exhaustive 14-phase automated and manual verification 
 Test Suite                               Harness              Tests   Passed   Rate
 ----------------------------------------------------------------------------------------
 Backend End-to-End API Integration       pytest-asyncio       44      44       100%
-Security Guardrails & Jailbreak Probes   pytest (Custom)      18      18       100%
+Security Guardrails & Injection Probes   pytest (Custom)      18      18       100%
 PII Scrubber & Luhn Algorithm Check      pytest               14      14       100%
 Security Audit Logger & Account Lockout  pytest               8       8        100%
 Security Headers, CSP & Anti-Caching     pytest               6       6        100%
 PDF Reader & Continuous Scroll Suite     Playwright Chromium  23      23       100%
 UI Layering & Multi-Viewport Suite       Playwright (7 Viewports) 16  16       100%
 ----------------------------------------------------------------------------------------
-TOTAL AUTOMATED TEST VERIFICATIONS                            129     129      100%
+TOTAL REPORTED TEST VERIFICATIONS                             129     129      100%
 ========================================================================================
 ```
 
-### Verified Multi-Viewport Responsiveness
-The application was tested and certified across seven distinct screen resolutions:
-- 🖥️ **Desktop Ultra-Wide:** `1920 x 1080` (100% Passed)
-- 💻 **Standard Desktop:** `1440 x 900` (100% Passed)
-- 💻 **Small Laptop:** `1366 x 768` (100% Passed)
-- 💻 **Compact Laptop:** `1280 x 800` (100% Passed)
-- 📱 **Tablet Landscape:** `1024 x 768` (100% Passed — adaptive button clustering)
-- 📱 **Tablet Portrait:** `768 x 1024` (100% Passed — independent drawer sliding)
-- 📱 **Mobile Portrait:** `375 x 667` / `390 x 844` (100% Passed — touch-friendly controls)
+> [!NOTE]
+> These automated test suites validate defined test fixtures, simulated role interactions, and API contracts under controlled test conditions. Production environments are additionally protected via ongoing logging and error monitoring.
+
+### Multi-Viewport Responsiveness
+The application layout was validated across seven distinct screen resolutions:
+- 🖥️ **Desktop Ultra-Wide:** `1920 x 1080` (Verified)
+- 💻 **Standard Desktop:** `1440 x 900` (Verified)
+- 💻 **Small Laptop:** `1366 x 768` (Verified)
+- 💻 **Compact Laptop:** `1280 x 800` (Verified)
+- 📱 **Tablet Landscape:** `1024 x 768` (Verified — adaptive button clustering)
+- 📱 **Tablet Portrait:** `768 x 1024` (Verified — independent drawer sliding)
+- 📱 **Mobile Portrait:** `375 x 667` / `390 x 844` (Verified — touch-friendly controls)
 
 ---
 
@@ -386,7 +387,7 @@ Create `backend/.env` from the provided example:
 ```bash
 cp backend/.env.example backend/.env
 ```
-Fill in your credentials (see [Environment Variables Reference](#-environment-variables-reference) below).
+Fill in your own environment credentials (see [Environment Variables Reference](#-environment-variables-reference) below).
 
 ---
 
@@ -413,7 +414,23 @@ Interactive Swagger API documentation is available at `http://127.0.0.1:8000/doc
 
 ---
 
-### Step 4: Configure Frontend & Start Development Server
+### Step 4: Seed Test Users & Ingest Documents (Optional)
+To set up local accounts for testing:
+```bash
+# Seed local test user accounts with your own secure passwords:
+python scripts/create_user.py --email hr_test@example.com --password <your_secure_password> --role hr
+python scripts/create_user.py --email eng_test@example.com --password <your_secure_password> --role engineering
+python scripts/create_user.py --email admin_test@example.com --password <your_secure_password> --role admin
+
+# Ingest initial documents per department:
+python scripts/run_ingestion.py --department hr --dir data/hr/
+python scripts/run_ingestion.py --department engineering --dir data/engineering/
+python scripts/run_ingestion.py --department finance --dir data/finance/
+```
+
+---
+
+### Step 5: Configure Frontend & Start Development Server
 In a new terminal window:
 ```bash
 cd frontend
@@ -428,10 +445,10 @@ Open your browser and navigate to `http://localhost:5173`.
 
 ---
 
-### Step 5: Run Verification Test Suites
+### Step 6: Run Verification Test Suites
 Verify your local installation:
 ```bash
-# Run complete 44-point backend integration suite:
+# Run backend integration suite:
 cd backend
 python tests/test_complete_e2e_suite.py
 
@@ -447,6 +464,9 @@ node test_reader_suite.mjs
 
 ## 🔑 Environment Variables Reference
 
+> [!IMPORTANT]
+> **Security Notice:** `.env` files contain sensitive credentials and must never be committed to public version control. The repository provides `.env.example` with non-sensitive placeholders only. In production environments (such as Render and Vercel), configure secrets through encrypted dashboard environment settings.
+
 ### Backend Configuration (`backend/.env`)
 | Variable | Description | Example / Recommended Value |
 | :--- | :--- | :--- |
@@ -454,15 +474,24 @@ node test_reader_suite.mjs
 | `PORT` | Local server port | `8000` |
 | `CORS_ORIGIN` | Allowed CORS origins (comma-separated) | `http://localhost:5173,https://your-domain.vercel.app` |
 | `GEMINI_API_KEY` | Google Gemini API secret key | `AIzaSy...` (from Google AI Studio) |
-| `GEMINI_MODEL` | Foundation LLM model identifier | `gemini-3.5-flash-lite` |
+| `GEMINI_MODEL` | Foundation LLM model identifier | `gemini-2.5-flash` or `gemini-3.5-flash-lite` |
 | `GEMINI_TIMEOUT_SECONDS` | API request timeout limit | `30` |
-| `DATABASE_URL` | PostgreSQL connection URI (asyncpg) | `postgresql+asyncpg://postgres:pass@db.pooler.supabase.com:6543/postgres` |
+| `DATABASE_URL` | PostgreSQL connection URI (asyncpg) | `postgresql+asyncpg://user:pass@host:5432/dbname` |
+| `POSTGRES_USER` | PostgreSQL username (fallback if DATABASE_URL unset) | `rag_user` |
+| `POSTGRES_PASSWORD` | PostgreSQL password (fallback) | `<secure_password_placeholder>` |
+| `POSTGRES_HOST` | PostgreSQL host (fallback) | `localhost` or cloud host |
+| `POSTGRES_PORT` | PostgreSQL port | `5432` |
+| `POSTGRES_DB` | PostgreSQL database name | `rag_db` |
 | `QDRANT_HOST` | Qdrant host URL / endpoint | `https://your-cluster.qdrant.tech` or `localhost` |
 | `QDRANT_PORT` | Qdrant gRPC / HTTP port | `6333` |
-| `QDRANT_API_KEY` | Qdrant Cloud API key | `your_qdrant_api_key_here` |
+| `QDRANT_URL` | Qdrant Cloud full cluster URL | `https://your-cluster.qdrant.io` |
+| `QDRANT_API_KEY` | Qdrant Cloud API key | `<qdrant_api_key_placeholder>` |
 | `QDRANT_COLLECTION` | Qdrant vector collection name | `rag_documents` |
-| `JWT_SECRET` | Secret key for signing HS256 tokens | `generate_with_openssl_rand_hex_32` |
-| `JWT_EXPIRE_MINUTES`| Access token expiration lifetime | `60` |
+| `JWT_SECRET_KEY` | Secret key for signing HS256 tokens | `<generate_via_openssl_rand_hex_32>` |
+| `JWT_ALGORITHM` | JWT signing algorithm | `HS256` |
+| `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`| Access token expiration lifetime | `60` |
+| `JWT_REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token expiration lifetime | `7` |
+| `ENABLE_RERANKER` | Toggle Cross-Encoder model (defaults to false for low RAM) | `false` or `true` |
 
 ### Frontend Configuration (`frontend/.env`)
 | Variable | Description | Example Value |
@@ -479,13 +508,12 @@ NexusRAG-Enterprise-AI-Knowledge-System-/
 │   ├── app/
 │   │   ├── api/
 │   │   │   └── routes/          # FastAPI route handlers (auth, query, docs, admin)
-│   │   ├── core/                # Global config, constants, security dependencies
 │   │   ├── db/                  # SQLAlchemy 2.0 async engine and PostgreSQL models
 │   │   ├── generation/          # Google Gemini generator and streaming SSE pipeline
 │   │   ├── ingestion/           # Chunking, contextual headers, and text extractors
 │   │   ├── retrieval/           # Dense Qdrant search, BM25s sparse, and RRF fusion
-│   │   ├── reranking/           # MiniLM cross-encoder neural reranker
-│   │   └── security/            # PII scrubber, prompt injection guard, rate limiting
+│   │   ├── security/            # PII scrubber, prompt injection guard, rate limiting
+│   │   └── config.py            # Pydantic v2 application settings and env validation
 │   ├── data/                    # Seed document corpus (hr/, engineering/, finance/)
 │   ├── scripts/                 # Utility scripts (user creation, seed ingestion)
 │   ├── tests/                   # Automated pytest and integration suites
@@ -519,7 +547,7 @@ NexusRAG-Enterprise-AI-Knowledge-System-/
 
 NexusRAG is designed as a cloud-native, decoupled full-stack architecture:
 
-- **Frontend (Vercel):** Single Page Application (SPA) deployed on Vercel's global Edge CDN, delivering sub-50ms asset delivery and automatic SSL.
+- **Frontend (Vercel):** Single Page Application (SPA) deployed on Vercel's global Edge CDN, delivering fast asset distribution and automatic SSL.
 - **Backend API (Render):** FastAPI application running inside a containerized Linux environment with automated health checks and restart policies.
 - **Relational Data (Supabase):** Managed PostgreSQL cluster with connection pooling, automated backups, and row-level security.
 - **Vector Search (Qdrant Cloud):** Managed multi-tenant Qdrant cluster with persistent vector storage, cosine similarity indexing, and high-concurrency payload filtering.
