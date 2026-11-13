@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import {
   generateMarkdownReport,
@@ -12,6 +12,17 @@ export default function ExportModal({ isOpen, onClose, messages = [], user, depa
   const [copiedSlack, setCopiedSlack] = useState(false)
   const [copiedMd, setCopiedMd] = useState(false)
   const [activeTab, setActiveTab] = useState('options') // 'options' | 'preview'
+
+  useEffect(() => {
+    if (!isOpen) return
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 

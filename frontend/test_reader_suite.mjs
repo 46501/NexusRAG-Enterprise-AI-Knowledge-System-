@@ -296,7 +296,8 @@ async function runTestSuite() {
 
     await adminPage.goto('http://localhost:5173/login');
     await adminPage.waitForLoadState('networkidle');
-    await adminPage.click('button:has-text("admin@example.com")');
+    await adminPage.fill('input[type="email"]', 'admin@example.com');
+    await adminPage.fill('input[type="password"]', 'admin-demo-2026');
     await adminPage.click('button[type="submit"]');
     await adminPage.waitForURL('**/admin-panel**', { timeout: 15000 });
     recordTest('Admin Login Success', adminPage.url().includes('/admin-panel'));
@@ -315,10 +316,11 @@ async function runTestSuite() {
       const adminModal = adminPage.locator('[data-testid="document-reader-modal"]');
       await adminModal.waitFor({ state: 'visible', timeout: 8000 });
       await adminModal.locator('.animate-spin').first().waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
-      await adminPage.waitForTimeout(1000);
+      const pdfViewerLocator = adminModal.locator('[data-testid="pdf-viewer-root"]');
+      await pdfViewerLocator.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
 
       const adminReaderVisible = await adminModal.isVisible();
-      const adminPdfViewerVisible = await adminModal.locator('[data-testid="pdf-viewer-root"]').isVisible();
+      const adminPdfViewerVisible = await pdfViewerLocator.isVisible();
       recordTest(
         'Admin Ingested PDF "Read ↗" Action',
         adminReaderVisible && adminPdfViewerVisible,

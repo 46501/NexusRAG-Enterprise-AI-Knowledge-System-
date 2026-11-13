@@ -153,7 +153,7 @@ export default function WorkspaceHeader({
       </div>
 
       {/* ── CENTER CLUSTER: Prioritized Primary Actions (No Overlap) ── */}
-      <div className="flex items-center gap-1.5 sm:gap-2 justify-center min-w-0 flex-shrink mx-1 sm:mx-2">
+      <div className="hidden xl:flex items-center gap-1.5 sm:gap-2 justify-center min-w-0 flex-shrink mx-1 sm:mx-2">
         {/* Prioritized 1: Agents Auditor */}
         <button
           type="button"

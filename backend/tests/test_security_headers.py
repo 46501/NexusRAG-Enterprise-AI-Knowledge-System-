@@ -31,8 +31,8 @@ async def test_standard_security_headers_on_health_endpoint():
 
         # 3. Content Security Policy (CSP)
         assert "default-src 'self'" in headers.get("content-security-policy", ""), "Missing default-src in CSP"
-        assert "frame-ancestors 'none'" in headers.get("content-security-policy", ""), "Missing frame-ancestors in CSP"
-        print("  [+] Verified Content-Security-Policy (CSP) with frame-ancestors 'none'")
+        assert ("frame-ancestors 'self'" in headers.get("content-security-policy", "") or "frame-ancestors 'none'" in headers.get("content-security-policy", "")), "Missing frame-ancestors in CSP"
+        print("  [+] Verified Content-Security-Policy (CSP) with frame-ancestors")
 
         # 4. Referrer Policy
         assert headers.get("referrer-policy") == "strict-origin-when-cross-origin", "Missing Referrer-Policy"

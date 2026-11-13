@@ -33,20 +33,20 @@ async function runSuite() {
     console.log('--- Step 1: Login & Chat Setup ---');
     await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', 'hr@demo.com');
-    await page.fill('input[type="password"]', 'demo123');
+    await page.fill('input[type="password"]', 'hr-demo-2026');
     await page.click('button[type="submit"]');
     await page.waitForURL('**/chat', { timeout: 10000 });
     assert(page.url().includes('/chat'), 'Login successful & navigated to /chat');
 
     // Wait for chat to load
-    await page.waitForSelector('input[placeholder*="Ask anything"]', { timeout: 10000 });
+    await page.waitForSelector('textarea[placeholder*="Ask anything"]', { timeout: 10000 });
 
     // -----------------------------------------------------------------
     // 2. Generate Conversation with Multiple Turns
     // -----------------------------------------------------------------
     console.log('\n--- Step 2: Populating Multi-Turn Conversation ---');
     // Turn 1: Ask about parental leave
-    const input = page.locator('input[placeholder*="Ask anything"]');
+    const input = page.locator('textarea[placeholder*="Ask anything"]');
     await input.fill('What is the parental leave duration?');
     await page.keyboard.press('Enter');
 
@@ -140,7 +140,7 @@ async function runSuite() {
     assert(userCount >= 2, `Found ${userCount} user message bubble(s)`);
 
     // Check that messages have bottom clearance above input bar
-    const inputBar = page.locator('div:has(input[placeholder*="Ask anything"])').first();
+    const inputBar = page.locator('div:has(textarea[placeholder*="Ask anything"])').first();
     const inputBarBox = await inputBar.boundingBox();
     assert(inputBarBox != null, 'Floating input bar bounding box found');
 
@@ -257,7 +257,7 @@ async function runSuite() {
     const exportBtn = page.locator('header button:has-text("Export")');
     if (await exportBtn.count() > 0) {
       await exportBtn.click();
-      await page.waitForSelector('text=Export & Share Workspace Session', { timeout: 3000 });
+      await page.waitForSelector('text=Corporate Export & Share', { timeout: 3000 });
       assert(true, 'Export Modal opens with backdrop');
       await page.keyboard.press('Escape');
       await page.waitForTimeout(300);
