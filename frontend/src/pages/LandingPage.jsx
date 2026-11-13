@@ -632,7 +632,7 @@ function HeroDeptCard({ dept, onEnter, active, onHover, onLeave }) {
 }
 
 export default function LandingPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const [activeDept, setActiveDept] = useState("hr");
@@ -903,8 +903,13 @@ export default function LandingPage() {
                 <button
                   type="button"
                   onClick={async () => {
-                    await logout();
-                    navigate("/login");
+                    try {
+                      if (logout) await logout();
+                    } catch (err) {
+                      console.error("Sign out error:", err);
+                    } finally {
+                      navigate("/login");
+                    }
                   }}
                   style={{
                     background: "transparent",
