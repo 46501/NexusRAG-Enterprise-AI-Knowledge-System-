@@ -45,7 +45,9 @@ export default function ThreadHistorySidebar({
   onDeleteThread,
   onClearAll,
   userRole = 'engineering',
-  isPinned = true,
+  isExpanded: isExpandedProp,
+  isPinned,
+  onToggle,
   onTogglePin,
 }) {
   const { isDark } = useTheme()
@@ -56,10 +58,7 @@ export default function ThreadHistorySidebar({
   const [confirmClearAll, setConfirmClearAll] = useState(false)
   const editInputRef = useRef(null)
 
-  // Hover expansion state for desktop
-  const [isHovered, setIsHovered] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const hoverTimeoutRef = useRef(null)
 
   useEffect(() => {
     function checkMobile() {
@@ -70,33 +69,15 @@ export default function ThreadHistorySidebar({
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  function handleMouseEnter() {
-    if (isMobile) return
-    const isHoverSupported = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 1024
-    if (!isHoverSupported) return
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
-    hoverTimeoutRef.current = setTimeout(() => {
-      setIsHovered(true)
-    }, 60)
-  }
+  // Explicit click-controlled state: no hover expansion or auto-collapse
+  const isDesktopExpanded = isExpandedProp !== undefined ? isExpandedProp : (isPinned !== undefined ? isPinned : true)
+  const isExpanded = isMobile ? isOpen : isDesktopExpanded
 
-  function handleMouseLeave() {
-    if (isMobile) return
-    const isHoverSupported = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 1024
-    if (!isHoverSupported) return
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
-    hoverTimeoutRef.current = setTimeout(() => {
-      setIsHovered(false)
-    }, 180)
-  }
-
-  const currentPinned = isPinned
-  const isExpanded = isMobile ? isOpen : (currentPinned || isHovered)
-
-  function handleTogglePin(e) {
+  function handleToggle(e) {
     if (e) e.stopPropagation()
-    if (onTogglePin) {
-      onTogglePin()
+    const fn = onToggle || onTogglePin
+    if (fn) {
+      fn()
     }
   }
 
@@ -169,8 +150,6 @@ export default function ThreadHistorySidebar({
       )}
 
       <aside
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         className={`flex flex-col flex-shrink-0 transition-[width] duration-200 ease-in-out select-none overflow-hidden ${
           isMobile
             ? isOpen
@@ -186,14 +165,8 @@ export default function ThreadHistorySidebar({
           WebkitBackdropFilter: 'blur(24px)',
           borderRight: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
           boxShadow: isMobile && isOpen
-            ? isDark
-              ? '12px 0 32px rgba(0,0,0,0.6)'
-              : '12px 0 32px rgba(15,23,42,0.12)'
-            : isExpanded && !currentPinned && !isMobile
-              ? isDark
-                ? '8px 0 24px rgba(0,0,0,0.45)'
-                : '8px 0 24px rgba(15,23,42,0.08)'
-              : 'none',
+            ? (isDark ? '12px 0 32px rgba(0,0,0,0.6)' : '12px 0 32px rgba(15,23,42,0.12)')
+            : 'none',
         }}
       >
         {!isExpanded && !isMobile ? (
@@ -204,31 +177,16 @@ export default function ThreadHistorySidebar({
               {/* Expand / Toggle Button */}
               <button
                 type="button"
-                onClick={handleTogglePin}
+                onClick={handleToggle}
                 className="w-9 h-9 rounded-xl flex items-center justify-center text-sm transition-all hover:scale-105 cursor-pointer shadow-xs"
                 style={{
                   color: isDark ? '#d8b4fe' : '#7e22ce',
                   background: isDark ? 'rgba(168, 85, 247, 0.15)' : '#f3e8ff',
                   border: isDark ? '1px solid rgba(168, 85, 247, 0.3)' : '1px solid #d8b4fe',
                 }}
-                title="Expand & Pin Chat Threads (⌘S)"
+                title="Expand Chat Threads (⌘S)"
               >
-                💾
-              </button>
-
-              {/* Pin Toggle Button */}
-              <button
-                type="button"
-                onClick={handleTogglePin}
-                className="w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-105"
-                style={{
-                  color: currentPinned ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? 'rgba(255,255,255,0.45)' : '#64748b'),
-                  background: currentPinned ? (isDark ? 'rgba(56, 189, 248, 0.15)' : '#f0f9ff') : (isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9'),
-                  border: currentPinned ? (isDark ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid #bae6fd') : (isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0'),
-                }}
-                title={currentPinned ? "Sidebar is pinned (Click to unpin)" : "Click to pin sidebar open"}
-              >
-                <PinIcon pinned={currentPinned} size={13} />
+                💬
               </button>
 
               {/* New Chat Button */}
@@ -249,7 +207,7 @@ export default function ThreadHistorySidebar({
               {/* Search Trigger Button */}
               <button
                 type="button"
-                onClick={handleTogglePin}
+                onClick={handleToggle}
                 className="w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer opacity-70 hover:opacity-100 hover:scale-105"
                 style={{
                   color: isDark ? '#fff' : '#0f172a',
@@ -335,23 +293,6 @@ export default function ThreadHistorySidebar({
               </div>
 
               <div className="flex items-center gap-1.5">
-                {/* Pin / Unpin Button (Desktop) */}
-                {!isMobile && (
-                  <button
-                    type="button"
-                    onClick={handleTogglePin}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-all cursor-pointer"
-                    style={{
-                      color: currentPinned ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? 'rgba(255,255,255,0.45)' : '#64748b'),
-                      background: currentPinned ? (isDark ? 'rgba(56, 189, 248, 0.15)' : '#f0f9ff') : (isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9'),
-                      border: currentPinned ? (isDark ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid #bae6fd') : (isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0'),
-                    }}
-                    title={currentPinned ? "Unpin sidebar (collapse on pointer leave)" : "Pin sidebar permanently open"}
-                  >
-                    <PinIcon pinned={currentPinned} size={12} />
-                  </button>
-                )}
-
                 {/* New Chat Button */}
                 <button
                   type="button"
@@ -376,13 +317,14 @@ export default function ThreadHistorySidebar({
                     if (isMobile) {
                       onClose()
                     } else {
-                      handleTogglePin()
+                      handleToggle()
                     }
                   }}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors cursor-pointer hover:opacity-100 opacity-60"
                   style={{
-                    color: isDark ? 'rgba(255,255,255,0.45)' : '#64748b',
-                    background: isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9',
+                    color: isDark ? '#fff' : '#0f172a',
+                    background: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
+                    border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1',
                   }}
                   title={isMobile ? "Close drawer" : "Collapse sidebar (⌘S)"}
                 >

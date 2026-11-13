@@ -17,8 +17,12 @@ const DEPT_NAMES = {
 export default function WorkspaceHeader({
   userRole = 'hr',
   isDark = true,
-  threadsSidebarPinned = true,
-  docsSidebarPinned = true,
+  threadsSidebarOpen,
+  docsSidebarOpen,
+  threadsSidebarPinned,
+  docsSidebarPinned,
+  onToggleThreads,
+  onToggleDocs,
   onToggleThreadsPin,
   onToggleDocsPin,
   threadsMobileOpen = false,
@@ -35,6 +39,11 @@ export default function WorkspaceHeader({
 }) {
   const [moreOpen, setMoreOpen] = useState(false)
   const moreMenuRef = useRef(null)
+
+  const isThreadsActive = threadsSidebarOpen !== undefined ? threadsSidebarOpen : (threadsSidebarPinned !== undefined ? threadsSidebarPinned : true)
+  const isDocsActive = docsSidebarOpen !== undefined ? docsSidebarOpen : (docsSidebarPinned !== undefined ? docsSidebarPinned : true)
+  const toggleThreads = onToggleThreads || onToggleThreadsPin
+  const toggleDocs = onToggleDocs || onToggleDocsPin
 
   const d = DEPT[userRole] || DEPT.engineering
   const deptName = DEPT_NAMES[userRole] || userRole
@@ -85,20 +94,20 @@ export default function WorkspaceHeader({
             if (isMobile) {
               onToggleThreadsMobile?.()
             } else {
-              onToggleThreadsPin?.()
+              toggleThreads?.()
             }
           }}
           className="p-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center hover:scale-105 shrink-0"
           style={{
-            color: threadsSidebarPinned ? (isDark ? '#d8b4fe' : '#7e22ce') : (isDark ? 'rgba(255, 255, 255, 0.65)' : '#64748b'),
-            background: threadsSidebarPinned
+            color: isThreadsActive ? (isDark ? '#d8b4fe' : '#7e22ce') : (isDark ? 'rgba(255, 255, 255, 0.65)' : '#64748b'),
+            background: isThreadsActive
               ? (isDark ? 'rgba(168, 85, 247, 0.18)' : '#f3e8ff')
               : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9'),
-            border: threadsSidebarPinned
+            border: isThreadsActive
               ? (isDark ? '1px solid rgba(168, 85, 247, 0.35)' : '1px solid #d8b4fe')
               : (isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1'),
           }}
-          title={`Toggle Chat Threads Sidebar (${threadsSidebarPinned ? 'Hide' : 'Show'}) (⌘S)`}
+          title={`Toggle Chat Threads Sidebar (${isThreadsActive ? 'Collapse' : 'Expand'}) (⌘S)`}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -317,7 +326,7 @@ export default function WorkspaceHeader({
                 onClick={() => {
                   setMoreOpen(false)
                   if (isMobile) onToggleThreadsMobile?.()
-                  else onToggleThreadsPin?.()
+                  else toggleThreads?.()
                 }}
                 className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors hover:bg-purple-500/10 cursor-pointer text-left"
               >
@@ -334,7 +343,7 @@ export default function WorkspaceHeader({
                 onClick={() => {
                   setMoreOpen(false)
                   if (isMobile) onToggleDocsMobile?.()
-                  else onToggleDocsPin?.()
+                  else toggleDocs?.()
                 }}
                 className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors hover:bg-purple-500/10 cursor-pointer text-left"
               >
@@ -355,20 +364,20 @@ export default function WorkspaceHeader({
             if (isMobile) {
               onToggleDocsMobile?.()
             } else {
-              onToggleDocsPin?.()
+              toggleDocs?.()
             }
           }}
           className="hidden md:flex p-1.5 rounded-lg transition-all cursor-pointer items-center justify-center hover:scale-105 shrink-0"
           style={{
-            color: docsSidebarPinned ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? 'rgba(255, 255, 255, 0.65)' : '#64748b'),
-            background: docsSidebarPinned
+            color: isDocsActive ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? 'rgba(255, 255, 255, 0.65)' : '#64748b'),
+            background: isDocsActive
               ? (isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff')
               : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9'),
-            border: docsSidebarPinned
+            border: isDocsActive
               ? (isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #bae6fd')
               : (isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1'),
           }}
-          title={`Toggle Documents Sidebar (${docsSidebarPinned ? 'Hide' : 'Show'}) (⌘D)`}
+          title={`Toggle Documents Sidebar (${isDocsActive ? 'Collapse' : 'Expand'}) (⌘D)`}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -400,3 +409,4 @@ export default function WorkspaceHeader({
     </header>
   )
 }
+

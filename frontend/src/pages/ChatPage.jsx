@@ -16,7 +16,7 @@ import DocumentComparisonModal from '../components/DocumentComparisonModal'
 import AgentSidecarModal from '../components/AgentSidecarModal'
 import WorkspaceEmptyState from '../components/WorkspaceEmptyState'
 import WorkspaceHeader from '../components/WorkspaceHeader'
-import ThreadHistorySidebar, { PinIcon } from '../components/ThreadHistorySidebar'
+import ThreadHistorySidebar from '../components/ThreadHistorySidebar'
 import {
   getThreads,
   saveThread,
@@ -56,25 +56,27 @@ export default function ChatPage() {
   const { messages, thinking, sendQuery, clearMessages, setMessages } = useQuery()
   const bottomRef = useRef(null)
   const messagesRef = useRef(null)
-  // Left Sidebar (Chat Threads) State
-  const [threadsSidebarPinned, setThreadsSidebarPinned] = useState(() => {
+  // Left Sidebar (Chat Threads) State - Explicit click-controlled (ChatGPT style)
+  const [threadsSidebarOpen, setThreadsSidebarOpen] = useState(() => {
     if (typeof window === 'undefined') return true
-    const saved = localStorage.getItem('nexusrag_threads_pinned')
+    const saved = localStorage.getItem('nexusrag_threads_open')
     if (saved !== null) return saved === 'true'
+    const legacy = localStorage.getItem('nexusrag_threads_pinned')
+    if (legacy !== null) return legacy === 'true'
     return window.innerWidth >= 1280
   })
   const [threadsMobileDrawerOpen, setThreadsMobileDrawerOpen] = useState(false)
 
-  // Right Sidebar (Documents) State
-  const [docsSidebarPinned, setDocsSidebarPinned] = useState(() => {
+  // Right Sidebar (Documents) State - Explicit click-controlled (ChatGPT style)
+  const [docsSidebarOpen, setDocsSidebarOpen] = useState(() => {
     if (typeof window === 'undefined') return true
-    const saved = localStorage.getItem('nexusrag_docs_pinned')
+    const saved = localStorage.getItem('nexusrag_docs_open')
     if (saved !== null) return saved === 'true'
+    const legacy = localStorage.getItem('nexusrag_docs_pinned')
+    if (legacy !== null) return legacy === 'true'
     return window.innerWidth >= 1280
   })
   const [docsMobileDrawerOpen, setDocsMobileDrawerOpen] = useState(false)
-  const [docsSidebarHovered, setDocsSidebarHovered] = useState(false)
-  const docsHoverTimeoutRef = useRef(null)
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -86,43 +88,29 @@ export default function ChatPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  function handleToggleThreadsPin() {
-    setThreadsSidebarPinned((prev) => {
+  function handleToggleThreads() {
+    setThreadsSidebarOpen((prev) => {
       const next = !prev
-      try { localStorage.setItem('nexusrag_threads_pinned', String(next)) } catch (_) {}
+      try {
+        localStorage.setItem('nexusrag_threads_open', String(next))
+        localStorage.setItem('nexusrag_threads_pinned', String(next))
+      } catch (_) {}
       return next
     })
   }
 
-  function handleToggleDocsPin() {
-    setDocsSidebarPinned((prev) => {
+  function handleToggleDocs() {
+    setDocsSidebarOpen((prev) => {
       const next = !prev
-      try { localStorage.setItem('nexusrag_docs_pinned', String(next)) } catch (_) {}
+      try {
+        localStorage.setItem('nexusrag_docs_open', String(next))
+        localStorage.setItem('nexusrag_docs_pinned', String(next))
+      } catch (_) {}
       return next
     })
   }
 
-  function handleDocsMouseEnter() {
-    if (isMobile) return
-    const isHoverSupported = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 1024
-    if (!isHoverSupported) return
-    if (docsHoverTimeoutRef.current) clearTimeout(docsHoverTimeoutRef.current)
-    docsHoverTimeoutRef.current = setTimeout(() => {
-      setDocsSidebarHovered(true)
-    }, 60)
-  }
-
-  function handleDocsMouseLeave() {
-    if (isMobile) return
-    const isHoverSupported = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 1024
-    if (!isHoverSupported) return
-    if (docsHoverTimeoutRef.current) clearTimeout(docsHoverTimeoutRef.current)
-    docsHoverTimeoutRef.current = setTimeout(() => {
-      setDocsSidebarHovered(false)
-    }, 180)
-  }
-
-  const isDocsExpanded = isMobile ? docsMobileDrawerOpen : (docsSidebarPinned || docsSidebarHovered)
+  const isDocsExpanded = isMobile ? docsMobileDrawerOpen : docsSidebarOpen
   const [docs, setDocs] = useState([])
   const [docsLoading, setDocsLoading] = useState(true)
   const [selectedDoc, setSelectedDoc] = useState(null)
@@ -431,14 +419,14 @@ export default function ChatPage() {
         if (isMobile) {
           setThreadsMobileDrawerOpen((prev) => !prev)
         } else {
-          handleToggleThreadsPin()
+          handleToggleThreads()
         }
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'd') {
         e.preventDefault()
         if (isMobile) {
           setDocsMobileDrawerOpen((prev) => !prev)
         } else {
-          handleToggleDocsPin()
+          handleToggleDocs()
         }
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
         e.preventDefault()
@@ -455,7 +443,7 @@ export default function ChatPage() {
         if (isMobile) {
           setDocsMobileDrawerOpen(true)
         } else {
-          setDocsSidebarPinned(true)
+          setDocsSidebarOpen(true)
         }
         setTimeout(() => docSearchInputRef.current?.focus(), 80)
       } else if (e.key === 'Escape' && document.activeElement === docSearchInputRef.current) {
@@ -484,10 +472,10 @@ export default function ChatPage() {
       <WorkspaceHeader
         userRole={user?.role}
         isDark={isDark}
-        threadsSidebarPinned={threadsSidebarPinned}
-        docsSidebarPinned={docsSidebarPinned}
-        onToggleThreadsPin={handleToggleThreadsPin}
-        onToggleDocsPin={handleToggleDocsPin}
+        threadsSidebarOpen={threadsSidebarOpen}
+        docsSidebarOpen={docsSidebarOpen}
+        onToggleThreads={handleToggleThreads}
+        onToggleDocs={handleToggleDocs}
         threadsMobileOpen={threadsMobileDrawerOpen}
         docsMobileOpen={docsMobileDrawerOpen}
         onToggleThreadsMobile={() => setThreadsMobileDrawerOpen((v) => !v)}
@@ -507,8 +495,8 @@ export default function ChatPage() {
         <ThreadHistorySidebar
           isOpen={threadsMobileDrawerOpen}
           onClose={() => setThreadsMobileDrawerOpen(false)}
-          isPinned={threadsSidebarPinned}
-          onTogglePin={handleToggleThreadsPin}
+          isExpanded={threadsSidebarOpen}
+          onToggle={handleToggleThreads}
           threads={threads}
           activeThreadId={activeThreadId}
           onSelectThread={handleSelectThread}
@@ -623,8 +611,6 @@ export default function ChatPage() {
 
       {/* ── RIGHT: Documents panel ──────────────────────── */}
       <aside
-        onMouseEnter={handleDocsMouseEnter}
-        onMouseLeave={handleDocsMouseLeave}
         className={`flex flex-col flex-shrink-0 transition-[width] duration-200 ease-in-out select-none overflow-hidden ${
           isMobile
             ? docsMobileDrawerOpen
@@ -640,14 +626,8 @@ export default function ChatPage() {
           WebkitBackdropFilter: 'blur(24px)',
           borderLeft: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
           boxShadow: isMobile && docsMobileDrawerOpen
-            ? isDark
-              ? '-12px 0 32px rgba(0,0,0,0.6)'
-              : '-12px 0 32px rgba(15,23,42,0.12)'
-            : isDocsExpanded && !docsSidebarPinned && !isMobile
-              ? isDark
-                ? '-8px 0 24px rgba(0,0,0,0.45)'
-                : '-8px 0 24px rgba(15,23,42,0.08)'
-              : 'none',
+            ? (isDark ? '-12px 0 32px rgba(0,0,0,0.6)' : '-12px 0 32px rgba(15,23,42,0.12)')
+            : 'none',
         }}
       >
         {!isDocsExpanded && !isMobile ? (
@@ -655,43 +635,22 @@ export default function ChatPage() {
           <div className="flex flex-col items-center h-full w-[60px] shrink-0 py-3 justify-between select-none">
             {/* Top Navigation & Action Controls */}
             <div className="flex flex-col items-center gap-2.5 w-full px-2">
-              {/* Expand / Pin Toggle Button */}
+              {/* Expand Documents Sidebar Button */}
               <button
                 type="button"
-                onClick={handleToggleDocsPin}
+                onClick={handleToggleDocs}
                 className="w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs"
                 style={{
                   background: isDark ? 'rgba(56, 189, 248, 0.16)' : '#f0f9ff',
                   color: isDark ? '#38bdf8' : '#0284c7',
                   border: isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #bae6fd',
                 }}
-                title="Expand Documents Sidebar (Hover to preview, Click to Pin) (⌘D)"
+                title="Expand Documents Sidebar (⌘D)"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
-              </button>
-
-              {/* Pin Toggle */}
-              <button
-                type="button"
-                onClick={handleToggleDocsPin}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
-                style={{
-                  background: docsSidebarPinned
-                    ? (isDark ? 'rgba(56, 189, 248, 0.20)' : '#f0f9ff')
-                    : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9'),
-                  color: docsSidebarPinned
-                    ? (isDark ? '#38bdf8' : '#0284c7')
-                    : (isDark ? 'rgba(255, 255, 255, 0.55)' : '#64748b'),
-                  border: docsSidebarPinned
-                    ? (isDark ? '1px solid rgba(56, 189, 248, 0.40)' : '1px solid #bae6fd')
-                    : (isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1'),
-                }}
-                title={docsSidebarPinned ? "Sidebar is pinned. Click to unpin (auto-collapse)" : "Pin Documents Sidebar open"}
-              >
-                <PinIcon pinned={docsSidebarPinned} size={13} />
               </button>
 
               <div className="w-6 h-px my-0.5" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }} />
@@ -730,7 +689,7 @@ export default function ChatPage() {
               <button
                 type="button"
                 onClick={() => {
-                  handleToggleDocsPin()
+                  handleToggleDocs()
                   setTimeout(() => docSearchInputRef.current?.focus(), 80)
                 }}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
@@ -817,29 +776,6 @@ export default function ChatPage() {
                   Documents
                 </p>
                 <div className="flex items-center gap-1.5">
-                  {/* Pin Button on Desktop */}
-                  {!isMobile && (
-                    <button
-                      type="button"
-                      onClick={handleToggleDocsPin}
-                      className="w-6 h-6 rounded-md flex items-center justify-center text-xs transition-all cursor-pointer hover:scale-105"
-                      style={{
-                        background: docsSidebarPinned
-                          ? (isDark ? 'rgba(56, 189, 248, 0.20)' : '#f0f9ff')
-                          : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9'),
-                        color: docsSidebarPinned
-                          ? (isDark ? '#38bdf8' : '#0284c7')
-                          : (isDark ? 'rgba(255, 255, 255, 0.55)' : '#64748b'),
-                        border: docsSidebarPinned
-                          ? (isDark ? '1px solid rgba(56, 189, 248, 0.40)' : '1px solid #bae6fd')
-                          : (isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1'),
-                      }}
-                      title={docsSidebarPinned ? "Sidebar is pinned open (Click to unpin)" : "Pin Documents sidebar open"}
-                    >
-                      <PinIcon pinned={docsSidebarPinned} size={11} />
-                    </button>
-                  )}
-
                   <button
                     type="button"
                     onClick={() => handleOpenComparison()}
@@ -886,14 +822,14 @@ export default function ChatPage() {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setDocsSidebarPinned(false)}
+                      onClick={handleToggleDocs}
                       className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] transition-all cursor-pointer opacity-60 hover:opacity-100 hover:scale-105"
                       style={{
                         background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
                         border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #cbd5e1',
                         color: isDark ? '#fff' : '#0f172a',
                       }}
-                      title="Collapse sidebar (Hover to expand)"
+                      title="Collapse Documents Sidebar (⌘D)"
                     >
                       ▶
                     </button>
