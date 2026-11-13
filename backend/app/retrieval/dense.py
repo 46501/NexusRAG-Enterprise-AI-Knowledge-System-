@@ -31,8 +31,9 @@ def load_dense_client() -> None:
 
 
 def get_client() -> AsyncQdrantClient:
+    global _client
     if _client is None:
-        raise RuntimeError("Qdrant client not loaded. Call load_dense_client() at startup.")
+        load_dense_client()
     return _client
 
 

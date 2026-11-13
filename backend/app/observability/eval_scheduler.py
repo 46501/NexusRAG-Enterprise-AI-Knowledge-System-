@@ -28,6 +28,7 @@ _EVAL_STATUS = {
     "run_id": None,
     "scores": None,
     "error": None,
+    "progress": None,
     "schedule_interval": "manual", # "manual" | "6h" | "12h" | "24h"
 }
 
@@ -123,11 +124,18 @@ async def run_background_evaluation(sample_limit: int | None = None) -> dict:
     _EVAL_STATUS["started_at"] = started_at.isoformat()
     _EVAL_STATUS["completed_at"] = None
     _EVAL_STATUS["error"] = None
+    _EVAL_STATUS["progress"] = "Starting evaluation..."
+
+    def _update_progress(msg: str):
+        _EVAL_STATUS["progress"] = msg
 
     async def _worker():
         async with _eval_lock:
             try:
-                run_id, scores, _ = await evaluate_benchmark_dataset(sample_limit=sample_limit)
+                run_id, scores, _ = await evaluate_benchmark_dataset(
+                    sample_limit=sample_limit,
+                    progress_callback=_update_progress,
+                )
                 now_utc = datetime.now(timezone.utc)
 
                 # Persist to Postgres
@@ -144,10 +152,12 @@ async def run_background_evaluation(sample_limit: int | None = None) -> dict:
                 _EVAL_STATUS["run_id"] = str(run_id)
                 _EVAL_STATUS["scores"] = scores
                 _EVAL_STATUS["completed_at"] = now_utc.isoformat()
+                _EVAL_STATUS["progress"] = "Evaluation complete"
                 logger.info("Background evaluation successfully completed and saved: run_id=%s scores=%s", run_id, scores)
             except Exception as exc:
                 logger.exception("Background evaluation failed: %s", exc)
                 _EVAL_STATUS["error"] = str(exc)
+                _EVAL_STATUS["progress"] = f"Failed: {exc}"
             finally:
                 _EVAL_STATUS["is_running"] = False
 

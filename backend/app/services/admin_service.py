@@ -373,22 +373,8 @@ async def trigger_eval_run() -> dict:
         logger.warning("Eval run rejected: %d RAG slots in use", in_use)
         raise ServerUnderLoadError("server under load, try again later")
 
-    if _eval_lock.locked():
-        raise RuntimeError("An evaluation run is already in progress")
-
-    started_at = datetime.now(timezone.utc)
-
-    async def _runner() -> None:
-        async with _eval_lock:
-            from eval.run_eval import run_evaluation
-            try:
-                await run_evaluation()
-            except Exception as exc:
-                logger.exception("Background eval run failed: %s", exc)
-
-    asyncio.create_task(_runner())
-    logger.info("Eval run triggered at %s", started_at.isoformat())
-    return {"status": "started", "started_at": started_at}
+    from app.observability.eval_scheduler import run_background_evaluation
+    return await run_background_evaluation()
 
 
 async def get_admin_analytics(db: AsyncSession) -> dict:

@@ -112,6 +112,12 @@ async def get_eval_results_route(
     return [EvalResultResponse.model_validate(r) for r in rows]
 
 
+@router.get("/eval/status")
+async def get_eval_status_route(_: User = Depends(_require_admin)):
+    from app.observability.eval_scheduler import get_eval_status
+    return get_eval_status()
+
+
 @router.post(
     "/eval/run",
     response_model=EvalRunStartResponse,

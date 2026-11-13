@@ -88,8 +88,9 @@ def load_generator() -> None:
 
 
 def get_client() -> genai.Client:
+    global _client
     if _client is None:
-        raise RuntimeError("Generator not loaded. Call load_generator() at startup.")
+        load_generator()
     return _client
 
 

@@ -185,13 +185,33 @@ export default function AdminPage() {
   const [runningEval, setRunningEval] = useState(false)
   const [evalPolling, setEvalPolling] = useState(false)
   const [evalBaselineAt, setEvalBaselineAt] = useState(null)
+  const [evalStatusInfo, setEvalStatusInfo] = useState(null)
 
   useEffect(() => {
     if (tab === 'analytics' && analytics === null) fetchAnalytics()
     if (tab === 'documents' && docs === null) fetchDocs()
     if (tab === 'users' && users === null) fetchUsers()
-    if (tab === 'eval' && evalResults === null) fetchEval()
+    if (tab === 'eval') {
+      if (evalResults === null) fetchEval()
+      checkEvalStatus()
+    }
   }, [tab])
+
+  async function checkEvalStatus() {
+    try {
+      const res = await api.get('/admin/eval/status')
+      const st = res.data
+      setEvalStatusInfo(st)
+      if (st?.is_running) {
+        setEvalPolling(true)
+      } else if (st?.error && evalPolling) {
+        setEvalPolling(false)
+        setEvalError(st.error)
+      }
+    } catch {
+      // ignore status endpoint error
+    }
+  }
 
   async function fetchAnalytics() {
     setAnalyticsLoading(true)
@@ -208,22 +228,51 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!evalPolling) return
+    let pollCount = 0
+    const maxPolls = 180 // 180 * 3.5s = ~10.5 mins safety timeout
     const id = setInterval(async () => {
+      pollCount++
+      if (pollCount > maxPolls) {
+        setEvalPolling(false)
+        setEvalError('Evaluation timed out after 10 minutes. Please check server logs.')
+        clearInterval(id)
+        return
+      }
+
       try {
-        const res = await api.get('/admin/eval/results')
-        const rows = res.data
-        if (rows && rows.length > 0) {
-          const latestAt = rows.reduce((max, r) => (r.run_at > max ? r.run_at : max), '')
-          if (!evalBaselineAt || latestAt > evalBaselineAt) {
-            setEvalResults(rows)
-            setEvalPolling(false)
-            clearInterval(id)
+        const resStatus = await api.get('/admin/eval/status')
+        const st = resStatus.data
+        setEvalStatusInfo(st)
+
+        if (!st?.is_running) {
+          setEvalPolling(false)
+          clearInterval(id)
+          if (st?.error) {
+            setEvalError(st.error)
+          } else {
+            const res = await api.get('/admin/eval/results')
+            setEvalResults(res.data)
           }
+          return
         }
       } catch {
-        // keep polling
+        // Fallback to checking results directly if status route encounters an issue
+        try {
+          const res = await api.get('/admin/eval/results')
+          const rows = res.data
+          if (rows && rows.length > 0) {
+            const latestAt = rows.reduce((max, r) => (r.run_at > max ? r.run_at : max), '')
+            if (!evalBaselineAt || latestAt > evalBaselineAt) {
+              setEvalResults(rows)
+              setEvalPolling(false)
+              clearInterval(id)
+            }
+          }
+        } catch {
+          // keep polling
+        }
       }
-    }, 5000)
+    }, 3500)
     return () => clearInterval(id)
   }, [evalPolling, evalBaselineAt])
 
@@ -314,13 +363,28 @@ export default function AdminPage() {
     }
   }
 
+  function groupEvalRuns(results) {
+    if (!results || results.length === 0) return []
+    const runs = {}
+    for (const r of results) {
+      if (!runs[r.run_id]) runs[r.run_id] = { id: r.run_id, runAt: r.run_at, scores: {} }
+      if (r.run_at > runs[r.run_id].runAt) runs[r.run_id].runAt = r.run_at
+      if (r.score != null && !Number.isNaN(r.score)) {
+        runs[r.run_id].scores[r.metric_name] = r.score
+      }
+    }
+    return Object.values(runs).sort((a, b) => (b.runAt > a.runAt ? 1 : -1))
+  }
+
   async function triggerEval() {
+    if (isDemoAdmin || runningEval || evalPolling) return
     setRunningEval(true)
     setEvalError(null)
     const { runAt: currentLatest } = latestRunScores(evalResults)
     try {
       await api.post('/admin/eval/run')
       setEvalBaselineAt(currentLatest)
+      setEvalStatusInfo({ is_running: true, progress: 'Starting evaluation...' })
       setEvalPolling(true)
     } catch (err) {
       setEvalError(err.response?.data?.detail ?? 'Failed to start eval run.')
@@ -330,6 +394,7 @@ export default function AdminPage() {
   }
 
   const { scores: latestScores, runAt: lastRunAt } = latestRunScores(evalResults)
+  const evalRuns = groupEvalRuns(evalResults)
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0a] text-white' : 'bg-[#f8fafc] text-slate-900'} transition-colors`}>
@@ -655,7 +720,9 @@ export default function AdminPage() {
                 <span className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 rounded-full border-2 border-amber-500/40 border-t-amber-500 animate-spin" />
                 <div>
                   <p className={`text-xs font-medium ${isDark ? 'text-amber-400' : 'text-amber-800'}`}>Evaluation in progress</p>
-                  <p className={`text-xs mt-0.5 ${isDark ? 'text-amber-400/60' : 'text-amber-700/80'}`}>Typically takes 5–8 minutes. Results will update automatically.</p>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-amber-400/60' : 'text-amber-700/80'}`}>
+                    {evalStatusInfo?.progress || 'Running RAGAS evaluation across enterprise benchmark dataset. Results will update automatically.'}
+                  </p>
                 </div>
               </div>
             )}
@@ -676,6 +743,38 @@ export default function AdminPage() {
                   <p className={`text-center text-sm ${isDark ? 'text-white/25' : 'text-slate-400'} py-4`}>
                     No eval results yet. Click "Run Eval" to start.
                   </p>
+                )}
+
+                {evalRuns.length > 0 && (
+                  <div className="mt-6 space-y-3">
+                    <h3 className={`text-xs font-semibold ${isDark ? 'text-white/60' : 'text-slate-600'} uppercase tracking-wide`}>
+                      Run History ({evalRuns.length})
+                    </h3>
+                    <div className={`overflow-x-auto rounded-xl border ${isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-white shadow-sm'}`}>
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className={`border-b ${isDark ? 'border-white/10 text-white/40' : 'border-slate-200 text-slate-500'}`}>
+                            <th className="px-4 py-2.5 text-left font-medium">Timestamp</th>
+                            <th className="px-4 py-2.5 text-right font-medium">Faithfulness</th>
+                            <th className="px-4 py-2.5 text-right font-medium">Answer Relevancy</th>
+                            <th className="px-4 py-2.5 text-right font-medium">Context Precision</th>
+                            <th className="px-4 py-2.5 text-right font-medium">Context Recall</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {evalRuns.slice(0, 10).map((run) => (
+                            <tr key={run.id} className={`border-b last:border-b-0 ${isDark ? 'border-white/5 hover:bg-white/[0.02]' : 'border-slate-100 hover:bg-slate-50'}`}>
+                              <td className={`px-4 py-2 font-mono ${isDark ? 'text-white/70' : 'text-slate-700'}`}>{fmtTs(run.runAt)}</td>
+                              <td className="px-4 py-2 text-right font-mono">{run.scores.faithfulness != null ? `${(run.scores.faithfulness * 100).toFixed(1)}%` : '—'}</td>
+                              <td className="px-4 py-2 text-right font-mono">{run.scores.answer_relevancy != null ? `${(run.scores.answer_relevancy * 100).toFixed(1)}%` : '—'}</td>
+                              <td className="px-4 py-2 text-right font-mono">{run.scores.context_precision != null ? `${(run.scores.context_precision * 100).toFixed(1)}%` : '—'}</td>
+                              <td className="px-4 py-2 text-right font-mono">{run.scores.context_recall != null ? `${(run.scores.context_recall * 100).toFixed(1)}%` : '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 )}
               </>
             )}
