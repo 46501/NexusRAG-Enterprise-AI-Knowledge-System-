@@ -462,59 +462,57 @@ export default function ChatPage() {
 
   return (
     <div
-      className="flex flex-col h-screen overflow-hidden transition-colors"
+      className="flex h-screen overflow-hidden transition-colors"
       style={{
         background: isDark ? '#0a0a0a' : '#f8fafc',
         color: isDark ? '#fff' : '#0f172a',
         fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif"
       }}
     >
-      {/* ── TOP: Workspace Full-Width Header (Always uncompressed and independent of sidebars) ── */}
-      <WorkspaceHeader
-        userRole={user?.role}
-        isDark={isDark}
-        threadsSidebarOpen={threadsSidebarOpen}
-        docsSidebarOpen={docsSidebarOpen}
-        onToggleThreads={handleToggleThreads}
-        onToggleDocs={handleToggleDocs}
-        threadsMobileOpen={threadsMobileDrawerOpen}
-        docsMobileOpen={docsMobileDrawerOpen}
-        onToggleThreadsMobile={() => setThreadsMobileDrawerOpen((v) => !v)}
-        onToggleDocsMobile={() => setDocsMobileDrawerOpen((v) => !v)}
-        onOpenAgentModal={handleOpenAgentModal}
+      {/* ── LEFT: Thread History Sidebar (Full Height) ──────────────────── */}
+      <ThreadHistorySidebar
+        isOpen={threadsMobileDrawerOpen}
+        onClose={() => setThreadsMobileDrawerOpen(false)}
+        isExpanded={threadsSidebarOpen}
+        onToggle={handleToggleThreads}
+        threads={threads}
+        activeThreadId={activeThreadId}
+        onSelectThread={handleSelectThread}
         onNewChat={handleNewChat}
-        onOpenExport={() => setExportOpen(true)}
-        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-        onOpenComparison={handleOpenComparison}
-        onOpenUpload={() => setUploadModalOpen(true)}
-        isMobile={isMobile}
+        onRenameThread={handleRenameThread}
+        onDeleteThread={handleDeleteThread}
+        onClearAll={handleClearAllThreads}
+        userRole={user?.role}
       />
 
-      {/* ── WORKSPACE BODY: Left Sidebar + Center Chat Area + Right Sidebar ── */}
-      <div className="flex flex-1 min-h-0 overflow-hidden relative">
-        {/* ── LEFT: Thread History Sidebar ──────────────────── */}
-        <ThreadHistorySidebar
-          isOpen={threadsMobileDrawerOpen}
-          onClose={() => setThreadsMobileDrawerOpen(false)}
-          isExpanded={threadsSidebarOpen}
-          onToggle={handleToggleThreads}
-          threads={threads}
-          activeThreadId={activeThreadId}
-          onSelectThread={handleSelectThread}
-          onNewChat={handleNewChat}
-          onRenameThread={handleRenameThread}
-          onDeleteThread={handleDeleteThread}
-          onClearAll={handleClearAllThreads}
+      {/* ── CENTER: Main Chat Column with Header ────────────────────────── */}
+      <div
+        className="flex flex-col min-w-0 overflow-hidden flex-1 relative"
+        style={{ borderRight: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e2e8f0' }}
+      >
+        {/* Workspace Header at Top of Center Area (Matching Reference Screenshot) */}
+        <WorkspaceHeader
           userRole={user?.role}
+          isDark={isDark}
+          threadsSidebarOpen={threadsSidebarOpen}
+          docsSidebarOpen={docsSidebarOpen}
+          onToggleThreads={handleToggleThreads}
+          onToggleDocs={handleToggleDocs}
+          threadsMobileOpen={threadsMobileDrawerOpen}
+          docsMobileOpen={docsMobileDrawerOpen}
+          onToggleThreadsMobile={() => setThreadsMobileDrawerOpen((v) => !v)}
+          onToggleDocsMobile={() => setDocsMobileDrawerOpen((v) => !v)}
+          onOpenAgentModal={handleOpenAgentModal}
+          onNewChat={handleNewChat}
+          onOpenExport={() => setExportOpen(true)}
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+          onOpenComparison={handleOpenComparison}
+          onOpenUpload={() => setUploadModalOpen(true)}
+          isMobile={isMobile}
         />
 
-        {/* ── CENTER: Chat column ───────────────────────────── */}
-        <div
-          className="flex flex-col min-w-0 overflow-hidden"
-          style={{ flex: 1, borderRight: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e2e8f0' }}
-        >
-          {/* Messages */}
-          <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 sm:px-6 pt-6 pb-28 chat-scroll min-h-0">
+        {/* Messages */}
+        <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 sm:px-6 pt-6 pb-28 chat-scroll min-h-0">
             <div className="max-w-[700px] mx-auto flex flex-col gap-4 min-h-full">
               {messages.length === 0 ? (
                 <WorkspaceEmptyState
@@ -1099,7 +1097,6 @@ export default function ChatPage() {
             </div>
           )}
         </aside>
-      </div>
 
       {/* Interactive Citation Inspector Drawer */}
       <CitationDrawer

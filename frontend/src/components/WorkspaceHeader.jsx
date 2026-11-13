@@ -71,16 +71,16 @@ export default function WorkspaceHeader({
 
   return (
     <header
-      className="w-full flex-shrink-0 flex items-center justify-between px-3 sm:px-4 py-2 z-30 transition-colors select-none relative"
+      className="w-full flex-shrink-0 flex items-center justify-between px-2.5 sm:px-4 py-2 z-30 transition-colors select-none relative min-w-0"
       style={{
-        background: isDark ? 'rgba(15, 17, 26, 0.90)' : 'rgba(255, 255, 255, 0.92)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        background: isDark ? 'rgba(15, 17, 26, 0.85)' : 'rgba(255, 255, 255, 0.88)',
+        backdropFilter: 'blur(16px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
         borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
       }}
     >
-      {/* ── LEFT CLUSTER: macOS Window dots, Sidebar Toggle, Back, Department ── */}
-      <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-shrink">
+      {/* ── LEFT CLUSTER: macOS Window dots, Sidebar Toggle, Back, Department, Quick ⌘K ── */}
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
         {/* macOS Window Controls */}
         <div className="hidden sm:flex items-center gap-1.5 mr-0.5 select-none shrink-0">
           <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] border border-[#e0443e]/80 inline-block shadow-xs" />
@@ -122,19 +122,38 @@ export default function WorkspaceHeader({
             style={{ background: d.dot, boxShadow: `0 0 8px ${d.dot}` }}
           />
           <span
-            className="text-xs sm:text-sm font-semibold tracking-tight whitespace-nowrap truncate max-w-[120px] sm:max-w-[180px] md:max-w-none"
+            className="text-xs sm:text-sm font-semibold tracking-tight whitespace-nowrap truncate max-w-[110px] sm:max-w-[160px] md:max-w-none"
             style={{ color: isDark ? '#fff' : '#0f172a' }}
           >
             {deptName}
           </span>
-          <span className="hidden xl:inline text-[11px] font-medium opacity-40 whitespace-nowrap">
+          <span className="hidden 2xl:inline text-[11px] font-medium opacity-40 whitespace-nowrap">
             Workspace
           </span>
         </div>
+
+        {/* Quick Command Palette Button next to Workspace (Matching Original Design) */}
+        <button
+          type="button"
+          onClick={onOpenCommandPalette}
+          className="hidden 2xl:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-xs font-medium transition-all cursor-pointer opacity-70 hover:opacity-100 shrink-0"
+          style={{
+            background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
+            border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #cbd5e1',
+            color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#475569',
+          }}
+          title="Open Command Palette (⌘K / Ctrl+K)"
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <kbd className="font-mono text-[10px] opacity-75">⌘K</kbd>
+        </button>
       </div>
 
-      {/* ── CENTER CLUSTER: Prioritized Primary Actions ── */}
-      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-shrink-0 mx-1 sm:mx-2">
+      {/* ── CENTER CLUSTER: Prioritized Primary Actions (No Overlap) ── */}
+      <div className="flex items-center gap-1.5 sm:gap-2 justify-center min-w-0 flex-shrink mx-1 sm:mx-2">
         {/* Prioritized 1: Agents Auditor */}
         <button
           type="button"
@@ -147,9 +166,9 @@ export default function WorkspaceHeader({
           }}
           title="Launch Autonomous Policy Compliance & Risk Auditor (Tier 2)"
         >
-          <span className="text-sm">🤖</span>
+          <span className="text-sm leading-none">🤖</span>
           <span className="hidden xs:inline sm:inline">Agents</span>
-          <span className="hidden lg:inline text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/30 text-purple-200">
+          <span className="hidden 2xl:inline text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/30 text-purple-200">
             Tier 2
           </span>
         </button>
@@ -166,12 +185,9 @@ export default function WorkspaceHeader({
           }}
           title="Start fresh conversation thread (⌘N)"
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          <span className="hidden sm:inline">New Chat</span>
-          <span className="sm:hidden">New</span>
+          <span className="text-sm font-semibold leading-none">+</span>
+          <span className="hidden 2xl:inline">New Chat</span>
+          <span className="hidden min-[1366px]:inline 2xl:hidden">New</span>
         </button>
 
         {/* Prioritized 3: Export & Share */}
@@ -191,33 +207,13 @@ export default function WorkspaceHeader({
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          <span className="hidden md:inline">Export & Share</span>
-          <span className="hidden xs:inline sm:inline md:hidden">Export</span>
-        </button>
-
-        {/* Secondary: Command Palette (shown directly on 1280px+) */}
-        <button
-          type="button"
-          onClick={onOpenCommandPalette}
-          className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer opacity-75 hover:opacity-100 whitespace-nowrap shrink-0"
-          style={{
-            background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
-            border: isDark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid #cbd5e1',
-            color: isDark ? 'rgba(255, 255, 255, 0.8)' : '#475569',
-          }}
-          title="Commands (⌘K)"
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <span>Commands</span>
-          <kbd className="font-mono text-[9px] px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 opacity-70">⌘K</kbd>
+          <span className="hidden 2xl:inline">Export & Share</span>
+          <span className="hidden min-[1366px]:inline 2xl:hidden">Export</span>
         </button>
       </div>
 
-      {/* ── RIGHT CLUSTER: More Menu, Docs Toggle, User Profile ── */}
-      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 ml-1">
+      {/* ── RIGHT CLUSTER: More Menu, Docs Toggle, User Profile (ml-auto anchors to right) ── */}
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
         {/* More Actions Menu (...) */}
         <div className="relative inline-block" ref={moreMenuRef}>
           <button

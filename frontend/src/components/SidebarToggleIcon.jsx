@@ -74,3 +74,4 @@ export function PanelRightIcon({ isOpen = true, size = 15, className = '' }) {
     </svg>
   )
 }
+
