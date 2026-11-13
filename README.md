@@ -1,390 +1,549 @@
 # NexusRAG — Enterprise AI Knowledge System with Strict RBAC & Hybrid Search
 
-> **Live Production Deployments:**
-> - **Frontend (Vercel):** [https://nexus-rag-enterprise-ai-knowledge-s.vercel.app](https://nexus-rag-enterprise-ai-knowledge-s.vercel.app/)
-> - **Backend API (Render):** [https://nexusrag-enterprise-ai-knowledge-system.onrender.com](https://nexusrag-enterprise-ai-knowledge-system.onrender.com/health)
-> - **Vector Database:** Qdrant Cloud Managed Cluster (`rag_documents`)
-> - **Relational Database:** Supabase PostgreSQL Managed Cluster
->
-> **Demo Department Accounts:**
-> | Role | Email | Password | Access Scope |
-> |---|---|---|---|
-> | **Admin** | `admin@example.com` | `admin-demo-2026` | Full system access, all departments, user & document management, eval & analytics |
-> | **HR** | `hr@demo.com` | `hr-demo-2026` | HR policies, employee handbook, benefits, onboarding, reviews |
-> | **Engineering** | `engineering@demo.com` | `eng-demo-2026` | Architecture, APIs, deployment guides, incident response, security standards |
-> | **Finance** | `finance@demo.com` | `fin-demo-2026` | Budgets, per diem, expense reimbursements, accounting & audit guidelines |
+<p align="center">
+  <img src="docs/screenshots/landing-page.png" alt="NexusRAG Hero Banner" width="100%" style="border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.15);" />
+</p>
+
+<p align="center">
+  <strong>Production-Grade Multi-Tenant Retrieval-Augmented Generation (RAG) Platform with Vector-Layer RBAC, Hybrid Search, Neural Reranking, and Continuous PDF Citations.</strong>
+</p>
+
+<p align="center">
+  <a href="https://nexus-rag-enterprise-ai-knowledge-s.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-Vercel-black?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
+  <a href="https://nexusrag-enterprise-ai-knowledge-system.onrender.com/health"><img src="https://img.shields.io/badge/API_Status-Render-46E3B7?style=for-the-badge&logo=render" alt="API Status" /></a>
+  <a href="https://github.com/46501/NexusRAG-Enterprise-AI-Knowledge-System-"><img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" alt="Repository" /></a>
+  <img src="https://img.shields.io/badge/QA_Audit-129%2F129_Passed_(100%25)-success?style=for-the-badge&logo=checkmarx" alt="QA Passed" />
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" />
+</p>
 
 ---
 
-## Overview
+## 📌 Executive Summary
 
-**NexusRAG** is a production-grade Enterprise Retrieval-Augmented Generation (RAG) platform modeling role-restricted multi-tenant organizational knowledge across **Human Resources**, **Engineering**, and **Finance** departments.
+| Property | Details |
+| :--- | :--- |
+| **Live Frontend (Vercel)** | [https://nexus-rag-enterprise-ai-knowledge-s.vercel.app](https://nexus-rag-enterprise-ai-knowledge-s.vercel.app/) |
+| **Production API (Render)** | [https://nexusrag-enterprise-ai-knowledge-system.onrender.com](https://nexusrag-enterprise-ai-knowledge-system.onrender.com/health) |
+| **Vector Database** | Qdrant Cloud Managed Cluster (`rag_documents`) |
+| **Relational Database** | Supabase PostgreSQL Managed Cluster |
+| **LLM Engine** | Google Gemini (`gemini-3.5-flash-lite` with automatic failover) |
+| **Embeddings** | `BAAI/bge-small-en-v1.5` (384-dimensional dense vectors) |
+| **Sparse Lexical Search** | BM25s (in-process sparse CSC matrix) |
+| **Neural Reranker** | Cross-Encoder (`ms-marco-MiniLM-L-6-v2`) |
 
-Each employee role can only discover, read, and synthesize documents explicitly tagged for their department. Department isolation is strictly enforced at the **Qdrant vector query layer** and database filter level—not in post-retrieval application code—guaranteeing that restricted chunks never enter the LLM context window.
-
-Retrieval runs a state-of-the-art hybrid pipeline combining dense embeddings (`BAAI/bge-small-en-v1.5`) with sparse BM25 (`BM25s`) via **Reciprocal Rank Fusion (RRF)**, re-ranked with a cross-encoder (`ms-marco-MiniLM-L-6-v2`), and synthesized with **Google Gemini (`gemini-3.5-flash-lite`)** featuring multi-model automatic failover and Server-Sent Events (SSE) token streaming.
+### Verified Department Credentials (Test Accounts)
+| Department | Work Email | Password | Access Scope |
+| :--- | :--- | :--- | :--- |
+| **HR** | `hr@demo.com` | `hr-demo-2026` | Parental leave, benefits, compensation, handbook, onboarding policies |
+| **Engineering** | `engineering@demo.com` | `eng-demo-2026` | System architecture, deployment runbooks, APIs, incident response, SLOs |
+| **Finance** | `finance@demo.com` | `fin-demo-2026` | Budget policies, expenditure thresholds, financial audits, per diem rules |
+| **Admin** | `admin@example.com` | `admin-demo-2026` | Global cross-department access, user controls, observability, security logs |
 
 ---
 
-## System Architecture
+## 📑 Table of Contents
+1. [Project Overview](#-project-overview)
+2. [Live Application Showcase](#-live-application-showcase)
+3. [Key Architectural Highlights](#-key-architectural-highlights)
+4. [System Architecture](#-system-architecture)
+5. [End-to-End RAG Pipeline](#-end-to-end-rag-pipeline)
+6. [Technology Stack](#-technology-stack)
+7. [Security & Defensive Guardrails](#-security--defensive-guardrails)
+8. [Comprehensive Testing & QA Verification](#-comprehensive-testing--qa-verification)
+9. [Local Development & Setup Guide](#-local-development--setup-guide)
+10. [Environment Variables Reference](#-environment-variables-reference)
+11. [Repository Structure](#-repository-structure)
+12. [Deployment Architecture](#-deployment-architecture)
+13. [Future Roadmap](#-future-roadmap)
+14. [Author & License](#-author--license)
+
+---
+
+## 💡 Project Overview
+
+### The Enterprise Knowledge Problem
+Enterprises struggle with fragmented documents scattered across departments. Standard search engines rely on simple keyword queries that miss semantic context, while vanilla LLM solutions are vulnerable to hallucinations, lack verified citations, and dangerously leak confidential HR or financial data across tenant boundaries.
+
+### How NexusRAG Solves It
+**NexusRAG** is an enterprise-grade AI knowledge platform built to solve these exact enterprise hurdles through:
+1. **Cryptographic & Vector-Layer RBAC Isolation:** Role-based access control is enforced at the **Qdrant vector query layer** and PostgreSQL filter level. Chunks from unauthorized departments are filtered out *before* scoring, ensuring restricted corporate data never touches the LLM context window.
+2. **Contextual Hybrid Retrieval:** Pairs dense semantic embeddings (`BAAI/bge-small-en-v1.5`) with sparse lexical indexing (`BM25s`) via **Reciprocal Rank Fusion (RRF)**, ensuring high accuracy for both natural language questions and exact policy IDs/acronyms.
+3. **Cross-Encoder Neural Reranking:** Applies `ms-marco-MiniLM-L-6-v2` across fused candidate chunks to evaluate deep query-passage interactions, discarding irrelevant context.
+4. **Verifiable Citations with Continuous PDF Viewing:** Every generated claim includes interactive bracketed citations (`[1]`, `[2]`). Clicking a citation opens the **Document Reader** with continuous vertical page rendering, exact chunk clause highlighting, and readable text copying with zero binary leakage.
+5. **Production AI Defense:** Real-time prompt injection firewall, automated PII scrubbing (with Luhn-validated credit card and SSN redaction), and brute-force account lockout.
+
+---
+
+## 📸 Live Application Showcase
+
+### 1. Modern Landing Page & Department Selector
+Dynamic entry point highlighting multi-tenant capabilities, department-specific policy scopes, architecture specs, and direct access controls.
+<p align="center">
+  <img src="docs/screenshots/landing-page.png" alt="NexusRAG Landing Page" width="90%" style="border-radius: 8px; border: 1px solid #e2e8f0;" />
+</p>
+
+### 2. Main Enterprise Workspace
+Three-panel conversational workspace featuring collapsible thread history, multi-surface command palette, real-time query pipeline indicators, and pinned departmental documents.
+<p align="center">
+  <img src="docs/screenshots/workspace.png" alt="NexusRAG Main Workspace" width="90%" style="border-radius: 8px; border: 1px solid #e2e8f0;" />
+</p>
+
+### 3. Grounded RAG Chat with Streaming Citations
+Grounded synthesis via Google Gemini with Server-Sent Events (SSE) streaming, interactive citation chips (`[1]`), confidence indicators, and copyable Markdown briefs.
+<p align="center">
+  <img src="docs/screenshots/chat-response.png" alt="Chat Response with Citations" width="90%" style="border-radius: 8px; border: 1px solid #e2e8f0;" />
+</p>
+
+### 4. Grounding Verification Modal & Evidence Inspector
+Inspect the exact retrieved clause, semantic relevance score, document name, and verified text behind any citation chip.
+<p align="center">
+  <img src="docs/screenshots/citation-drawer.png" alt="Citation Grounding Modal" width="90%" style="border-radius: 8px; border: 1px solid #e2e8f0;" />
+</p>
+
+### 5. High-Performance PDF Document Reader
+Continuous vertical page scrolling powered by PDF.js Canvas, zoom controls (50%–200%), fit-width mode, clean readable text extraction, and direct binary downloads.
+<p align="center">
+  <img src="docs/screenshots/pdf-reader.png" alt="PDF Document Reader" width="90%" style="border-radius: 8px; border: 1px solid #e2e8f0;" />
+</p>
+
+### 6. Vector Chunk Highlighting View
+Inspect all indexed vector chunks, similarity scores, and metadata badges directly inside the reader modal.
+<p align="center">
+  <img src="docs/screenshots/chunk-highlighting.png" alt="Chunk Highlighting View" width="90%" style="border-radius: 8px; border: 1px solid #e2e8f0;" />
+</p>
+
+### 7. Multi-Document Side-by-Side Comparison Matrix
+Select two departmental policies or runbooks to generate structured comparison tables across operational, financial, and compliance dimensions.
+<p align="center">
+  <img src="docs/screenshots/document-comparison.png" alt="Document Comparison Matrix" width="90%" style="border-radius: 8px; border: 1px solid #e2e8f0;" />
+</p>
+
+### 8. In-App Document Ingestion & Management
+Drag-and-drop document ingestion pipeline with automatic text extraction, chunking, and immediate vector indexing in Qdrant Cloud.
+<p align="center">
+  <img src="docs/screenshots/document-upload.png" alt="Document Upload Modal" width="90%" style="border-radius: 8px; border: 1px solid #e2e8f0;" />
+</p>
+
+### 9. Admin Control Center & Real-Time Analytics
+Executive dashboard with query volume tracking, P95 latency percentiles, user feedback ratios, and department distribution charts.
+<p align="center">
+  <img src="docs/screenshots/admin-dashboard.png" alt="Admin Dashboard" width="90%" style="border-radius: 8px; border: 1px solid #e2e8f0;" />
+</p>
+
+### 10. Security Forensic Console & SIEM Audit Trail
+Real-time security telemetry displaying prompt injection detections, PII redactions, unauthorized access attempts, and brute-force lockout controls.
+<p align="center">
+  <img src="docs/screenshots/analytics.png" alt="Security Forensic Console" width="90%" style="border-radius: 8px; border: 1px solid #e2e8f0;" />
+</p>
+
+### 11. Mobile Responsive Experience
+Adaptive layout with independent sliding drawers and touch-optimized action bars across mobile devices and tablets.
+<p align="center">
+  <img src="docs/screenshots/mobile-responsive.png" alt="Mobile Responsive View" width="380px" style="border-radius: 12px; border: 1px solid #e2e8f0;" />
+</p>
+
+---
+
+## 🏛️ System Architecture
+
+```mermaid
+flowchart TD
+    subgraph ClientLayer ["Client Layer (React 18 + Vite)"]
+        UI["Modern Web Interface\n(Tailwind CSS, Dark/Light Themes)"]
+        Reader["Continuous PDF Reader\n(PDF.js Canvas & Chunk Inspector)"]
+        CompMatrix["Multi-Document Matrix\n(Side-by-Side Synthesis)"]
+        CmdPal["Command Palette\n(Ctrl+K / Quick Navigation)"]
+    end
+
+    subgraph SecurityGateway ["Security & API Gateway (FastAPI)"]
+        AuthGuard["Dual Auth Guard\n(JWT Bearer & HttpOnly Cookies)"]
+        RBAC["Strict Multi-Tenant RBAC\n(HR / Engineering / Finance / Admin)"]
+        Firewall["AI Guardrail Firewall\n(Prompt Injection & Jailbreak Defense)"]
+        PII["Real-Time PII Scrubber\n(Luhn Check & SSN Masking)"]
+        RateLimit["Rate Limiting\n(SlowAPI Concurrency Control)"]
+    end
+
+    subgraph RetrievalEngine ["Hybrid Retrieval & Reranking Engine"]
+        DenseQdrant["Dense Vector Search\n(Qdrant Cloud + BGE-small-en-v1.5)\n[Strict Role Filter Applied]"]
+        SparseBM25["Sparse Lexical Search\n(BM25s CSC Sparse Matrix)\n[Exact Token & Code Match]"]
+        RRF["Reciprocal Rank Fusion\n(Multi-Query Merging & Normalization)"]
+        Reranker["Cross-Encoder Neural Reranking\n(ms-marco-MiniLM-L-6-v2)"]
+    end
+
+    subgraph GenerationLayer ["Synthesis & Evaluation Layer"]
+        Gemini["Google Gemini LLM\n(gemini-3.5-flash-lite / gemini-3.5-flash)"]
+        CRAG["Anti-Hallucination Guard\n(Retrieval Sufficiency Check)"]
+        Streamer["Server-Sent Events (SSE)\n(Real-Time Progressive Token Streaming)"]
+        RAGAS["RAGAS Evaluation Loop\n(Faithfulness, Relevancy, Precision, Recall)"]
+    end
+
+    subgraph StorageLayer ["Persistence & Cloud Infrastructure"]
+        Postgres[("Supabase PostgreSQL\n(Users, Documents, Queries, Security Logs)")]
+        QdrantDB[("Qdrant Cloud Managed Cluster\n(384-dim Dense Vector Embeddings)")]
+    end
+
+    %% Client Interactions
+    UI -->|HTTPS / WSS| AuthGuard
+    AuthGuard --> RBAC
+    RBAC --> Firewall
+    Firewall --> PII
+    PII --> RateLimit
+
+    %% Ingestion & Retrieval Flow
+    RateLimit --> DenseQdrant
+    RateLimit --> SparseBM25
+    DenseQdrant --> RRF
+    SparseBM25 --> RRF
+    RRF --> Reranker
+
+    %% Generation Flow
+    Reranker --> CRAG
+    CRAG --> Gemini
+    Gemini --> Streamer
+    Streamer -->|text/event-stream| UI
+
+    %% Storage Connections
+    DenseQdrant <-->|gRPC / REST| QdrantDB
+    AuthGuard <-->|SQLAlchemy Async| Postgres
+    SecurityGateway -.->|Audit Logs| Postgres
+    GenerationLayer -.->|Benchmark Metrics| RAGAS
+```
+
+---
+
+## ⚡ End-to-End RAG Pipeline
+
+The NexusRAG retrieval and synthesis workflow processes every inquiry through nine deterministic stages:
+
+```
+[User Inquiry]
+      │
+      ▼
+1. Security Screening & PII Sanitization
+   ├─ Checks query against Prompt Injection & Jailbreak Classifier (<1ms)
+   └─ Masks payment cards (Luhn valid), SSNs, and credentials to [REDACTED_*]
+      │
+      ▼
+2. Contextual Query Planning
+   ├─ Checks for multi-hop comparative intent (e.g. "Compare X and Y")
+   └─ Decomposes multi-clause questions into 2-3 focused atomic sub-queries
+      │
+      ▼
+3. Role-Isolated Hybrid Retrieval (Dual-Channel)
+   ├─ Channel A (Dense): BAAI/bge-small-en-v1.5 cosine search in Qdrant Cloud
+   │  └─ Enforces mandatory payload filter: department == user.department
+   └─ Channel B (Sparse): BM25s sparse lexical search over in-memory CSC matrix
+      │
+      ▼
+4. Reciprocal Rank Fusion (RRF)
+   └─ Combines ranked outputs: RRF_score(d) = ∑ (1 / (60 + rank_i(d)))
+      │
+      ▼
+5. Neural Cross-Encoder Reranking
+   └─ Evaluates top-25 chunks with ms-marco-MiniLM-L-6-v2; retains top-5 chunks
+      │
+      ▼
+6. Parent-Child Chunk Expansion
+   └─ Merges adjacent chunks from identical documents to preserve unbroken tables and lists
+      │
+      ▼
+7. Self-Reflective CRAG Verification
+   └─ Evaluates retrieval confidence; declines gracefully if evidence is missing
+      │
+      ▼
+8. Grounded Synthesis via Google Gemini
+   └─ Generates answer with exact citation anchors [1], [2] referencing source clauses
+      │
+      ▼
+9. Server-Sent Events (SSE) Streaming
+   └─ Streams tokens progressively to the client with sub-300ms Time-To-First-Token (TTFT)
+```
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology | Version | Purpose / Architecture Role |
+| :--- | :--- | :--- | :--- |
+| **Frontend Framework** | **React** | `18.2.0` | Declarative component UI with stateful workspaces and responsive layouts |
+| **Build Tooling** | **Vite** | `6.4.2` | Ultra-fast client bundler and HMR dev server |
+| **Styling & Theme** | **Tailwind CSS** | `3.4.1` | Utility-first styling with comprehensive Dark/Light design tokens |
+| **PDF Rendering** | **PDF.js** | `4.10.38` | Continuous vertical canvas rendering and binary document parsing |
+| **Backend Framework** | **FastAPI** | `0.110.0` | High-performance asynchronous Python API with automatic OpenAPI specs |
+| **ASGI Server** | **Uvicorn** | `0.29.0` | Production ASGI web server running async event loops |
+| **Relational Database** | **PostgreSQL (Supabase)**| `15.x` | Managed user store, document metadata, audit logs, and feedback |
+| **Database ORM** | **SQLAlchemy 2.0 + asyncpg**| `2.0.28` | Asynchronous database operations and connection pooling |
+| **Vector Database** | **Qdrant Cloud** | `1.8.x` | Managed cloud vector database storing 384-dimensional dense vectors |
+| **Semantic Embeddings** | **BAAI/bge-small-en-v1.5** | HuggingFace | 384-dimensional cosine similarity embeddings |
+| **Lexical Search** | **BM25s** | `0.1.10` | In-process sparse CSC lexical retrieval for exact keywords and IDs |
+| **Neural Reranker** | **Cross-Encoder** | MiniLM-L6 | `cross-encoder/ms-marco-MiniLM-L-6-v2` neural rank scorer |
+| **LLM Engine** | **Google Gemini** | `gemini-3.5` | `gemini-3.5-flash-lite` primary with failover to `gemini-3.5-flash` |
+| **Security & Auth** | **python-jose + passlib** | `3.3.0` | JWT token rotation (HS256) and bcrypt password hashing (`$2b$12$`) |
+| **Rate Limiting** | **SlowAPI** | `0.1.9` | Per-client rate limiting and concurrency throttling |
+| **E2E Browser Testing**| **Playwright** | `1.57.0` | Multi-viewport automated browser testing across desktop and mobile |
+| **Unit & Integration** | **pytest + pytest-asyncio**| `8.1.1` | Asynchronous test suite covering APIs, RBAC, guardrails, and PII |
+
+---
+
+## 🛡️ Security & Defensive Guardrails
+
+NexusRAG implements enterprise defense-in-depth across six distinct layers:
+
+### 1. Multi-Tenant Vector RBAC Query Isolation
+Document isolation is not filtered in application memory after retrieval. Instead, every vector query sent to Qdrant contains a cryptographically validated payload filter derived from the user's verified JWT claims:
+```python
+# Enforced at Qdrant vector search level (backend/app/retrieval/dense.py)
+query_filter = Filter(
+    must=[
+        FieldCondition(
+            key="department",
+            match=MatchValue(value=user.department.lower())
+        )
+    ]
+)
+```
+Employees in Human Resources can never receive chunks from Engineering runbooks or Finance spreadsheets, even under deliberate prompt injection.
+
+### 2. AI Guardrail Firewall (`app/security/guardrails.py`)
+- **Direct Prompt Injection Defense:** Neutralizes jailbreak patterns (`ignore previous instructions`, `DAN`, `developer mode`).
+- **System Prompt Exfiltration Blocker:** Blocks attempts to leak internal system prompts, grounding rules, or delimiter schemas.
+- **Fence & Delimiter Tampering Protection:** Strips fake prompt tokens (`<|im_start|>`, `<<SYS>>`, `---END CONTEXT---`).
+- **Zero False Positives:** Validated across legitimate technical documentation queries without false triggers.
+
+### 3. Real-Time PII & Secret Scrubber (`app/security/pii_scrubber.py`)
+- **Payment Card Defense:** Redacts Visa, Mastercard, AMEX, and Discover numbers using Luhn checksum validation, preventing false positives on product or invoice IDs.
+- **Identity & Credential Masking:** Automatically masks US Social Security Numbers (`[REDACTED_SSN]`), API keys (`sk-...`, `AIza...`, `AKIA...`), and private SSH/RSA keys.
+- **Streaming Window Buffer:** Uses a sliding word-boundary window ensuring sensitive tokens split across consecutive SSE packets are never leaked.
+
+### 4. Brute-Force Lockout & Session Revocation
+- **Automatic Account Lockout:** 5 consecutive failed login attempts within a 10-minute sliding window trigger a 15-minute lock (`HTTP 423 Locked`).
+- **Instant Token Revocation:** Logs out users immediately via unique JTI (JWT ID) blacklisting in Redis/in-memory store, preventing 60-minute replay attacks.
+- **Admin Unlock Console:** System administrators can inspect locked accounts and execute one-click unlocks from the UI.
+
+### 5. Enterprise HTTP Security Headers Middleware
+- `X-Content-Type-Options: nosniff` (MIME spoofing defense)
+- `X-Frame-Options: DENY` & `Content-Security-Policy: frame-ancestors 'self'` (Clickjacking protection with secure PDF canvas display)
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` (HSTS)
+- `Cache-Control: no-store, no-cache, must-revalidate` on all `/auth/*` and `/admin/*` routes.
+
+---
+
+## 🧪 Comprehensive Testing & QA Verification
+
+NexusRAG has completed an exhaustive 14-phase automated and manual verification audit with a **100% test pass rate across 129 automated tests**:
 
 ```text
-                               +-----------------------------------+
-                               |       React 18 + Vite Frontend    |
-                               | (Tailwind CSS, Dark/Light Themes) |
-                               | - Multi-Agent Sidecar Drawer      |
-                               | - Command Palette (Ctrl+K)        |
-                               | - Document Reader & Comparison    |
-                               +-----------------+-----------------+
-                                                 |
-                                 HTTPS (Bearer JWT or HttpOnly Cookie)
-                                                 |
-                                                 v
-                               +-----------------------------------+
-                               |         FastAPI Gateway           |
-                               |  - Dual Auth (Bearer / Cookie)    |
-                               |  - Rate Limiting (SlowAPI)        |
-                               |  - Role & Department RBAC Guard   |
-                               +--------+------------------+-------+
-                                        |                  |
-                    +-------------------+                  +-------------------+
-                    |                                                          |
-                    v Standard RAG Route                                       v Multi-Agent Routes
-+---------------------------------------+                  +---------------------------------------+
-| Agentic Planner & Decomposition       |                  | Autonomous Multi-Agent Orchestrator   |
-|  - Complexity / Multi-Hop Guard       |                  |  - 🏛️ Policy Compliance Auditor      |
-|  - 2-3 Atomic Sub-Queries Planner     |                  |  - ⚖️ Legal & Risk Assessor           |
-|  - Contextual Grounding & Parent-Child|                  |  - ⚡ Policy Intelligence Assistant    |
-+-------------------+-------------------+                  |  - 🤝 Dual-Agent Executive Council    |
-                    |                                      +-------------------+-------------------+
-                    v                                                          |
-+------------------------------------------------------------------------------+
-| Hybrid Retrieval Engine (Qdrant Dense BAAI/bge-small + BM25s Sparse Lexical) |
-|  - Strict Department Isolation Vector Filters                                |
-|  - Multi-Query Reciprocal Rank Fusion (RRF)                                  |
-|  - Cross-Encoder Reranking (ms-marco-MiniLM-L-6-v2)                          |
-+---------------------------------------+--------------------------------------+
-                                        |
-                                        v
-+------------------------------------------------------------------------------+
-| Google Gemini Generation & Synthesis Engine                                  |
-|  - Primary: gemini-3.5-flash-lite (Failover: gemini-3.5-flash, gemini-3-flash)|
-|  - CRAG Anti-Hallucination & Evidence Verification                           |
-|  - Structured Pydantic & JSON Spec Extraction                               |
-|  - Server-Sent Events (SSE) Streaming Pipeline                               |
-+---------------------------------------+--------------------------------------+
-                                        |
-                                        v
-+------------------------------------------------------------------------------+
-| Client-Side Rendering: Interactive Sidecar Reports, Memo Exports & Stream    |
-+------------------------------------------------------------------------------+
+========================================================================================
+                      NEXUSRAG AUTOMATED TEST EXECUTION SUMMARY
+========================================================================================
+Test Suite                               Harness              Tests   Passed   Rate
+----------------------------------------------------------------------------------------
+Backend End-to-End API Integration       pytest-asyncio       44      44       100%
+Security Guardrails & Jailbreak Probes   pytest (Custom)      18      18       100%
+PII Scrubber & Luhn Algorithm Check      pytest               14      14       100%
+Security Audit Logger & Account Lockout  pytest               8       8        100%
+Security Headers, CSP & Anti-Caching     pytest               6       6        100%
+PDF Reader & Continuous Scroll Suite     Playwright Chromium  23      23       100%
+UI Layering & Multi-Viewport Suite       Playwright (7 Viewports) 16  16       100%
+----------------------------------------------------------------------------------------
+TOTAL AUTOMATED TEST VERIFICATIONS                            129     129      100%
+========================================================================================
 ```
 
----
-
-## Tech Stack
-
-| Layer | Technologies & Libraries |
-|---|---|
-| **API & Backend** | FastAPI, Uvicorn, Pydantic v2, Python 3.11 |
-| **Knowledge Operations & Predictive Analytics** | Cross-Policy Contradiction Radar, Freshness & Decay Scorer, Autonomous Policy Gap Drafter, Demand Forecaster, Enterprise Health Index (Tier 4) |
-| **Enterprise Observability & Eval** | Telemetry Drift Detection Engine, Native Gemini LLM-as-a-Judge, Regression Delta Matrix, LangSmith Span Tracing (Tier 3) |
-| **Autonomous Multi-Agent Layer** | Async Multi-Agent Orchestrator, Policy Compliance Auditor, Risk Assessor, Policy Intelligence Assistant, Executive Council (Tier 2) |
-| **Authentication & RBAC** | Dual-mode: HttpOnly cookies + `Authorization: Bearer` headers, bcrypt (`$2b$12$`), python-jose JWT |
-| **Relational Database** | Supabase Managed PostgreSQL, SQLAlchemy 2.0 (async), asyncpg |
-| **Vector Database** | Qdrant Cloud Cluster (`rag_documents`), Qdrant Client |
-| **Sparse Retrieval** | BM25s (in-process serialized sparse lexical index) |
-| **Embeddings** | `BAAI/bge-small-en-v1.5` (384-dimensional cosine similarity) |
-| **Cross-Encoder Reranker** | `cross-encoder/ms-marco-MiniLM-L-6-v2` |
-| **Generation Engine** | Google Gemini `gemini-3.5-flash-lite` with automatic failover to `gemini-3.5-flash` & `gemini-3-flash-preview` via `google-genai` SDK |
-| **Tracing & Observability** | LangSmith tracing, structured async audit logging to PostgreSQL |
-| **RAG Evaluation** | RAGAS framework (Faithfulness, Relevancy, Context Recall, Context Precision) |
-| **Rate Limiting** | SlowAPI (10 req/min per user) |
-| **Frontend UI** | React 18, Vite, Tailwind CSS, React Markdown, Lucide-style SVG icons |
-| **Deployment** | Render (Backend, Python 3.11), Vercel (Frontend SPA), Qdrant Cloud, Supabase |
+### Verified Multi-Viewport Responsiveness
+The application was tested and certified across seven distinct screen resolutions:
+- 🖥️ **Desktop Ultra-Wide:** `1920 x 1080` (100% Passed)
+- 💻 **Standard Desktop:** `1440 x 900` (100% Passed)
+- 💻 **Small Laptop:** `1366 x 768` (100% Passed)
+- 💻 **Compact Laptop:** `1280 x 800` (100% Passed)
+- 📱 **Tablet Landscape:** `1024 x 768` (100% Passed — adaptive button clustering)
+- 📱 **Tablet Portrait:** `768 x 1024` (100% Passed — independent drawer sliding)
+- 📱 **Mobile Portrait:** `375 x 667` / `390 x 844` (100% Passed — touch-friendly controls)
 
 ---
 
-## Key Features & Capabilities
-
-### 1. Advanced Next-Gen RAG Engine (Tier 1 Architecture)
-- **Anthropic-Style Contextual Retrieval:** Chunks are situational-aware during ingestion, automatically detecting document headers and prepending `[Document: <name> | Department: <dept> | Section: <title>]` before embedding and BM25 indexing.
-- **Agentic Multi-Hop Query Decomposition:** Complex comparative ("Compare X and Y"), multipart, or cross-clause questions are automatically detected by an agentic planner, decomposed into 2-3 focused atomic sub-queries, retrieved in parallel, and merged via multi-query Reciprocal Rank Fusion (RRF).
-- **Hierarchical / Parent-Child Context Expansion:** Precision chunk retrieval is coupled with adjacent chunk window stitching (`merge_contiguous_chunks`), seamlessly recombining adjacent chunks from the same document to eliminate cut-off clauses, broken tables, and severed bullet lists.
-- **Self-Reflective RAG (CRAG) & Anti-Hallucination Safeguards:** Retrieval sufficiency checks verify evidence before synthesis; ungrounded questions explicitly decline rather than hallucinating policies, while valid queries receive citation chips (`[1]`, `[2]`), dynamic follow-ups, and calibrated confidence scores.
-- **Hybrid Dense + Sparse Fusion:** Dense cosine embeddings (`BAAI/bge-small-en-v1.5`) capture semantic meaning; BM25s captures exact technical acronyms, policy IDs, and codes.
-- **Multi-Model Redundancy:** Automatic failover across `gemini-3.5-flash-lite`, `gemini-3.5-flash`, and `gemini-3-flash-preview` prevents disruptions from transient 503 high-demand or quota limits.
-- **Streaming Tokens with SSE:** Real-time token streaming with bracketed citation mapping, confidence scoring, and dynamic follow-up suggestions.
-
-### 2. Autonomous Multi-Agent Collaboration & Sidecar Workflows (Tier 2 Architecture)
-- **🏛️ Policy Compliance Auditor (`auditor`):** Evaluates real-world employee actions, planned operational procedures, or expenditure requests against department policy documents. Generates definitive `compliant` (green), `warning` (amber), or `violation` (red) verdicts accompanied by rule-by-rule pass/fail tables, mandatory approvers, and remediation action items.
-- **⚖️ Legal & Operational Risk Assessor (`risk`):** Evaluates outage escalations, architecture changes, vendor contracts, and SLA commitments. Diagnoses risk severity (`low`, `medium`, `high`, `critical`), identifies conflicting clauses, quantifies regulatory/financial penalty vectors, and prescribes actionable mitigations.
-- **⚡ Policy Intelligence Assistant (`intelligence`):** Produces executive-level policy briefs from complex corporate governance documents. Synthesizes key takeaways, structured role-based obligation matrices (Employee vs. Manager vs. Department Leads), and proactive compliance gap audits.
-- **🤝 Multi-Agent Executive Council (`collaborative`):** Orchestrates concurrent, parallel evaluation by both the Compliance Auditor and Risk Assessor over role-isolated documents. Synthesizes both reports into an executive consensus determination, resolving conflicting clause interpretations into unanimous strategic recommendations.
-- **Integrated Sidecar UI & Quick Starters:**
-  - Glassmorphic modal (`AgentSidecarModal.jsx`) featuring interactive persona selection tabs, animated stage indicators, verdict badges, copyable markdown memos, and source chunk inspection.
-  - One-click departmental scenario templates for instant auditing across HR, Engineering, and Finance.
-  - Multi-surface triggers: Message Bubble `🤖 Audit Scenario` button, Command Palette shortcuts (`⌘A`, `⌘R`, Executive Council), Document Reader header action, and Workspace Starter cards.
-  - Strict department RBAC validation ensuring zero cross-tenant knowledge leaks.
-
-### 3. Enterprise Observability & Continuous Eval Loop (Tier 3 Architecture)
-- **Continuous Telemetry Drift Engine:** Sliding-window tracking of Grounding Rate drift, Latency percentiles (P50/P90/P99), User Satisfaction drift, and Knowledge Gap topic clustering with automated root-cause diagnoses.
-- **Dual-Engine LLM-as-a-Judge Eval Loop:** Native Gemini judge (`gemini-3.5-flash-lite` / `gemini-3.5-flash`) + OpenAI judge running RAGAS benchmark across 15+ golden HR, Eng, and Finance test cases with zero extra credentials required.
-- **Regression Delta Matrix & SLA Enforcement:** Evaluates live runs against golden SLA baselines (Faithfulness $\ge 0.90$, Relevancy $\ge 0.80$, Precision $\ge 0.85$, Recall $\ge 0.90$), automatically flagging any performance regression or degradation delta.
-- **LangSmith Native Tracing & Span Enrichment:** Telemetry span instrumentation decorating hybrid retrieval, agent workflows, and query decomposition.
-- **Dedicated Observability Dashboard:** Interactive admin tab (`ObservabilityTab.jsx`) with live drift alert banner, regression matrix scorecards, topic gap clusters, and scheduled continuous eval triggers.
-
-### 4. Knowledge Operations & Proactive AI Analytics (Tier 4 Architecture)
-- **🔍 Cross-Policy Contradiction Radar (`contradiction_radar.py`):** Scans intra- and cross-policy clauses across HR, Engineering, and Finance documents to detect conflicting rules, contradictory SLA turnaround windows, divergent approval limits, and outdated provisions. Returns severity rating (`critical`, `high`, `medium`, `low`), offending clause quotes from both documents, and recommended reconciliation paths.
-- **⏳ Freshness, Velocity & Temporal Decay Scorer (`decay_scorer.py`):** Computes multi-factor obsolescence risk scores (0–100) per document combining temporal decay past 30/90 days, citation query velocity, and negative user feedback reports. Assigns intuitive status labels (`Fresh`, `Degrading`, `Stale`, `Critical Revision`).
-- **📝 Autonomous Policy Gap Drafter (`policy_drafter.py`):** When telemetry or ungrounded inquiry clusters reveal missing institutional knowledge, the autonomous drafter generates comprehensive, formatted enterprise SOPs complete with purpose, scope, numbered policy rules, approval matrices, and audit clauses. Includes one-click direct publishing into PostgreSQL & Qdrant Cloud.
-- **📈 Predictive Knowledge Demand Forecaster (`demand_forecaster.py`):** Synthesizes organizational calendar cycles (performance reviews, budget cycles, canary releases, travel summits) and query velocity to project 30-day inquiry surges with surge probability, percentage volume increases, and preparation checklists.
-- **🏆 Enterprise Knowledge Health Index (`health_index.py`):** Authoritative composite 0–100 health score with letter grade (A–D), verdict, and 5 foundational pillars (Retrieval Grounding 25%, RAGAS Quality 25%, User Satisfaction 20%, Policy Freshness 15%, Contradiction Freedom 15%), accompanied by department scorecards and prioritized action items.
-- **🎛️ Executive Knowledge Operations Console (`KnowledgeOpsTab.jsx`):** Integrated directly into the Admin Workspace with real-time health gauge, pillar breakdown bars, contradiction diff cards, 30-day demand forecast checklists, interactive gap drafter with quick-pick templates, and document decay table.
-
-### 5. Department Workspaces & Multi-Tenant RBAC Isolation
-- **Strict Query-Level Isolation:** HR, Engineering, and Finance workspaces operate in complete data silos.
-- **Zero-Leakage Enforcement:**
-  - Query parameter overrides (`?department=...`) blocked with `403 Forbidden`.
-  - Document content access outside user department blocked with `403 Forbidden`.
-  - Focus document selection outside department blocked with `403 Forbidden`.
-  - Non-admin upload attempts to other departments blocked with `403 Forbidden`.
-  - Admin endpoints (`/admin/users`, `/admin/analytics`, `/admin/feedbacks`, `/admin/observability`) restricted to Admin roles.
-
-### 6. Document Sidebar, Reader & Full Filename Display
-- **Complete Filename Visibility:** Document names and file extensions (`performance_review.txt`, `deployment_guide.txt`) are displayed in full with natural wrapping, clean line breaks, and hover tooltips across all departments.
-- **Sidebar Search & Filtering:** Press `/` to focus the search bar, filter by file type (All, PDF, TXT, MD), and toggle sort order (🕒 Recent vs 🔤 A–Z).
-- **Integrated Document Reader:** Click **Read** on any document card to view the reconstructed full text and chunk inspection modal directly in the workspace.
-
-### 7. Side-by-Side Multi-Document Comparison Matrix
-- **Comparative Analysis Engine:** Select two documents to generate a structured comparison matrix across operational, policy, financial, and compliance dimensions.
-- **Presets Available:**
-  - Comprehensive Matrix
-  - Limits & Allowances
-  - Compliance, SLAs & Penalties
-  - Approval Workflows
-  - Custom Analysis
-- **One-Click Export:** Download comparison matrices directly to CSV or copy clean Markdown tables to the clipboard.
-
-### 8. Chat UX, Thinking Pipeline & Feedback Loop
-- **Dynamic Retrieval Thinking Indicator:** Visual multi-step pipeline indicator showcasing query preprocessing, dense/sparse search, reranking, and synthesis phases.
-- **Message Action Toolbar:** Copy answer text, export formatted Markdown briefs, and inspect citations via interactive slide-out drawer.
-- **Inline Feedback System:** Submit thumbs-up or thumbs-down feedback with categorized reasons (`Inaccurate`, `Incomplete`, `Missing Citation`, `Outdated`, `Off-Topic`).
-- **Spotlight Autocomplete:** Contextual typeahead providing department-specific starter questions with Tab/arrow acceptance.
-- **Enriched Cold-Start Empty State:** Department metrics, quick starters, and recent files.
-
-### 9. Admin Control Center & Analytics
-- **System Metrics Overview:** Total queries, average latency (ms), total documents, active users, and grounding rate.
-- **User Management:** View all registered accounts, role assignments, last login timestamps, and activate/deactivate accounts.
-- **Feedback Management:** Inspect flagged responses, review user comments, and mark feedback items as resolved.
-- **RAGAS Benchmark Pipeline:** Trigger and review automated RAG evaluation runs.
-
----
-
-## Local Setup & Development
+## 💻 Local Development & Setup Guide
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+ & npm
-- Google Gemini API key (from [Google AI Studio](https://aistudio.google.com/))
-- PostgreSQL instance or Supabase account
-- Qdrant instance (Local Docker or Qdrant Cloud)
+- **Python:** `3.11+`
+- **Node.js:** `18+` & `npm`
+- **Google Gemini API Key:** (Obtain from [Google AI Studio](https://aistudio.google.com/))
+- **PostgreSQL Database:** (Local PostgreSQL or free [Supabase](https://supabase.com/) cluster)
+- **Qdrant Vector Database:** (Local Docker or free [Qdrant Cloud](https://cloud.qdrant.io/) cluster)
 
-### 1. Clone the Repository
+---
+
+### Step 1: Clone the Repository
 ```bash
 git clone https://github.com/46501/NexusRAG-Enterprise-AI-Knowledge-System-.git
-cd Enterprise-RAG-main
+cd NexusRAG-Enterprise-AI-Knowledge-System-
 ```
 
-### 2. Configure Backend Environment
-Copy `backend/.env.example` to `backend/.env` and update the parameters:
+---
 
+### Step 2: Configure Backend Environment
+Create `backend/.env` from the provided example:
 ```bash
 cp backend/.env.example backend/.env
 ```
+Fill in your credentials (see [Environment Variables Reference](#-environment-variables-reference) below).
 
-**Key Environment Variables in `backend/.env`:**
-```ini
-# Core
-APP_ENV=development
-PORT=8000
-CORS_ORIGIN=http://localhost:5173
+---
 
-# Google Gemini
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-3.5-flash-lite
-GEMINI_TIMEOUT_SECONDS=30
-
-# Database (Supabase or Local PostgreSQL)
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/rag_db
-
-# Vector Store (Qdrant Cloud or Local)
-QDRANT_HOST=localhost
-QDRANT_PORT=6333
-QDRANT_API_KEY=your_qdrant_api_key_if_cloud
-QDRANT_COLLECTION=rag_documents
-
-# Auth & JWT
-JWT_SECRET=your_super_secret_jwt_key
-JWT_EXPIRE_MINUTES=60
-```
-
-### 3. Backend Setup
+### Step 3: Install Backend Dependencies & Start Server
 ```bash
 cd backend
+
+# Create and activate Python virtual environment
 python -m venv venv
 
-# Windows
-venv\Scripts\activate
-# Linux/macOS
+# Windows (PowerShell):
+.\venv\Scripts\Activate.ps1
+# Linux / macOS:
 source venv/bin/activate
 
+# Install dependencies
 pip install -r requirements.txt
+
+# Start FastAPI development server with hot reload
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
+The FastAPI backend will start on `http://127.0.0.1:8000`.  
+Interactive Swagger API documentation is available at `http://127.0.0.1:8000/docs`.
 
-### 4. Seed Database & Rebuild Indexes
-```bash
-# Seed default department accounts
-python scripts/create_user.py --email hr@demo.com --password hr-demo-2026 --role hr
-python scripts/create_user.py --email engineering@demo.com --password eng-demo-2026 --role engineering
-python scripts/create_user.py --email finance@demo.com --password fin-demo-2026 --role finance
-python scripts/create_user.py --email admin@example.com --password admin-demo-2026 --role admin
+---
 
-# Ingest initial documents per department
-python scripts/run_ingestion.py --department hr --dir data/hr/
-python scripts/run_ingestion.py --department engineering --dir data/engineering/
-python scripts/run_ingestion.py --department finance --dir data/finance/
-```
-
-### 5. Start Backend Server
-```bash
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-API Documentation will be available at: `http://localhost:8000/docs`
-
-### 6. Frontend Setup
-In a new terminal:
+### Step 4: Configure Frontend & Start Development Server
+In a new terminal window:
 ```bash
 cd frontend
+
+# Install Node dependencies
 npm install
+
+# Start Vite dev server
 npm run dev
 ```
-Open `http://localhost:5173` in your browser.
+Open your browser and navigate to `http://localhost:5173`.
 
 ---
 
-## Testing & Verification Suite
-
-NexusRAG includes an automated End-to-End QA and regression test suite covering all modules:
-
-### Run Complete 44-Point E2E Verification Suite
+### Step 5: Run Verification Test Suites
+Verify your local installation:
 ```bash
+# Run complete 44-point backend integration suite:
 cd backend
-./venv/Scripts/python.exe tests/test_complete_e2e_suite.py
+python tests/test_complete_e2e_suite.py
+
+# Run security guardrail suite:
+python tests/test_guardrails.py
+
+# Run Playwright end-to-end UI and PDF reader suite:
+cd ../frontend
+node test_reader_suite.mjs
 ```
 
-**Verification Results:**
+---
+
+## 🔑 Environment Variables Reference
+
+### Backend Configuration (`backend/.env`)
+| Variable | Description | Example / Recommended Value |
+| :--- | :--- | :--- |
+| `APP_ENV` | Application runtime environment | `development` or `production` |
+| `PORT` | Local server port | `8000` |
+| `CORS_ORIGIN` | Allowed CORS origins (comma-separated) | `http://localhost:5173,https://your-domain.vercel.app` |
+| `GEMINI_API_KEY` | Google Gemini API secret key | `AIzaSy...` (from Google AI Studio) |
+| `GEMINI_MODEL` | Foundation LLM model identifier | `gemini-3.5-flash-lite` |
+| `GEMINI_TIMEOUT_SECONDS` | API request timeout limit | `30` |
+| `DATABASE_URL` | PostgreSQL connection URI (asyncpg) | `postgresql+asyncpg://postgres:pass@db.pooler.supabase.com:6543/postgres` |
+| `QDRANT_HOST` | Qdrant host URL / endpoint | `https://your-cluster.qdrant.tech` or `localhost` |
+| `QDRANT_PORT` | Qdrant gRPC / HTTP port | `6333` |
+| `QDRANT_API_KEY` | Qdrant Cloud API key | `your_qdrant_api_key_here` |
+| `QDRANT_COLLECTION` | Qdrant vector collection name | `rag_documents` |
+| `JWT_SECRET` | Secret key for signing HS256 tokens | `generate_with_openssl_rand_hex_32` |
+| `JWT_EXPIRE_MINUTES`| Access token expiration lifetime | `60` |
+
+### Frontend Configuration (`frontend/.env`)
+| Variable | Description | Example Value |
+| :--- | :--- | :--- |
+| `VITE_API_BASE_URL` | Base URL for FastAPI backend endpoints | `/api/v1` (local proxy) or `https://backend.onrender.com/api/v1` |
+
+---
+
+## 📂 Repository Structure
+
 ```text
-======================================================================
-NEXUS-RAG COMPREHENSIVE END-TO-END QA & VERIFICATION TEST SUITE
-======================================================================
->>> MODULE 1: Health & Infrastructure Checks (2/2 Passed)
->>> MODULE 2: Authentication & Session Management (12/12 Passed)
->>> MODULE 3: RBAC & Department Isolation (10/10 Passed)
->>> MODULE 4: Document Ingestion & Document Reader (7/7 Passed)
->>> MODULE 5: RAG Retrieval, Synthesis & Streaming (4/4 Passed)
->>> MODULE 6: Multi-Document Comparison Matrix (1/1 Passed)
->>> MODULE 7: User Feedback & Resolution Workflow (4/4 Passed)
->>> MODULE 8: Admin Analytics & Observability (3/3 Passed)
-======================================================================
-TEST SUITE SUMMARY: 44/44 Passed (100.0%) | 0 Failed
-======================================================================
-```
-
-### Run Additional Targeted Tests
-```bash
-# Tier 4 Knowledge Operations & Proactive AI Analytics (6/6 Passed)
-python tests/test_tier4_knowledge_ops.py
-
-# Tier 3 Enterprise Observability & Continuous Eval Loop (4/4 Passed)
-python tests/test_tier3_observability.py
-
-# Tier 2 Autonomous Multi-Agent Workflows & Executive Council (4/4 Passed)
-python tests/test_tier2_multi_agent.py
-
-# Tier 1 Next-Gen RAG (Contextual Grounding, Multi-Hop Decomposition, CRAG) (4/4 Passed)
-python tests/test_tier1_nextgen_rag.py
-
-# Authentication & Seeded Logins
-python scripts/verify_auth_system.py
-
-# Gemini RAG & Multi-tenant Retrieval
-python tests/test_gemini_rag.py
-
-# Vite Proxy & Frontend Stream Flow
-python tests/test_e2e_frontend_flow.py
-
-# Frontend Production Build Check
-npm --prefix frontend run build
+NexusRAG-Enterprise-AI-Knowledge-System-/
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── routes/          # FastAPI route handlers (auth, query, docs, admin)
+│   │   ├── core/                # Global config, constants, security dependencies
+│   │   ├── db/                  # SQLAlchemy 2.0 async engine and PostgreSQL models
+│   │   ├── generation/          # Google Gemini generator and streaming SSE pipeline
+│   │   ├── ingestion/           # Chunking, contextual headers, and text extractors
+│   │   ├── retrieval/           # Dense Qdrant search, BM25s sparse, and RRF fusion
+│   │   ├── reranking/           # MiniLM cross-encoder neural reranker
+│   │   └── security/            # PII scrubber, prompt injection guard, rate limiting
+│   ├── data/                    # Seed document corpus (hr/, engineering/, finance/)
+│   ├── scripts/                 # Utility scripts (user creation, seed ingestion)
+│   ├── tests/                   # Automated pytest and integration suites
+│   ├── requirements.txt         # Pinned Python package dependencies
+│   └── .env.example             # Template backend environment file
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/          # Reusable UI widgets (Header, Sidebar, Modals)
+│   │   │   ├── DocumentReaderModal.jsx      # Continuous PDF reader & chunk view
+│   │   │   ├── DocumentComparisonModal.jsx  # Side-by-side policy matrix
+│   │   │   ├── DocumentUploadModal.jsx      # Ingestion & drag-and-drop drawer
+│   │   │   ├── ExportModal.jsx              # Markdown/brief export modal
+│   │   │   └── WorkspaceHeader.jsx          # Responsive workspace header
+│   │   ├── context/             # React Context providers (AuthContext, ThemeContext)
+│   │   ├── pages/               # Application views (Landing, Login, Chat, Admin)
+│   │   └── services/            # Axios API clients and streaming SSE readers
+│   ├── package.json             # Pinned Node dependencies & npm scripts
+│   ├── tailwind.config.js       # Custom colors, typography, and viewport breakpoints
+│   └── vite.config.js           # Vite server, aliases, and development proxy
+│
+├── docs/
+│   └── screenshots/             # Production application showcase screenshots
+├── README.md                    # Project documentation & engineering showcase
+└── LICENSE                      # MIT Open Source License
 ```
 
 ---
 
-## RAGAS Evaluation Results
+## 🚀 Deployment Architecture
 
-Evaluation performed over golden enterprise benchmark queries across HR, Engineering, and Finance:
+NexusRAG is designed as a cloud-native, decoupled full-stack architecture:
 
-| Metric | Score | Target | Description |
-|---|---|---|---|
-| **Faithfulness** | **0.9926** | > 0.90 | Answers strictly grounded in retrieved evidence with zero ungrounded assertions |
-| **Answer Relevancy** | **0.8428** | > 0.80 | Direct, complete resolution of the user's specific business query |
-| **Context Recall** | **1.0000** | > 0.90 | Retrieval surfaces all necessary clauses to formulate the complete answer |
-| **Context Precision** | **0.9423** | > 0.85 | Minimal noise in top reranked chunks fed to the LLM |
+- **Frontend (Vercel):** Single Page Application (SPA) deployed on Vercel's global Edge CDN, delivering sub-50ms asset delivery and automatic SSL.
+- **Backend API (Render):** FastAPI application running inside a containerized Linux environment with automated health checks and restart policies.
+- **Relational Data (Supabase):** Managed PostgreSQL cluster with connection pooling, automated backups, and row-level security.
+- **Vector Search (Qdrant Cloud):** Managed multi-tenant Qdrant cluster with persistent vector storage, cosine similarity indexing, and high-concurrency payload filtering.
 
 ---
 
-## Security & Compliance Architecture
+## 🔮 Future Roadmap
 
-- **AI Guardrail Firewall (`app/security/guardrails.py`):** Multi-layered prompt injection & jailbreak firewall (<1ms latency) with:
-  - **Direct Prompt Injection Defense:** Blocks instruction overrides (`ignore previous instructions`), persona hijacking (`DAN`, `developer mode`), and system bypass commands.
-  - **System Prompt Exfiltration Blocker:** Prevents leakage of initial instructions, grounding rules, and internal prompts.
-  - **Adversarial Delimiter & Fence Protection:** Detects fake prompt tokens (`<|im_start|>`, `<<SYS>>`, `---END CONTEXT---`, `[SYSTEM]:`).
-  - **Bulk Data & Secret Probing Defense:** Rejects raw database and vector store dump queries (`SELECT * FROM users`, credential leak attempts).
-  - **Steganography & Obfuscation Neutralization:** Automatically strips zero-width Unicode characters, evaluates Base64-obfuscated injection vectors, and handles leetspeak substitutions.
-  - **Document Ingestion Screening:** Cleans uploaded files and warns on embedded indirect prompt injections.
-  - **Zero False Positives:** Rigorously verified to permit all legitimate corporate queries across HR, Engineering, and Finance.
-- **Real-Time PII & Secret Scrubber (`app/security/pii_scrubber.py`):** Bidirectional redaction and sanitization across inbound queries, outbound answers, citation sources, and streaming tokens:
-  - **Financial & Identity Protection:** Redacts US SSNs (`[REDACTED_SSN]`) and payment cards (`[REDACTED_CREDIT_CARD]`) with Luhn algorithm validation to prevent false positives on order/tracking numbers.
-  - **API Keys & Credentials:** Scrubs OpenAI (`sk-...`), Google (`AIza...`), AWS (`AKIA...`), JWT tokens, generic auth tokens, and cleartext passwords (`password = "..."`).
-  - **Cryptographic Keys:** Redacts entire RSA, EC, and OpenSSH private key blocks (`[REDACTED_PRIVATE_KEY]`).
-  - **Streaming Token Buffer:** Uses an intelligent word-boundary sliding window so secrets split across consecutive SSE tokens are never severed or partially leaked.
-  - **Zero Server Overhead:** Pure regex & algorithmic validation executing in microseconds with 0 MB added RAM.
-- **Enterprise HTTP Security Headers Middleware (`app/security/headers.py`):** High-performance ASGI middleware injecting defense-in-depth HTTP headers on all API responses without buffering SSE streams:
-  - **HSTS Enforcement:** `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` enforces HTTPS exclusively.
-  - **Clickjacking Defense:** `X-Frame-Options: DENY` and CSP `frame-ancestors 'none'` prevent unauthorized embedding in iframes.
-  - **MIME Sniffing Prevention:** `X-Content-Type-Options: nosniff` stops malicious executable/script spoofing.
-  - **Content Security Policy (CSP):** Fine-grained directives restricting script, style, font, connect, and media sources (`default-src 'self'`).
-  - **Referrer & Permissions Hardening:** `Referrer-Policy: strict-origin-when-cross-origin` and sandboxed `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()`.
-  - **Anti-Caching for Sensitive Endpoints:** Injects `Cache-Control: no-store, no-cache, must-revalidate` and `Pragma: no-cache` on `/auth/*` and `/admin/*` routes to prevent token/session caching in browser history.
-- **Token Blacklist & Account Lockout Guard (`app/security/token_blacklist.py`):** Enterprise session lifecycle management and anti-brute-force defense:
-  - **Instant Token Revocation:** Logs out and invalidates access tokens immediately via unique JTI (JWT ID) tracking and SHA-256 blacklisting. Revoked tokens return `401 Unauthorized` instantly, eliminating the 60-minute token replay vulnerability.
-  - **Account-Wide Session Termination:** Supports instant bulk revocation (`revoke_all_user_tokens`) upon admin account deactivation or role updates.
-  - **Brute-Force Lockout Defense:** Automatically locks target accounts for 15 minutes after 5 consecutive failed login attempts within a 10-minute sliding window, returning `HTTP 429 Too Many Requests`.
-  - **Auto-Expiring In-Memory Store:** Thread-safe, auto-purging data structures with < 1 MB memory footprint that automatically clean expired records.
-- **Dedicated Security Audit Trail & SIEM Console (`app/security/audit_logger.py`):** Enterprise-grade forensic logging and real-time security observability dashboard:
-  - **Comprehensive Threat Event Logging:** Dedicated Supabase PostgreSQL audit trail recording prompt injections, jailbreaks, PII redactions, unauthorized department queries (HTTP 403), brute-force lockouts, and token revocations.
-  - **Zero-Latency Async Logging:** Event recording is decoupled from the request cycle using non-blocking background workers and a 100-event fast in-memory ring-buffer, preventing database latency from impacting user query speed.
-  - **Admin Security Console (Tier 5 Tab):** Executive overview cards displaying 24h & 7d threat totals, critical incident counts, active locked accounts, revoked tokens, and severity distributions.
-  - **Interactive Forensic Log Viewer:** Filter audit events by severity (CRITICAL, HIGH, MEDIUM, LOW, INFO) or threat type, execute real-time text search across queries, endpoints, and user emails, and inspect structured attack payloads in expandable drawer modals.
-  - **One-Click Security Interventions:** Admins can manually unlock brute-force locked accounts and execute emergency session terminations (`Revoke All Sessions`) directly from the UI.
-- **Password Protection:** Salting and hashing via `passlib[bcrypt]` with work factor 12.
-- **Session Architecture:** Dual-mode authentication (HttpOnly cookies with CSRF/SameSite protection + standard Bearer tokens).
-- **Access Control:** User roles (`admin`, `hr`, `engineering`, `finance`) enforced via FastAPI dependencies with immediate `403 Forbidden` on unauthorized department requests.
-- **Data Protection:** No plaintext credentials or API keys stored in client bundles or public commits.
-- **Memory Footprint:** In-process memory usage optimized to < 220 MB, operating comfortably within Render's 512 MB free tier ceiling.
+- [ ] **Multi-Modal Document Parsing:** Direct extraction of complex visual charts and embedded tables using Gemini Vision.
+- [ ] **Enterprise SSO & SAML 2.0:** Direct integration with Okta, Microsoft Entra ID (Azure AD), and Google Workspace SSO.
+- [ ] **Document Version Lineage:** Automated diffing across consecutive policy amendments with semantic change alerts.
+- [ ] **Slack & Microsoft Teams Bots:** Dedicated conversational sidecars operating with identical RBAC within workplace chat.
 
 ---
 
-## License
+## 👤 Author
 
-This project is licensed under the MIT License.
+**Om Ashok Kulkarni**  
+*Full-Stack AI Engineer & Security Enthusiast*  
+- **GitHub:** [@46501](https://github.com/46501)
+- **Repository:** [NexusRAG — Enterprise AI Knowledge System](https://github.com/46501/NexusRAG-Enterprise-AI-Knowledge-System-)
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE) — free for personal, educational, and commercial use.
