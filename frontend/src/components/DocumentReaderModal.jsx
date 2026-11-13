@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTheme } from '../context/ThemeContext'
-import { getDocumentContent } from '../services/documents'
+import { getDocumentContent, getDocumentFileBlob } from '../services/documents'
+import * as pdfjsLib from 'pdfjs-dist'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import PdfViewer from './PdfViewer'
+
+if (typeof window !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
+}
 
 const DEPT = {
   hr:          { dot: '#a78bfa', text: '#a78bfa', bg: 'rgba(139,92,246,0.12)', border: 'rgba(139,92,246,0.28)', label: 'Human Resources' },
@@ -29,6 +35,8 @@ export default function DocumentReaderModal({
   const [searchQuery, setSearchQuery] = useState('')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [copiedFull, setCopiedFull] = useState(false)
+  const [isCopying, setIsCopying] = useState(false)
+  const [copyToast, setCopyToast] = useState(null)
   const [copiedChunkIdx, setCopiedChunkIdx] = useState(null)
 
   const chunkRefs = useRef({})
@@ -159,11 +167,87 @@ export default function DocumentReaderModal({
     return data.chunks.filter((c) => c.text && c.text.toLowerCase().includes(searchLower)).length
   }, [searchLower, data])
 
-  function handleCopyFullText() {
-    if (!data?.full_text) return
-    navigator.clipboard.writeText(data.full_text)
-    setCopiedFull(true)
-    setTimeout(() => setCopiedFull(false), 2000)
+  // Extract readable text from chunks or clean full_text (filtering out %PDF binary data)
+  const readableFullText = useMemo(() => {
+    if (!data) return ''
+    if (data.full_text && !data.full_text.startsWith('%PDF')) {
+      return data.full_text
+    }
+    if (data.chunks && data.chunks.length > 0) {
+      const validChunks = data.chunks
+        .filter((c) => c.text && typeof c.text === 'string' && !c.text.startsWith('%PDF'))
+        .map((c) => c.text.trim())
+        .filter(Boolean)
+      if (validChunks.length > 0) {
+        return validChunks.join('\n\n')
+      }
+    }
+    return ''
+  }, [data])
+
+  async function handleCopyFullText() {
+    try {
+      setIsCopying(true)
+      let textToCopy = readableFullText
+
+      // If readable text is not already available and document is PDF, use PDF.js fallback
+      if (!textToCopy && (isPdf || data?.full_text?.startsWith('%PDF')) && resolvedDocIdOrName) {
+        try {
+          const blob = await getDocumentFileBlob(resolvedDocIdOrName)
+          if (blob && blob.size > 0) {
+            const arrayBuffer = await blob.arrayBuffer()
+            const loadingTask = pdfjsLib.getDocument({
+              data: arrayBuffer,
+              cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
+              cMapPacked: true,
+            })
+            const pdf = await loadingTask.promise
+            const pageTexts = []
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i)
+              const textContent = await page.getTextContent()
+              const pageLines = []
+              let lastY = null
+              for (const item of textContent.items) {
+                if (!item.str) continue
+                if (lastY !== null && Math.abs(item.transform[5] - lastY) > 8) {
+                  pageLines.push('\n')
+                }
+                pageLines.push(item.str)
+                lastY = item.transform[5]
+              }
+              const pageStr = pageLines.join(' ').replace(/ \n /g, '\n').trim()
+              if (pageStr) pageTexts.push(pageStr)
+            }
+            if (pageTexts.length > 0) {
+              textToCopy = pageTexts.join('\n\n')
+            }
+          }
+        } catch (pdfErr) {
+          console.warn('[DocumentReaderModal] PDF.js fallback text extraction failed:', pdfErr)
+        }
+      }
+
+      if (!textToCopy || textToCopy.startsWith('%PDF')) {
+        setCopyToast({ type: 'error', message: 'No readable text available to copy.' })
+        setTimeout(() => setCopyToast(null), 2500)
+        return
+      }
+
+      await navigator.clipboard.writeText(textToCopy)
+      setCopiedFull(true)
+      setCopyToast({ type: 'success', message: 'Document text copied to clipboard!' })
+      setTimeout(() => {
+        setCopiedFull(false)
+        setCopyToast(null)
+      }, 2500)
+    } catch (err) {
+      console.error('[DocumentReaderModal] Failed to copy text:', err)
+      setCopyToast({ type: 'error', message: 'Failed to copy document text.' })
+      setTimeout(() => setCopyToast(null), 2500)
+    } finally {
+      setIsCopying(false)
+    }
   }
 
   function handleCopyChunk(text, idx) {
@@ -541,7 +625,8 @@ export default function DocumentReaderModal({
             {/* Copy Full Document Button */}
             <button
               onClick={handleCopyFullText}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors cursor-pointer border"
+              disabled={isCopying}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors cursor-pointer border disabled:opacity-50"
               style={{
                 background: copiedFull
                   ? (isDark ? 'rgba(52,211,153,0.15)' : '#dcfce7')
@@ -553,10 +638,10 @@ export default function DocumentReaderModal({
                   ? (isDark ? '#34d399' : '#15803d')
                   : (isDark ? 'rgba(255,255,255,0.75)' : '#475569'),
               }}
-              title="Copy entire document text to clipboard"
+              title={isPdf ? "Copy readable document text to clipboard" : "Copy entire document text to clipboard"}
             >
-              <span>{copiedFull ? '✓' : '📋'}</span>
-              <span>{copiedFull ? 'Copied' : 'Copy'}</span>
+              <span>{isCopying ? '⏳' : copiedFull ? '✓' : '📋'}</span>
+              <span>{isCopying ? 'Copying…' : copiedFull ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
         </div>
@@ -787,7 +872,7 @@ export default function DocumentReaderModal({
                 lineHeight: 1.8,
               }}
             >
-              {renderHighlightedText(data.full_text || 'No full text available.')}
+              {renderHighlightedText(readableFullText || (data.full_text?.startsWith('%PDF') ? 'Loading readable text…' : data.full_text) || 'No readable text available.')}
             </div>
           )}
         </div>
@@ -833,6 +918,25 @@ export default function DocumentReaderModal({
           </div>
         </div>
       </div>
+
+      {/* Floating Copy Toast Notification */}
+      {copyToast && (
+        <div
+          data-testid="reader-copy-toast"
+          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-2xl border transition-all animate-in fade-in slide-in-from-bottom-2 duration-150 ${
+            copyToast.type === 'error'
+              ? isDark
+                ? 'bg-rose-950/95 text-rose-200 border-rose-800/80 shadow-rose-950/50'
+                : 'bg-rose-50 text-rose-800 border-rose-200 shadow-rose-100'
+              : isDark
+              ? 'bg-emerald-950/95 text-emerald-200 border-emerald-800/80 shadow-emerald-950/50'
+              : 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-emerald-100'
+          }`}
+        >
+          <span>{copyToast.type === 'error' ? '⚠️' : '✓'}</span>
+          <span>{copyToast.message}</span>
+        </div>
+      )}
 
       <style>{`
         @keyframes modalFadeIn {
