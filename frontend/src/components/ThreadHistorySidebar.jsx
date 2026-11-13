@@ -5,6 +5,7 @@ import {
   groupThreadsByDate,
   searchThreads,
 } from '../services/threads'
+import { PanelLeftIcon } from './SidebarToggleIcon'
 
 const DEPT_BADGES = {
   hr: { dot: '#a78bfa', text: '#a78bfa', label: 'HR' },
@@ -186,7 +187,7 @@ export default function ThreadHistorySidebar({
                 }}
                 title="Expand Chat Threads (⌘S)"
               >
-                💬
+                <PanelLeftIcon isOpen={false} size={17} />
               </button>
 
               {/* New Chat Button */}
@@ -320,7 +321,7 @@ export default function ThreadHistorySidebar({
                       handleToggle()
                     }
                   }}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors cursor-pointer hover:opacity-100 opacity-60"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors cursor-pointer hover:opacity-100 opacity-70"
                   style={{
                     color: isDark ? '#fff' : '#0f172a',
                     background: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
@@ -328,7 +329,7 @@ export default function ThreadHistorySidebar({
                   }}
                   title={isMobile ? "Close drawer" : "Collapse sidebar (⌘S)"}
                 >
-                  {isMobile ? '✕' : '◀'}
+                  {isMobile ? '✕' : <PanelLeftIcon isOpen={true} size={14} />}
                 </button>
               </div>
             </div>

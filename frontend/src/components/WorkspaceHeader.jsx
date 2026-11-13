@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import BackHomeButton from './BackHomeButton'
 import UserProfileMenu from './UserProfileMenu'
+import { PanelLeftIcon, PanelRightIcon } from './SidebarToggleIcon'
 
 const DEPT = {
   hr: { dot: '#a78bfa', text: '#a78bfa', bg: 'rgba(139,92,246,0.10)', btn: '#7c3aed' },
@@ -109,10 +110,7 @@ export default function WorkspaceHeader({
           }}
           title={`Toggle Chat Threads Sidebar (${isThreadsActive ? 'Collapse' : 'Expand'}) (⌘S)`}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <line x1="9" y1="3" x2="9" y2="21" />
-          </svg>
+          <PanelLeftIcon isOpen={isThreadsActive} size={15} />
         </button>
 
         <BackHomeButton />
@@ -379,10 +377,7 @@ export default function WorkspaceHeader({
           }}
           title={`Toggle Documents Sidebar (${isDocsActive ? 'Collapse' : 'Expand'}) (⌘D)`}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <line x1="15" y1="3" x2="15" y2="21" />
-          </svg>
+          <PanelRightIcon isOpen={isDocsActive} size={15} />
         </button>
 
         {/* Mobile Docs Drawer Toggle */}

@@ -17,6 +17,7 @@ import AgentSidecarModal from '../components/AgentSidecarModal'
 import WorkspaceEmptyState from '../components/WorkspaceEmptyState'
 import WorkspaceHeader from '../components/WorkspaceHeader'
 import ThreadHistorySidebar from '../components/ThreadHistorySidebar'
+import { PanelRightIcon } from '../components/SidebarToggleIcon'
 import {
   getThreads,
   saveThread,
@@ -94,7 +95,7 @@ export default function ChatPage() {
       try {
         localStorage.setItem('nexusrag_threads_open', String(next))
         localStorage.setItem('nexusrag_threads_pinned', String(next))
-      } catch (_) {}
+      } catch (_) { }
       return next
     })
   }
@@ -105,7 +106,7 @@ export default function ChatPage() {
       try {
         localStorage.setItem('nexusrag_docs_open', String(next))
         localStorage.setItem('nexusrag_docs_pinned', String(next))
-      } catch (_) {}
+      } catch (_) { }
       return next
     })
   }
@@ -514,600 +515,591 @@ export default function ChatPage() {
         >
           {/* Messages */}
           <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 sm:px-6 pt-6 pb-28 chat-scroll min-h-0">
-          <div className="max-w-[700px] mx-auto flex flex-col gap-4 min-h-full">
-            {messages.length === 0 ? (
-              <WorkspaceEmptyState
-                user={user}
-                docs={docs}
-                onSendPrompt={(prompt, stream, docParam) => sendQuery(prompt, stream, docParam ?? focusDoc?.name ?? focusDoc)}
-                onFocusDoc={(doc) => setFocusDoc(doc)}
-                onOpenComparison={() => handleOpenComparison()}
-                onOpenUpload={() => setUploadModalOpen(true)}
-                onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-                onOpenAgentModal={handleOpenAgentModal}
-              />
-            ) : (
-              <>
-                {/* Print-Only Corporate Briefing Header */}
-                <div className="hidden print-only mb-8 pb-4 border-b-2 border-slate-900">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h1 className="text-xl font-bold text-slate-900 tracking-tight">NexusRAG Enterprise Knowledge Briefing</h1>
-                      <p className="text-xs text-slate-500 uppercase tracking-widest mt-0.5">Verified Corporate Knowledge Documentation</p>
-                    </div>
-                    <div className="text-right text-xs text-slate-600">
-                      <p className="font-semibold text-slate-900">{DEPT_NAMES[user?.role] || user?.role} Department</p>
-                      <p>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                      <p className="text-[10px] text-amber-800 font-bold uppercase mt-0.5">CONFIDENTIAL // INTERNAL ONLY</p>
+            <div className="max-w-[700px] mx-auto flex flex-col gap-4 min-h-full">
+              {messages.length === 0 ? (
+                <WorkspaceEmptyState
+                  user={user}
+                  docs={docs}
+                  onSendPrompt={(prompt, stream, docParam) => sendQuery(prompt, stream, docParam ?? focusDoc?.name ?? focusDoc)}
+                  onFocusDoc={(doc) => setFocusDoc(doc)}
+                  onOpenComparison={() => handleOpenComparison()}
+                  onOpenUpload={() => setUploadModalOpen(true)}
+                  onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+                  onOpenAgentModal={handleOpenAgentModal}
+                />
+              ) : (
+                <>
+                  {/* Print-Only Corporate Briefing Header */}
+                  <div className="hidden print-only mb-8 pb-4 border-b-2 border-slate-900">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">NexusRAG Enterprise Knowledge Briefing</h1>
+                        <p className="text-xs text-slate-500 uppercase tracking-widest mt-0.5">Verified Corporate Knowledge Documentation</p>
+                      </div>
+                      <div className="text-right text-xs text-slate-600">
+                        <p className="font-semibold text-slate-900">{DEPT_NAMES[user?.role] || user?.role} Department</p>
+                        <p>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        <p className="text-[10px] text-amber-800 font-bold uppercase mt-0.5">CONFIDENTIAL // INTERNAL ONLY</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {messages.map((msg, i) => (
-                  msg.role === 'assistant' && !msg.content ? null :
-                    <MessageBubble
-                      key={i}
-                      role={msg.role}
-                      content={msg.content}
+                  {messages.map((msg, i) => (
+                    msg.role === 'assistant' && !msg.content ? null :
+                      <MessageBubble
+                        key={i}
+                        role={msg.role}
+                        content={msg.content}
+                        userRole={user?.role}
+                        sources={msg.sources}
+                        confidenceScore={msg.confidenceScore}
+                        focusDoc={msg.focusDoc}
+                        streaming={msg.streaming}
+                        suggestedQuestions={msg.suggestedQuestions}
+                        precedingUserQuery={i > 0 && messages[i - 1]?.role === 'user' ? messages[i - 1].content : null}
+                        onOpenCitation={(idx, srcList) => setActiveCitation({ isOpen: true, index: idx, sources: srcList || [] })}
+                        onSelectSuggestion={(q) => sendQuery(q, true, focusDoc?.name || focusDoc)}
+                        onOpenReader={handleOpenDocumentReader}
+                        onOpenAgentAudit={(cfg) => handleOpenAgentModal(cfg)}
+                      />
+                  ))}
+                  {thinking && (
+                    <ThinkingIndicator
                       userRole={user?.role}
-                      sources={msg.sources}
-                      confidenceScore={msg.confidenceScore}
-                      focusDoc={msg.focusDoc}
-                      streaming={msg.streaming}
-                      suggestedQuestions={msg.suggestedQuestions}
-                      precedingUserQuery={i > 0 && messages[i - 1]?.role === 'user' ? messages[i - 1].content : null}
-                      onOpenCitation={(idx, srcList) => setActiveCitation({ isOpen: true, index: idx, sources: srcList || [] })}
-                      onSelectSuggestion={(q) => sendQuery(q, true, focusDoc?.name || focusDoc)}
-                      onOpenReader={handleOpenDocumentReader}
-                      onOpenAgentAudit={(cfg) => handleOpenAgentModal(cfg)}
+                      focusDoc={focusDoc}
                     />
-                ))}
-                {thinking && (
-                  <ThinkingIndicator
-                    userRole={user?.role}
-                    focusDoc={focusDoc}
-                  />
-                )}
-                <div className="h-8 shrink-0" />
-                <div ref={bottomRef} />
-              </>
-            )}
+                  )}
+                  <div className="h-8 shrink-0" />
+                  <div ref={bottomRef} />
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Floating Input Area (macOS Floating Capsule Style) */}
+          <div
+            className="flex-shrink-0 px-4 sm:px-6 pt-2 pb-5 transition-colors relative z-10"
+            style={{
+              background: isDark
+                ? 'linear-gradient(to top, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.65) 60%, transparent 100%)'
+                : 'linear-gradient(to top, rgba(248, 250, 252, 0.95) 0%, rgba(248, 250, 252, 0.65) 60%, transparent 100%)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+            }}
+          >
+            <div className="max-w-[720px] mx-auto">
+              <Chat
+                onSend={(q, stream, docParam) => sendQuery(q, stream, docParam ?? focusDoc?.name ?? focusDoc)}
+                disabled={thinking}
+                userRole={user?.role}
+                focusDoc={focusDoc}
+                onClearFocus={() => setFocusDoc(null)}
+                documents={docs}
+                threads={threads}
+                onFocusDoc={(doc) => setFocusDoc(doc)}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Floating Input Area (macOS Floating Capsule Style) */}
-        <div
-          className="flex-shrink-0 px-4 sm:px-6 pt-2 pb-5 transition-colors relative z-10"
+        {/* Mobile Drawer Backdrop for Documents */}
+        {isMobile && docsMobileDrawerOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 transition-opacity"
+            onClick={() => setDocsMobileDrawerOpen(false)}
+          />
+        )}
+
+        {/* ── RIGHT: Documents panel ──────────────────────── */}
+        <aside
+          className={`flex flex-col flex-shrink-0 transition-[width] duration-200 ease-in-out select-none overflow-hidden ${isMobile
+              ? docsMobileDrawerOpen
+                ? 'fixed inset-y-0 right-0 z-50 w-[340px] max-w-[85vw] shadow-2xl'
+                : 'w-0 overflow-hidden opacity-0 pointer-events-none hidden'
+              : isDocsExpanded
+                ? 'w-[340px] relative z-20'
+                : 'w-[60px] relative z-20'
+            }`}
           style={{
-            background: isDark
-              ? 'linear-gradient(to top, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.65) 60%, transparent 100%)'
-              : 'linear-gradient(to top, rgba(248, 250, 252, 0.95) 0%, rgba(248, 250, 252, 0.65) 60%, transparent 100%)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
+            background: isDark ? 'rgba(15, 17, 23, 0.98)' : '#ffffff',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            borderLeft: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+            boxShadow: isMobile && docsMobileDrawerOpen
+              ? (isDark ? '-12px 0 32px rgba(0,0,0,0.6)' : '-12px 0 32px rgba(15,23,42,0.12)')
+              : 'none',
           }}
         >
-          <div className="max-w-[720px] mx-auto">
-            <Chat
-              onSend={(q, stream, docParam) => sendQuery(q, stream, docParam ?? focusDoc?.name ?? focusDoc)}
-              disabled={thinking}
-              userRole={user?.role}
-              focusDoc={focusDoc}
-              onClearFocus={() => setFocusDoc(null)}
-              documents={docs}
-              threads={threads}
-              onFocusDoc={(doc) => setFocusDoc(doc)}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Drawer Backdrop for Documents */}
-      {isMobile && docsMobileDrawerOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 transition-opacity"
-          onClick={() => setDocsMobileDrawerOpen(false)}
-        />
-      )}
-
-      {/* ── RIGHT: Documents panel ──────────────────────── */}
-      <aside
-        className={`flex flex-col flex-shrink-0 transition-[width] duration-200 ease-in-out select-none overflow-hidden ${
-          isMobile
-            ? docsMobileDrawerOpen
-              ? 'fixed inset-y-0 right-0 z-50 w-[340px] max-w-[85vw] shadow-2xl'
-              : 'w-0 overflow-hidden opacity-0 pointer-events-none hidden'
-            : isDocsExpanded
-              ? 'w-[340px] relative z-20'
-              : 'w-[60px] relative z-20'
-        }`}
-        style={{
-          background: isDark ? 'rgba(15, 17, 23, 0.98)' : '#ffffff',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          borderLeft: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
-          boxShadow: isMobile && docsMobileDrawerOpen
-            ? (isDark ? '-12px 0 32px rgba(0,0,0,0.6)' : '-12px 0 32px rgba(15,23,42,0.12)')
-            : 'none',
-        }}
-      >
-        {!isDocsExpanded && !isMobile ? (
-          /* ── COLLAPSED VIEW (60px) ────────────────────────── */
-          <div className="flex flex-col items-center h-full w-[60px] shrink-0 py-3 justify-between select-none">
-            {/* Top Navigation & Action Controls */}
-            <div className="flex flex-col items-center gap-2.5 w-full px-2">
-              {/* Expand Documents Sidebar Button */}
-              <button
-                type="button"
-                onClick={handleToggleDocs}
-                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs"
-                style={{
-                  background: isDark ? 'rgba(56, 189, 248, 0.16)' : '#f0f9ff',
-                  color: isDark ? '#38bdf8' : '#0284c7',
-                  border: isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #bae6fd',
-                }}
-                title="Expand Documents Sidebar (⌘D)"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-              </button>
-
-              <div className="w-6 h-px my-0.5" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }} />
-
-              {/* Upload Button */}
-              <button
-                type="button"
-                onClick={() => setUploadModalOpen(true)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
-                style={{
-                  background: isDark ? 'rgba(168, 85, 247, 0.16)' : '#f5f3ff',
-                  color: isDark ? '#d8b4fe' : '#7c3aed',
-                  border: isDark ? '1px solid rgba(168, 85, 247, 0.30)' : '1px solid #ddd6fe',
-                }}
-                title="Upload & index new file (⌘U)"
-              >
-                <span className="text-sm font-bold leading-none">+</span>
-              </button>
-
-              {/* Compare Button */}
-              <button
-                type="button"
-                onClick={() => handleOpenComparison()}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
-                style={{
-                  background: isDark ? 'rgba(56, 189, 248, 0.14)' : '#f0f9ff',
-                  color: isDark ? '#38bdf8' : '#0284c7',
-                  border: isDark ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid #bae6fd',
-                }}
-                title="Compare documents side-by-side (⌘M)"
-              >
-                <span className="text-xs">📊</span>
-              </button>
-
-              {/* Search Trigger Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  handleToggleDocs()
-                  setTimeout(() => docSearchInputRef.current?.focus(), 80)
-                }}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
-                style={{
-                  background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
-                  color: isDark ? 'rgba(255, 255, 255, 0.65)' : '#64748b',
-                  border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #cbd5e1',
-                }}
-                title="Search and filter documents (/)"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              </button>
-
-              <div className="w-6 h-px my-0.5" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }} />
-
-              {/* Scrollable list of Document Icons */}
-              <div className="flex flex-col items-center gap-1.5 w-full overflow-y-auto no-scrollbar max-h-[calc(100vh-290px)] py-1">
-                {docs.length === 0 ? (
-                  <span className="text-[10px] opacity-30 select-none">∅</span>
-                ) : (
-                  docs.map((doc) => {
-                    const isSelected = selectedDoc === doc.id
-                    const isFocused = focusDoc?.id === doc.id
-                    const icon = doc.name.endsWith('.pdf') ? '📕' : doc.name.endsWith('.md') ? '📝' : '📄'
-                    return (
-                      <button
-                        key={doc.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedDoc(doc.id)
-                          handleOpenDocumentReader({ docIdOrName: doc.id })
-                        }}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer relative hover:scale-110"
-                        style={{
-                          background: isFocused
-                            ? (isDark ? 'rgba(168, 85, 247, 0.25)' : '#f3e8ff')
-                            : isSelected
-                              ? (isDark ? 'rgba(56, 189, 248, 0.18)' : '#e0f2fe')
-                              : (isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc'),
-                          border: isFocused
-                            ? (isDark ? '1px solid rgba(168, 85, 247, 0.50)' : '1px solid #c084fc')
-                            : isSelected
-                              ? (isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #7dd3fc')
-                              : (isDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid #e2e8f0'),
-                        }}
-                        title={`${doc.name}\n${doc.chunk_count} chunks · Uploaded ${fmtDate(doc.uploaded_at)}\n(Click to read)`}
-                      >
-                        <span className="text-xs">{icon}</span>
-                        {isFocused && (
-                          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-purple-500 ring-2 ring-white dark:ring-black" />
-                        )}
-                      </button>
-                    )
-                  })
-                )}
-              </div>
-            </div>
-
-            {/* Bottom Info: Department badge & File count */}
-            <div className="flex flex-col items-center gap-1.5 w-full pt-2" style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0' }}>
-              <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold"
-                style={{
-                  background: d ? d.bg : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
-                  color: d ? d.text : (isDark ? '#fff' : '#0f172a'),
-                  border: d ? `1px solid ${d.dot}40` : (isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1'),
-                }}
-                title={`${docs.length} documents indexed for ${DEPT_NAMES[user?.role] || user?.role}`}
-              >
-                {docs.length}
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* ── EXPANDED VIEW (340px) ────────────────────────── */
-          <div className="flex flex-col h-full w-[340px] shrink-0">
-            {/* Panel header */}
-            <div className="px-4 py-3.5" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0' }}>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.1em]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>
-                  Documents
-                </p>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenComparison()}
-                    className="text-[10px] px-2 py-0.5 rounded font-semibold transition-all hover:scale-105 cursor-pointer flex items-center gap-1 shadow-xs"
-                    style={{
-                      background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
-                      color: isDark ? '#38bdf8' : '#0284c7',
-                      border: isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #bae6fd',
-                    }}
-                    title="Compare documents side-by-side in a matrix (⌘M)"
-                  >
-                    <span>📊</span>
-                    <span>Compare</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setUploadModalOpen(true)}
-                    className="text-[10px] px-2 py-0.5 rounded font-semibold transition-all hover:scale-105 cursor-pointer flex items-center gap-1 shadow-xs"
-                    style={{
-                      background: isDark ? 'rgba(168, 85, 247, 0.20)' : '#f3e8ff',
-                      color: isDark ? '#d8b4fe' : '#7e22ce',
-                      border: isDark ? '1px solid rgba(168, 85, 247, 0.35)' : '1px solid #d8b4fe',
-                    }}
-                    title="Upload & index new corporate file (⌘U)"
-                  >
-                    <span>+</span>
-                    <span>Upload</span>
-                  </button>
-
-                  {/* Collapse button on Desktop or Close on Mobile */}
-                  {isMobile ? (
-                    <button
-                      className="text-[11px] px-2 py-0.5 rounded cursor-pointer"
-                      style={{
-                        color: isDark ? 'rgba(255,255,255,0.35)' : '#475569',
-                        border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
-                        background: 'none',
-                      }}
-                      onClick={() => setDocsMobileDrawerOpen(false)}
-                    >
-                      ✕ Close
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleToggleDocs}
-                      className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] transition-all cursor-pointer opacity-60 hover:opacity-100 hover:scale-105"
-                      style={{
-                        background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
-                        border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #cbd5e1',
-                        color: isDark ? '#fff' : '#0f172a',
-                      }}
-                      title="Collapse Documents Sidebar (⌘D)"
-                    >
-                      ▶
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                {d && <span className="w-1.5 h-1.5 rounded-full" style={{ background: d.dot }} />}
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: d?.text }}>
-                  {user?.role}
-                </span>
-                <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.30)' : '#64748b' }}>
-                  · {filteredDocs.length !== docs.length ? `${filteredDocs.length} of ${docs.length} files` : `${docs.length} files`}
-                </span>
-              </div>
-            </div>
-
-            {/* Search & Filter Bar */}
-            <div
-              className="px-3 py-2 space-y-1.5 border-b select-none"
-              style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0' }}
-            >
-              {/* Search Input Box */}
-              <div className="relative flex items-center">
-                <svg
-                  className="absolute left-2.5 w-3.5 h-3.5 pointer-events-none opacity-40"
-                  style={{ color: isDark ? '#fff' : '#0f172a' }}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="11" cy="11" r="8" strokeWidth="2" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                <input
-                  ref={docSearchInputRef}
-                  type="text"
-                  value={docSearchQuery}
-                  onChange={(e) => setDocSearchQuery(e.target.value)}
-                  placeholder="Filter files... (Press /)"
-                  className={`w-full text-xs pl-8 pr-7 py-1.5 rounded-lg border outline-none transition-all placeholder:text-[11px] ${
-                    isDark
-                      ? 'bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-purple-400/50 focus:bg-white/[0.06]'
-                      : 'bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-purple-500/50 focus:bg-white'
-                  }`}
-                />
-                {docSearchQuery ? (
-                  <button
-                    type="button"
-                    onClick={() => setDocSearchQuery('')}
-                    className="absolute right-2 text-xs opacity-50 hover:opacity-100 cursor-pointer p-0.5"
-                    title="Clear search (Esc)"
-                  >
-                    ✕
-                  </button>
-                ) : (
-                  <kbd className="absolute right-2 font-mono text-[9px] px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 opacity-40 pointer-events-none select-none">
-                    /
-                  </kbd>
-                )}
-              </div>
-
-              {/* Type Filter Chips & Sort Toggle */}
-              <div className="flex items-center justify-between gap-1">
-                {/* Type Chips */}
-                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
-                  {[
-                    { key: 'all', label: 'All', count: docCounts.all },
-                    { key: 'pdf', label: 'PDF', count: docCounts.pdf },
-                    { key: 'txt', label: 'TXT', count: docCounts.txt },
-                    { key: 'md', label: 'MD', count: docCounts.md },
-                  ].map(({ key, label, count }) => {
-                    if (key !== 'all' && count === 0) return null
-                    const isActive = docTypeFilter === key
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => setDocTypeFilter(key)}
-                        className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 ${
-                          isActive
-                            ? isDark
-                              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-xs'
-                              : 'bg-purple-100 text-purple-700 border border-purple-200 shadow-xs'
-                            : isDark
-                              ? 'text-white/40 hover:text-white/70 hover:bg-white/5 border border-transparent'
-                              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent'
-                        }`}
-                      >
-                        <span>{label}</span>
-                        <span className="text-[9px] opacity-60">({count})</span>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {/* Sort Toggle Button */}
+          {!isDocsExpanded && !isMobile ? (
+            /* ── COLLAPSED VIEW (60px) ────────────────────────── */
+            <div className="flex flex-col items-center h-full w-[60px] shrink-0 py-3 justify-between select-none">
+              {/* Top Navigation & Action Controls */}
+              <div className="flex flex-col items-center gap-2.5 w-full px-2">
+                {/* Expand Documents Sidebar Button */}
                 <button
                   type="button"
-                  onClick={() => setDocSortOrder((prev) => (prev === 'recent' ? 'alpha' : 'recent'))}
-                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
-                    isDark
-                      ? 'text-white/50 hover:text-white hover:bg-white/5 border border-white/10'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
-                  }`}
-                  title={`Sort: ${docSortOrder === 'recent' ? 'Newest first (Click for A-Z)' : 'Alphabetical (Click for Newest)'}`}
+                  onClick={handleToggleDocs}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs"
+                  style={{
+                    background: isDark ? 'rgba(56, 189, 248, 0.16)' : '#f0f9ff',
+                    color: isDark ? '#38bdf8' : '#0284c7',
+                    border: isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #bae6fd',
+                  }}
+                  title="Expand Documents Sidebar (⌘D)"
                 >
-                  <span>{docSortOrder === 'recent' ? '🕒 Recent' : '🔤 A–Z'}</span>
+                  <PanelRightIcon isOpen={false} size={18} />
                 </button>
-              </div>
-            </div>
 
-            {/* Doc list */}
-            <div className="flex-1 overflow-y-auto p-2 doc-scroll">
-              {docsLoading ? (
-                <div className="flex items-center gap-2 px-2 py-3">
-                  <div className={`w-3 h-3 rounded-full border border-t-transparent animate-spin ${isDark ? 'border-white/30 border-t-white' : 'border-slate-300 border-t-slate-700'}`} />
-                  <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8' }}>Loading…</span>
-                </div>
-              ) : docs.length === 0 ? (
-                <p className="px-2 text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>No documents found.</p>
-              ) : filteredDocs.length === 0 ? (
-                <div className="px-3 py-8 text-center space-y-2">
-                  <p className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.50)' : '#64748b' }}>
-                    No files match <span className="font-semibold text-purple-400">"{docSearchQuery}"</span>
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDocSearchQuery('')
-                      setDocTypeFilter('all')
-                    }}
-                    className="text-[11px] font-medium text-purple-400 hover:underline cursor-pointer"
-                  >
-                    Clear filter
-                  </button>
-                </div>
-              ) : (
-                <ul className="space-y-1.5">
-                  {filteredDocs.map((doc) => (
-                    <li key={doc.id}>
-                      <div
-                        className={`w-full text-left p-2.5 rounded-[12px] transition-all group border ${
-                          selectedDoc === doc.id
-                            ? isDark
-                              ? 'bg-purple-500/15 border-purple-500/40 shadow-xs'
-                              : 'bg-purple-50 border-purple-200 shadow-xs'
-                            : isDark
-                              ? 'border-transparent hover:bg-white/[0.04]'
-                              : 'border-transparent hover:bg-slate-100'
-                        }`}
-                        style={{
-                          borderLeft: `3px solid ${selectedDoc === doc.id ? (d?.dot ?? 'transparent') : 'transparent'}`,
-                        }}
-                        title={doc.name}
-                      >
-                        {/* Row 1: Complete Filename with icon (natural wrap, no truncation ellipsis) */}
-                        <div
+                <div className="w-6 h-px my-0.5" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }} />
+
+                {/* Upload Button */}
+                <button
+                  type="button"
+                  onClick={() => setUploadModalOpen(true)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
+                  style={{
+                    background: isDark ? 'rgba(168, 85, 247, 0.16)' : '#f5f3ff',
+                    color: isDark ? '#d8b4fe' : '#7c3aed',
+                    border: isDark ? '1px solid rgba(168, 85, 247, 0.30)' : '1px solid #ddd6fe',
+                  }}
+                  title="Upload & index new file (⌘U)"
+                >
+                  <span className="text-sm font-bold leading-none">+</span>
+                </button>
+
+                {/* Compare Button */}
+                <button
+                  type="button"
+                  onClick={() => handleOpenComparison()}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
+                  style={{
+                    background: isDark ? 'rgba(56, 189, 248, 0.14)' : '#f0f9ff',
+                    color: isDark ? '#38bdf8' : '#0284c7',
+                    border: isDark ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid #bae6fd',
+                  }}
+                  title="Compare documents side-by-side (⌘M)"
+                >
+                  <span className="text-xs">📊</span>
+                </button>
+
+                {/* Search Trigger Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleToggleDocs()
+                    setTimeout(() => docSearchInputRef.current?.focus(), 80)
+                  }}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105"
+                  style={{
+                    background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
+                    color: isDark ? 'rgba(255, 255, 255, 0.65)' : '#64748b',
+                    border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #cbd5e1',
+                  }}
+                  title="Search and filter documents (/)"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </button>
+
+                <div className="w-6 h-px my-0.5" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }} />
+
+                {/* Scrollable list of Document Icons */}
+                <div className="flex flex-col items-center gap-1.5 w-full overflow-y-auto no-scrollbar max-h-[calc(100vh-290px)] py-1">
+                  {docs.length === 0 ? (
+                    <span className="text-[10px] opacity-30 select-none">∅</span>
+                  ) : (
+                    docs.map((doc) => {
+                      const isSelected = selectedDoc === doc.id
+                      const isFocused = focusDoc?.id === doc.id
+                      const icon = doc.name.endsWith('.pdf') ? '📕' : doc.name.endsWith('.md') ? '📝' : '📄'
+                      return (
+                        <button
+                          key={doc.id}
+                          type="button"
                           onClick={() => {
                             setSelectedDoc(doc.id)
                             handleOpenDocumentReader({ docIdOrName: doc.id })
                           }}
-                          className="cursor-pointer mb-2 group/title"
-                          title={`${doc.name} (Click to open in reader)`}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer relative hover:scale-110"
+                          style={{
+                            background: isFocused
+                              ? (isDark ? 'rgba(168, 85, 247, 0.25)' : '#f3e8ff')
+                              : isSelected
+                                ? (isDark ? 'rgba(56, 189, 248, 0.18)' : '#e0f2fe')
+                                : (isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc'),
+                            border: isFocused
+                              ? (isDark ? '1px solid rgba(168, 85, 247, 0.50)' : '1px solid #c084fc')
+                              : isSelected
+                                ? (isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #7dd3fc')
+                                : (isDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid #e2e8f0'),
+                          }}
+                          title={`${doc.name}\n${doc.chunk_count} chunks · Uploaded ${fmtDate(doc.uploaded_at)}\n(Click to read)`}
                         >
-                          <div className="flex items-start gap-2">
-                            <span className="text-sm shrink-0 mt-0.5 select-none">
-                              {doc.name.endsWith('.pdf') ? '📕' : doc.name.endsWith('.md') ? '📝' : '📄'}
-                            </span>
-                            <p
-                              className="text-xs font-semibold leading-snug break-words [overflow-wrap:anywhere] transition-colors group-hover/title:text-purple-400"
-                              style={{
-                                color: selectedDoc === doc.id
-                                  ? (isDark ? '#fff' : '#0f172a')
-                                  : (isDark ? 'rgba(255,255,255,0.92)' : '#1e293b'),
-                              }}
-                            >
-                              {doc.name}
-                            </p>
-                          </div>
-                        </div>
+                          <span className="text-xs">{icon}</span>
+                          {isFocused && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-purple-500 ring-2 ring-white dark:ring-black" />
+                          )}
+                        </button>
+                      )
+                    })
+                  )}
+                </div>
+              </div>
 
-                        {/* Row 2: Metadata (left) & Actions (right) */}
-                        <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-black/5 dark:border-white/5 select-none">
-                          {/* Metadata */}
-                          <div className="flex items-center gap-1.5 text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.40)' : '#64748b' }}>
-                            <span className="font-mono font-medium">{doc.chunk_count} chunks</span>
-                            <span className="opacity-40">·</span>
-                            <span>{fmtDate(doc.uploaded_at)}</span>
-                          </div>
-
-                          {/* Action Controls */}
-                          <div className="flex items-center gap-1 shrink-0">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setFocusDoc(focusDoc?.id === doc.id ? null : doc)
-                              }}
-                              className={`text-[10px] px-2 py-0.5 rounded font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-                                focusDoc?.id === doc.id
-                                  ? 'ring-1 shadow-xs'
-                                  : 'hover:scale-105 opacity-80 group-hover:opacity-100'
-                              }`}
-                              style={{
-                                background: focusDoc?.id === doc.id
-                                  ? (isDark ? 'rgba(168, 85, 247, 0.25)' : '#f3e8ff')
-                                  : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
-                                color: focusDoc?.id === doc.id
-                                  ? (isDark ? '#d8b4fe' : '#7e22ce')
-                                  : (isDark ? 'rgba(255,255,255,0.75)' : '#475569'),
-                                borderColor: focusDoc?.id === doc.id
-                                  ? (isDark ? 'rgba(168, 85, 247, 0.45)' : '#d8b4fe')
-                                  : 'transparent',
-                              }}
-                              title={focusDoc?.id === doc.id ? "Clear focus (Search all)" : `Focus queries on ${doc.name}`}
-                            >
-                              <span>🎯</span>
-                              <span>{focusDoc?.id === doc.id ? 'Focused' : 'Focus'}</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleOpenComparison(doc, null)
-                              }}
-                              className="text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all cursor-pointer hover:scale-105 opacity-80 group-hover:opacity-100"
-                              style={{
-                                background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
-                                color: isDark ? '#38bdf8' : '#0284c7',
-                                border: isDark ? '1px solid rgba(56, 189, 248, 0.30)' : '1px solid #bae6fd',
-                              }}
-                              title={`Compare ${doc.name} side-by-side with another file`}
-                            >
-                              📊
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedDoc(doc.id)
-                                handleOpenDocumentReader({ docIdOrName: doc.id })
-                              }}
-                              className="text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all cursor-pointer hover:scale-105 opacity-80 group-hover:opacity-100"
-                              style={{
-                                background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
-                                color: isDark ? 'rgba(255,255,255,0.75)' : '#475569',
-                              }}
-                              title={`Open ${doc.name} in Document Reader`}
-                            >
-                              Read ↗
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {/* Bottom Info: Department badge & File count */}
+              <div className="flex flex-col items-center gap-1.5 w-full pt-2" style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0' }}>
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold"
+                  style={{
+                    background: d ? d.bg : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
+                    color: d ? d.text : (isDark ? '#fff' : '#0f172a'),
+                    border: d ? `1px solid ${d.dot}40` : (isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1'),
+                  }}
+                  title={`${docs.length} documents indexed for ${DEPT_NAMES[user?.role] || user?.role}`}
+                >
+                  {docs.length}
+                </div>
+              </div>
             </div>
+          ) : (
+            /* ── EXPANDED VIEW (340px) ────────────────────────── */
+            <div className="flex flex-col h-full w-[340px] shrink-0">
+              {/* Panel header */}
+              <div className="px-4 py-3.5" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.1em]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>
+                    Documents
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenComparison()}
+                      className="text-[10px] px-2 py-0.5 rounded font-semibold transition-all hover:scale-105 cursor-pointer flex items-center gap-1 shadow-xs"
+                      style={{
+                        background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
+                        color: isDark ? '#38bdf8' : '#0284c7',
+                        border: isDark ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid #bae6fd',
+                      }}
+                      title="Compare documents side-by-side in a matrix (⌘M)"
+                    >
+                      <span>📊</span>
+                      <span>Compare</span>
+                    </button>
 
-            {/* Footer */}
-            <div className="px-4 py-3" style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0' }}>
-              <button
-                onClick={logout}
-                className="text-[11px] transition-colors hover:underline cursor-pointer"
-                style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#64748b', background: 'none', border: 'none', fontFamily: 'inherit' }}
+                    <button
+                      type="button"
+                      onClick={() => setUploadModalOpen(true)}
+                      className="text-[10px] px-2 py-0.5 rounded font-semibold transition-all hover:scale-105 cursor-pointer flex items-center gap-1 shadow-xs"
+                      style={{
+                        background: isDark ? 'rgba(168, 85, 247, 0.20)' : '#f3e8ff',
+                        color: isDark ? '#d8b4fe' : '#7e22ce',
+                        border: isDark ? '1px solid rgba(168, 85, 247, 0.35)' : '1px solid #d8b4fe',
+                      }}
+                      title="Upload & index new corporate file (⌘U)"
+                    >
+                      <span>+</span>
+                      <span>Upload</span>
+                    </button>
+
+                    {/* Collapse button on Desktop or Close on Mobile */}
+                    {isMobile ? (
+                      <button
+                        className="text-[11px] px-2 py-0.5 rounded cursor-pointer"
+                        style={{
+                          color: isDark ? 'rgba(255,255,255,0.35)' : '#475569',
+                          border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
+                          background: 'none',
+                        }}
+                        onClick={() => setDocsMobileDrawerOpen(false)}
+                      >
+                        ✕ Close
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleToggleDocs}
+                        className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] transition-all cursor-pointer opacity-70 hover:opacity-100 hover:scale-105"
+                        style={{
+                          background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
+                          border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #cbd5e1',
+                          color: isDark ? '#fff' : '#0f172a',
+                        }}
+                        title="Collapse Documents Sidebar (⌘D)"
+                      >
+                        <PanelRightIcon isOpen={true} size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  {d && <span className="w-1.5 h-1.5 rounded-full" style={{ background: d.dot }} />}
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: d?.text }}>
+                    {user?.role}
+                  </span>
+                  <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.30)' : '#64748b' }}>
+                    · {filteredDocs.length !== docs.length ? `${filteredDocs.length} of ${docs.length} files` : `${docs.length} files`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Search & Filter Bar */}
+              <div
+                className="px-3 py-2 space-y-1.5 border-b select-none"
+                style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0' }}
               >
-                Sign out
-              </button>
+                {/* Search Input Box */}
+                <div className="relative flex items-center">
+                  <svg
+                    className="absolute left-2.5 w-3.5 h-3.5 pointer-events-none opacity-40"
+                    style={{ color: isDark ? '#fff' : '#0f172a' }}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="11" cy="11" r="8" strokeWidth="2" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                  <input
+                    ref={docSearchInputRef}
+                    type="text"
+                    value={docSearchQuery}
+                    onChange={(e) => setDocSearchQuery(e.target.value)}
+                    placeholder="Filter files... (Press /)"
+                    className={`w-full text-xs pl-8 pr-7 py-1.5 rounded-lg border outline-none transition-all placeholder:text-[11px] ${isDark
+                        ? 'bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-purple-400/50 focus:bg-white/[0.06]'
+                        : 'bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-purple-500/50 focus:bg-white'
+                      }`}
+                  />
+                  {docSearchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => setDocSearchQuery('')}
+                      className="absolute right-2 text-xs opacity-50 hover:opacity-100 cursor-pointer p-0.5"
+                      title="Clear search (Esc)"
+                    >
+                      ✕
+                    </button>
+                  ) : (
+                    <kbd className="absolute right-2 font-mono text-[9px] px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 opacity-40 pointer-events-none select-none">
+                      /
+                    </kbd>
+                  )}
+                </div>
+
+                {/* Type Filter Chips & Sort Toggle */}
+                <div className="flex items-center justify-between gap-1">
+                  {/* Type Chips */}
+                  <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+                    {[
+                      { key: 'all', label: 'All', count: docCounts.all },
+                      { key: 'pdf', label: 'PDF', count: docCounts.pdf },
+                      { key: 'txt', label: 'TXT', count: docCounts.txt },
+                      { key: 'md', label: 'MD', count: docCounts.md },
+                    ].map(({ key, label, count }) => {
+                      if (key !== 'all' && count === 0) return null
+                      const isActive = docTypeFilter === key
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setDocTypeFilter(key)}
+                          className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 ${isActive
+                              ? isDark
+                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-xs'
+                                : 'bg-purple-100 text-purple-700 border border-purple-200 shadow-xs'
+                              : isDark
+                                ? 'text-white/40 hover:text-white/70 hover:bg-white/5 border border-transparent'
+                                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent'
+                            }`}
+                        >
+                          <span>{label}</span>
+                          <span className="text-[9px] opacity-60">({count})</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Sort Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => setDocSortOrder((prev) => (prev === 'recent' ? 'alpha' : 'recent'))}
+                    className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 shrink-0 ${isDark
+                        ? 'text-white/50 hover:text-white hover:bg-white/5 border border-white/10'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
+                      }`}
+                    title={`Sort: ${docSortOrder === 'recent' ? 'Newest first (Click for A-Z)' : 'Alphabetical (Click for Newest)'}`}
+                  >
+                    <span>{docSortOrder === 'recent' ? '🕒 Recent' : '🔤 A–Z'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Doc list */}
+              <div className="flex-1 overflow-y-auto p-2 doc-scroll">
+                {docsLoading ? (
+                  <div className="flex items-center gap-2 px-2 py-3">
+                    <div className={`w-3 h-3 rounded-full border border-t-transparent animate-spin ${isDark ? 'border-white/30 border-t-white' : 'border-slate-300 border-t-slate-700'}`} />
+                    <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8' }}>Loading…</span>
+                  </div>
+                ) : docs.length === 0 ? (
+                  <p className="px-2 text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>No documents found.</p>
+                ) : filteredDocs.length === 0 ? (
+                  <div className="px-3 py-8 text-center space-y-2">
+                    <p className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.50)' : '#64748b' }}>
+                      No files match <span className="font-semibold text-purple-400">"{docSearchQuery}"</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDocSearchQuery('')
+                        setDocTypeFilter('all')
+                      }}
+                      className="text-[11px] font-medium text-purple-400 hover:underline cursor-pointer"
+                    >
+                      Clear filter
+                    </button>
+                  </div>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {filteredDocs.map((doc) => (
+                      <li key={doc.id}>
+                        <div
+                          className={`w-full text-left p-2.5 rounded-[12px] transition-all group border ${selectedDoc === doc.id
+                              ? isDark
+                                ? 'bg-purple-500/15 border-purple-500/40 shadow-xs'
+                                : 'bg-purple-50 border-purple-200 shadow-xs'
+                              : isDark
+                                ? 'border-transparent hover:bg-white/[0.04]'
+                                : 'border-transparent hover:bg-slate-100'
+                            }`}
+                          style={{
+                            borderLeft: `3px solid ${selectedDoc === doc.id ? (d?.dot ?? 'transparent') : 'transparent'}`,
+                          }}
+                          title={doc.name}
+                        >
+                          {/* Row 1: Complete Filename with icon (natural wrap, no truncation ellipsis) */}
+                          <div
+                            onClick={() => {
+                              setSelectedDoc(doc.id)
+                              handleOpenDocumentReader({ docIdOrName: doc.id })
+                            }}
+                            className="cursor-pointer mb-2 group/title"
+                            title={`${doc.name} (Click to open in reader)`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="text-sm shrink-0 mt-0.5 select-none">
+                                {doc.name.endsWith('.pdf') ? '📕' : doc.name.endsWith('.md') ? '📝' : '📄'}
+                              </span>
+                              <p
+                                className="text-xs font-semibold leading-snug break-words [overflow-wrap:anywhere] transition-colors group-hover/title:text-purple-400"
+                                style={{
+                                  color: selectedDoc === doc.id
+                                    ? (isDark ? '#fff' : '#0f172a')
+                                    : (isDark ? 'rgba(255,255,255,0.92)' : '#1e293b'),
+                                }}
+                              >
+                                {doc.name}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Row 2: Metadata (left) & Actions (right) */}
+                          <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-black/5 dark:border-white/5 select-none">
+                            {/* Metadata */}
+                            <div className="flex items-center gap-1.5 text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.40)' : '#64748b' }}>
+                              <span className="font-mono font-medium">{doc.chunk_count} chunks</span>
+                              <span className="opacity-40">·</span>
+                              <span>{fmtDate(doc.uploaded_at)}</span>
+                            </div>
+
+                            {/* Action Controls */}
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setFocusDoc(focusDoc?.id === doc.id ? null : doc)
+                                }}
+                                className={`text-[10px] px-2 py-0.5 rounded font-semibold transition-all cursor-pointer flex items-center gap-1 ${focusDoc?.id === doc.id
+                                    ? 'ring-1 shadow-xs'
+                                    : 'hover:scale-105 opacity-80 group-hover:opacity-100'
+                                  }`}
+                                style={{
+                                  background: focusDoc?.id === doc.id
+                                    ? (isDark ? 'rgba(168, 85, 247, 0.25)' : '#f3e8ff')
+                                    : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
+                                  color: focusDoc?.id === doc.id
+                                    ? (isDark ? '#d8b4fe' : '#7e22ce')
+                                    : (isDark ? 'rgba(255,255,255,0.75)' : '#475569'),
+                                  borderColor: focusDoc?.id === doc.id
+                                    ? (isDark ? 'rgba(168, 85, 247, 0.45)' : '#d8b4fe')
+                                    : 'transparent',
+                                }}
+                                title={focusDoc?.id === doc.id ? "Clear focus (Search all)" : `Focus queries on ${doc.name}`}
+                              >
+                                <span>🎯</span>
+                                <span>{focusDoc?.id === doc.id ? 'Focused' : 'Focus'}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleOpenComparison(doc, null)
+                                }}
+                                className="text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all cursor-pointer hover:scale-105 opacity-80 group-hover:opacity-100"
+                                style={{
+                                  background: isDark ? 'rgba(56, 189, 248, 0.18)' : '#f0f9ff',
+                                  color: isDark ? '#38bdf8' : '#0284c7',
+                                  border: isDark ? '1px solid rgba(56, 189, 248, 0.30)' : '1px solid #bae6fd',
+                                }}
+                                title={`Compare ${doc.name} side-by-side with another file`}
+                              >
+                                📊
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedDoc(doc.id)
+                                  handleOpenDocumentReader({ docIdOrName: doc.id })
+                                }}
+                                className="text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all cursor-pointer hover:scale-105 opacity-80 group-hover:opacity-100"
+                                style={{
+                                  background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
+                                  color: isDark ? 'rgba(255,255,255,0.75)' : '#475569',
+                                }}
+                                title={`Open ${doc.name} in Document Reader`}
+                              >
+                                Read ↗
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-4 py-3" style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0' }}>
+                <button
+                  onClick={logout}
+                  className="text-[11px] transition-colors hover:underline cursor-pointer"
+                  style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#64748b', background: 'none', border: 'none', fontFamily: 'inherit' }}
+                >
+                  Sign out
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </aside>
-    </div>
+          )}
+        </aside>
+      </div>
 
       {/* Interactive Citation Inspector Drawer */}
       <CitationDrawer
