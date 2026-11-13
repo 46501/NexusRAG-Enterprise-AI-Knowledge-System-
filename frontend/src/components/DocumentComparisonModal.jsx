@@ -4,6 +4,7 @@ import {
   COMPARISON_PRESETS,
   buildComparisonPrompt,
   runComparisonQuery,
+  synthesizeFallbackComparison,
   parseMarkdownTable,
   exportTableToCsv,
   copyMarkdownToClipboard,
@@ -116,21 +117,59 @@ export default function DocumentComparisonModal({
     setLoadingStep(1)
     setActiveTab('matrix')
 
-    const timer1 = setTimeout(() => setLoadingStep(2), 1500)
-    const timer2 = setTimeout(() => setLoadingStep(3), 3200)
+    const timer1 = setTimeout(() => setLoadingStep(2), 1200)
 
     try {
+      // 1. Fetch chunks in parallel if not loaded yet, ensuring they are available for both Side-by-Side tab and fallback
+      let currentChunksA = chunksA
+      let currentChunksB = chunksB
+      if (!currentChunksA.length || !currentChunksB.length) {
+        try {
+          const [resA, resB] = await Promise.all([
+            getDocumentContent(docAId),
+            getDocumentContent(docBId),
+          ])
+          currentChunksA = resA.chunks || []
+          currentChunksB = resB.chunks || []
+          setChunksA(currentChunksA)
+          setChunksB(currentChunksB)
+        } catch (_) {}
+      }
+
       const docNames = [docA.name, docB.name]
       if (docC) docNames.push(docC.name)
 
       const prompt = buildComparisonPrompt(docNames, selectedPreset, customPrompt)
-      const data = await runComparisonQuery({
-        query: prompt,
-        department: userRole,
-        topK: 10,
-      })
 
-      setComparisonResult(data)
+      // 2. Run streaming comparison query with SSE
+      try {
+        const data = await runComparisonQuery({
+          query: prompt,
+          department: userRole,
+          topK: 10,
+          onToken: () => {
+            setLoadingStep(3)
+          },
+        })
+
+        if (data && data.answer) {
+          setComparisonResult(data)
+          return
+        }
+      } catch (queryErr) {
+        console.warn('Backend query route failed, using resilient clause matrix synthesis:', queryErr)
+        // If 502/503/504, timeout, or backend error occurs:
+        // Synthesize comparison matrix directly from the indexed document chunks
+        const fallbackData = synthesizeFallbackComparison({
+          docA,
+          docB,
+          chunksA: currentChunksA,
+          chunksB: currentChunksB,
+          preset: selectedPreset,
+        })
+        setComparisonResult(fallbackData)
+        return
+      }
     } catch (err) {
       console.error('Comparison failed:', err)
       const msg =
@@ -143,7 +182,6 @@ export default function DocumentComparisonModal({
       setError(msg)
     } finally {
       clearTimeout(timer1)
-      clearTimeout(timer2)
       setLoading(false)
     }
   }
@@ -657,14 +695,27 @@ export default function DocumentComparisonModal({
           {/* Error Message */}
           {error && !loading && (
             <div
-              className="p-4 rounded-xl border text-xs space-y-1"
+              className="p-4 rounded-xl border text-xs space-y-2"
               style={{
                 background: 'rgba(239, 68, 68, 0.08)',
                 borderColor: 'rgba(239, 68, 68, 0.25)',
                 color: isDark ? '#fca5a5' : '#b91c1c',
               }}
             >
-              <p className="font-bold">Comparison Error</p>
+              <div className="flex items-center justify-between">
+                <p className="font-bold">Comparison Error</p>
+                <button
+                  type="button"
+                  onClick={handleRunComparison}
+                  className="px-2.5 py-1 rounded-md text-xs font-semibold cursor-pointer transition-colors"
+                  style={{
+                    background: isDark ? 'rgba(239, 68, 68, 0.20)' : '#fee2e2',
+                    color: isDark ? '#fca5a5' : '#991b1b',
+                  }}
+                >
+                  ↻ Try Again
+                </button>
+              </div>
               <p>{error}</p>
             </div>
           )}
@@ -692,6 +743,32 @@ export default function DocumentComparisonModal({
                 </div>
               ) : (
                 <div className="space-y-6">
+                  {/* Fallback Notice Banner */}
+                  {comparisonResult.isFallback && (
+                    <div
+                      className="px-3.5 py-2 rounded-xl border text-xs flex items-center justify-between"
+                      style={{
+                        background: isDark ? 'rgba(56, 189, 248, 0.08)' : '#f0f9ff',
+                        borderColor: isDark ? 'rgba(56, 189, 248, 0.20)' : '#bae6fd',
+                        color: isDark ? '#7dd3fc' : '#0369a1',
+                      }}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>⚡</span>
+                        <span>
+                          <strong>Indexed Clause Synthesis:</strong> Matrix synthesized directly from document vector clauses.
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleRunComparison}
+                        className="underline font-semibold hover:opacity-80 cursor-pointer ml-3 shrink-0"
+                      >
+                        Re-query LLM ↻
+                      </button>
+                    </div>
+                  )}
+
                   {/* Executive Summary Callout */}
                   {textSections.summary && (
                     <div
