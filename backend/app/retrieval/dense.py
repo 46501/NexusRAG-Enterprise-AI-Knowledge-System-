@@ -14,9 +14,20 @@ _client: AsyncQdrantClient | None = None
 def load_dense_client() -> None:
     global _client
     if _s.qdrant_url:
-        _client = AsyncQdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key)
+        _client = AsyncQdrantClient(
+            url=_s.qdrant_url,
+            api_key=_s.qdrant_api_key,
+            check_compatibility=False,
+            timeout=10.0,
+        )
     else:
-        _client = AsyncQdrantClient(host=_s.qdrant_host, port=_s.qdrant_port)
+        _client = AsyncQdrantClient(
+            host=_s.qdrant_host,
+            port=_s.qdrant_port,
+            check_compatibility=False,
+            timeout=10.0,
+        )
+    logger.info("Qdrant async client loaded (check_compatibility=False)")
 
 
 def get_client() -> AsyncQdrantClient:

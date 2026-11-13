@@ -55,9 +55,9 @@ def main() -> None:
     load_embedder()
 
     if _s.qdrant_url:
-        client = QdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key)
+        client = QdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key, check_compatibility=False, timeout=10.0)
     else:
-        client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port)
+        client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port, check_compatibility=False, timeout=10.0)
 
     collections = [c.name for c in client.get_collections().collections]
     if _s.qdrant_collection not in collections:

@@ -59,9 +59,9 @@ def ingest_file(
     doc_meta = build_doc_meta(file_path, role_access, original_filename=original_filename)
 
     if _s.qdrant_url:
-        client = QdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key)
+        client = QdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key, check_compatibility=False, timeout=10.0)
     else:
-        client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port)
+        client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port, check_compatibility=False, timeout=10.0)
     texts = [c.contextual_text for c in chunks]
     vectors = embed(texts)
 
@@ -107,9 +107,9 @@ def rebuild_bm25_index(db: Session | None = None) -> None:
     doc_metadata: list[dict] = []
 
     if _s.qdrant_url:
-        client = QdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key)
+        client = QdrantClient(url=_s.qdrant_url, api_key=_s.qdrant_api_key, check_compatibility=False, timeout=10.0)
     else:
-        client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port)
+        client = QdrantClient(host=_s.qdrant_host, port=_s.qdrant_port, check_compatibility=False, timeout=10.0)
 
     offset = None
     all_points = []
