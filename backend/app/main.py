@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -32,8 +33,9 @@ async def lifespan(app: FastAPI):
     load_generator()
     load_reranker()
     await init_db()
-    load_embedder()
-    logger.info("Application startup complete")
+    # Initialize embedder model asynchronously in worker thread so port binding & /health are instant
+    asyncio.create_task(asyncio.to_thread(load_embedder))
+    logger.info("Application startup complete (port ready, embedder loading in background)")
     yield
     await close_db()
     logger.info("Application shutdown complete")

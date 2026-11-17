@@ -5,6 +5,7 @@ const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 const api = axios.create({
   baseURL,
   withCredentials: true,
+  timeout: 15000,
 })
 
 api.interceptors.response.use(

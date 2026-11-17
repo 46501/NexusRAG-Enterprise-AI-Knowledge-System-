@@ -947,7 +947,18 @@ export default function ChatPage() {
                     <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8' }}>Loading…</span>
                   </div>
                 ) : docs.length === 0 ? (
-                  <p className="px-2 text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.20)' : '#94a3b8' }}>No documents found.</p>
+                  <div className="px-3 py-6 text-center space-y-2">
+                    <p className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.30)' : '#94a3b8' }}>
+                      No documents loaded.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={fetchDocs}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 border border-purple-500/20 transition-all cursor-pointer"
+                    >
+                      <span>↻</span> Retry loading
+                    </button>
+                  </div>
                 ) : filteredDocs.length === 0 ? (
                   <div className="px-3 py-8 text-center space-y-2">
                     <p className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.50)' : '#64748b' }}>
@@ -1086,17 +1097,6 @@ export default function ChatPage() {
                     ))}
                   </ul>
                 )}
-              </div>
-
-              {/* Footer */}
-              <div className="px-4 py-3" style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0' }}>
-                <button
-                  onClick={logout}
-                  className="text-[11px] transition-colors hover:underline cursor-pointer"
-                  style={{ color: isDark ? 'rgba(255,255,255,0.25)' : '#64748b', background: 'none', border: 'none', fontFamily: 'inherit' }}
-                >
-                  Sign out
-                </button>
               </div>
             </div>
           )}
