@@ -59,6 +59,27 @@ JSON SCHEMA:
 """
 
 
+def _safe_parse_json(raw_text: str) -> dict:
+    text = (raw_text or "").strip()
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+    cleaned = re.sub(r"^```(?:json)?\s*", "", text, flags=re.MULTILINE)
+    cleaned = re.sub(r"\s*```$", "", cleaned, flags=re.MULTILINE).strip()
+    try:
+        return json.loads(cleaned)
+    except Exception:
+        pass
+    match = re.search(r"(\{.*\})", text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(1))
+        except Exception:
+            pass
+    raise ValueError(f"Could not parse valid JSON from model response: {text[:200]}")
+
+
 def _format_risk_markdown(
     risk_level: RiskLevel,
     summary: str,
@@ -149,7 +170,10 @@ async def assess_risk(
         response_mime_type="application/json",
     )
 
-    models_to_try = [_s.gemini_model, "gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3-flash-preview"]
+    models_to_try = []
+    for m in [_s.gemini_model, "gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-3.5-flash"]:
+        if m and m not in models_to_try:
+            models_to_try.append(m)
 
     last_exc = None
     for model_name in models_to_try:
@@ -160,12 +184,7 @@ async def assess_risk(
                 config=config,
             )
             raw_text = (res.text or "").strip()
-            if "```" in raw_text:
-                raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
-                raw_text = re.sub(r"\s*```$", "", raw_text)
-            raw_text = raw_text.strip()
-
-            data = json.loads(raw_text)
+            data = _safe_parse_json(raw_text)
 
             level_str = str(data.get("risk_level", "LOW")).upper()
             if level_str not in RiskLevel._value2member_map_:

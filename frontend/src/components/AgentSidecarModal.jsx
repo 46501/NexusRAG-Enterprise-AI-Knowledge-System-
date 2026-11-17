@@ -131,7 +131,14 @@ export default function AgentSidecarModal({
         setResult({ type: 'collaborative', data: res })
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to complete agent workflow. Please try again.')
+      const msg =
+        err.response?.data?.detail ||
+        (err.code === 'ECONNABORTED'
+          ? 'Analysis timed out. The AI model is under heavy load, please retry in a moment.'
+          : null) ||
+        err.message ||
+        'Failed to complete agent workflow. Please try again.'
+      setError(msg)
     } finally {
       setLoading(false)
       setStage('')

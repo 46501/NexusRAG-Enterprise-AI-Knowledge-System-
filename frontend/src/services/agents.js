@@ -12,12 +12,16 @@ export async function fetchAgentsList() {
  * Run Policy Compliance Auditor agent.
  */
 export async function runComplianceAudit({ scenario, department, focusDoc }) {
-  const res = await api.post('/agents/audit', {
-    scenario,
-    persona: 'auditor',
-    department: department || undefined,
-    focus_doc: focusDoc || undefined,
-  })
+  const res = await api.post(
+    '/agents/audit',
+    {
+      scenario,
+      persona: 'auditor',
+      department: department || undefined,
+      focus_doc: focusDoc || undefined,
+    },
+    { timeout: 90000 }
+  )
   return res.data
 }
 
@@ -25,12 +29,16 @@ export async function runComplianceAudit({ scenario, department, focusDoc }) {
  * Run Legal & Operational Risk Assessor agent.
  */
 export async function runRiskAssessment({ scenario, department, focusDoc }) {
-  const res = await api.post('/agents/risk', {
-    scenario,
-    persona: 'risk',
-    department: department || undefined,
-    focus_doc: focusDoc || undefined,
-  })
+  const res = await api.post(
+    '/agents/risk',
+    {
+      scenario,
+      persona: 'risk',
+      department: department || undefined,
+      focus_doc: focusDoc || undefined,
+    },
+    { timeout: 90000 }
+  )
   return res.data
 }
 
@@ -38,12 +46,16 @@ export async function runRiskAssessment({ scenario, department, focusDoc }) {
  * Run Policy Intelligence Assistant agent.
  */
 export async function runPolicyIntelligence({ scenario, department, focusDoc }) {
-  const res = await api.post('/agents/intelligence', {
-    scenario,
-    persona: 'intelligence',
-    department: department || undefined,
-    focus_doc: focusDoc || undefined,
-  })
+  const res = await api.post(
+    '/agents/intelligence',
+    {
+      scenario,
+      persona: 'intelligence',
+      department: department || undefined,
+      focus_doc: focusDoc || undefined,
+    },
+    { timeout: 90000 }
+  )
   return res.data
 }
 
@@ -51,12 +63,16 @@ export async function runPolicyIntelligence({ scenario, department, focusDoc }) 
  * Run Multi-Agent Executive Council collaboration.
  */
 export async function runAgentCollaboration({ scenario, department, focusDoc }) {
-  const res = await api.post('/agents/collaborate', {
-    scenario,
-    persona: 'collaborative',
-    department: department || undefined,
-    focus_doc: focusDoc || undefined,
-  })
+  const res = await api.post(
+    '/agents/collaborate',
+    {
+      scenario,
+      persona: 'collaborative',
+      department: department || undefined,
+      focus_doc: focusDoc || undefined,
+    },
+    { timeout: 120000 }
+  )
   return res.data
 }
 
@@ -64,12 +80,16 @@ export async function runAgentCollaboration({ scenario, department, focusDoc }) 
  * Unified agent runner.
  */
 export async function runAgentWorkflow({ scenario, persona, department, focusDoc }) {
-  const res = await api.post('/agents/run', {
-    scenario,
-    persona,
-    department: department || undefined,
-    focus_doc: focusDoc || undefined,
-  })
+  const res = await api.post(
+    '/agents/run',
+    {
+      scenario,
+      persona,
+      department: department || undefined,
+      focus_doc: focusDoc || undefined,
+    },
+    { timeout: 90000 }
+  )
   return res.data
 }
 

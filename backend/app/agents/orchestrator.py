@@ -22,6 +22,27 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 _s = get_settings()
 
+def _safe_parse_json(raw_text: str) -> dict:
+    text = (raw_text or "").strip()
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+    cleaned = re.sub(r"^```(?:json)?\s*", "", text, flags=re.MULTILINE)
+    cleaned = re.sub(r"\s*```$", "", cleaned, flags=re.MULTILINE).strip()
+    try:
+        return json.loads(cleaned)
+    except Exception:
+        pass
+    match = re.search(r"(\{.*\})", text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(1))
+        except Exception:
+            pass
+    raise ValueError(f"Could not parse valid JSON from model response: {text[:200]}")
+
+
 COLLABORATIVE_SYNTHESIS_PROMPT = """You are the Lead Executive Governance Council synthesising insights from two specialized AI agents:
 1. The Policy Compliance Auditor (evaluates rule conformity, approval criteria, and violations)
 2. The Legal & Operational Risk Assessor (evaluates contractual liabilities, SLA risks, and operational bottlenecks)
@@ -93,7 +114,10 @@ async def run_collaborative_audit(
         response_mime_type="application/json",
     )
 
-    models_to_try = [_s.gemini_model, "gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3-flash-preview"]
+    models_to_try = []
+    for m in [_s.gemini_model, "gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-3.5-flash"]:
+        if m and m not in models_to_try:
+            models_to_try.append(m)
 
     synthesis_text = (
         f"The Compliance Auditor determined {auditor_report.verdict.value} while the Risk Assessor identified "
@@ -111,12 +135,7 @@ async def run_collaborative_audit(
                 config=config,
             )
             raw_text = (res.text or "").strip()
-            if "```" in raw_text:
-                raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
-                raw_text = re.sub(r"\s*```$", "", raw_text)
-            raw_text = raw_text.strip()
-
-            data = json.loads(raw_text)
+            data = _safe_parse_json(raw_text)
             synthesis_text = data.get("collaborative_synthesis", synthesis_text)
             recs = data.get("unanimous_recommendations", [])
             if recs:

@@ -163,7 +163,7 @@ async def generate(
     )
 
     models_to_try = [_s.gemini_model]
-    for alt in ("gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3-flash-preview"):
+    for alt in ("gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-3.5-flash"):
         if alt not in models_to_try:
             models_to_try.append(alt)
 
@@ -244,7 +244,7 @@ async def generate_stream(
     )
 
     models_to_try = [_s.gemini_model]
-    for alt in ("gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3-flash-preview"):
+    for alt in ("gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-3.5-flash"):
         if alt not in models_to_try:
             models_to_try.append(alt)
 
