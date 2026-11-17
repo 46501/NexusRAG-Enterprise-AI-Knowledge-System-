@@ -1,3 +1,4 @@
+import asyncio
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchAny, MatchValue
 
@@ -17,17 +18,19 @@ def load_dense_client() -> None:
         _client = AsyncQdrantClient(
             url=_s.qdrant_url,
             api_key=_s.qdrant_api_key,
+            prefer_grpc=False,
             check_compatibility=False,
-            timeout=10.0,
+            timeout=15.0,
         )
     else:
         _client = AsyncQdrantClient(
             host=_s.qdrant_host,
             port=_s.qdrant_port,
+            prefer_grpc=False,
             check_compatibility=False,
-            timeout=10.0,
+            timeout=15.0,
         )
-    logger.info("Qdrant async client loaded (check_compatibility=False)")
+    logger.info("Qdrant async client loaded (prefer_grpc=False, timeout=15.0)")
 
 
 def get_client() -> AsyncQdrantClient:
@@ -43,41 +46,49 @@ async def dense_search(
     top_k: int = 20,
     focus_doc: str | None = None,
 ) -> list[dict]:
-    vector = embed([query])[0]
+    try:
+        loop = asyncio.get_running_loop()
+        vectors = await loop.run_in_executor(None, embed, [query])
+        if not vectors:
+            return []
+        vector = vectors[0]
 
-    must_conditions = [
-        FieldCondition(
-            key="role_access",
-            match=MatchAny(any=allowed_roles),
-        )
-    ]
-    if focus_doc:
-        must_conditions.append(
+        must_conditions = [
             FieldCondition(
-                key="source",
-                match=MatchValue(value=focus_doc),
+                key="role_access",
+                match=MatchAny(any=allowed_roles),
             )
+        ]
+        if focus_doc:
+            must_conditions.append(
+                FieldCondition(
+                    key="source",
+                    match=MatchValue(value=focus_doc),
+                )
+            )
+
+        role_filter = Filter(must=must_conditions)
+
+        response = await get_client().query_points(
+            collection_name=_s.qdrant_collection,
+            query=vector,
+            query_filter=role_filter,
+            limit=top_k,
+            with_payload=True,
         )
 
-    role_filter = Filter(must=must_conditions)
+        hits = []
+        for r in response.points:
+            payload = r.payload or {}
+            hits.append({
+                "id": str(r.id),
+                "score": r.score,
+                "text": payload.get("text", ""),
+                "metadata": {k: v for k, v in payload.items() if k != "text"},
+            })
 
-    response = await get_client().query_points(
-        collection_name=_s.qdrant_collection,
-        query=vector,
-        query_filter=role_filter,
-        limit=top_k,
-        with_payload=True,
-    )
-
-    hits = []
-    for r in response.points:
-        payload = r.payload or {}
-        hits.append({
-            "id": str(r.id),
-            "score": r.score,
-            "text": payload.get("text", ""),
-            "metadata": {k: v for k, v in payload.items() if k != "text"},
-        })
-
-    logger.info("Dense search returned %d hits", len(hits))
-    return hits
+        logger.info("Dense search returned %d hits", len(hits))
+        return hits
+    except Exception as exc:
+        logger.warning("Dense search encountered an error (%s); falling back to sparse hits", exc)
+        return []

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useQuery } from '../hooks/useQuery'
@@ -8,16 +8,18 @@ import Chat from '../components/Chat'
 import BackHomeButton from '../components/BackHomeButton'
 import UserProfileMenu from '../components/UserProfileMenu'
 import CitationDrawer from '../components/CitationDrawer'
-import ExportModal from '../components/ExportModal'
-import CommandPalette from '../components/CommandPalette'
-import DocumentReaderModal from '../components/DocumentReaderModal'
-import DocumentUploadModal from '../components/DocumentUploadModal'
-import DocumentComparisonModal from '../components/DocumentComparisonModal'
-import AgentSidecarModal from '../components/AgentSidecarModal'
 import WorkspaceEmptyState from '../components/WorkspaceEmptyState'
 import WorkspaceHeader from '../components/WorkspaceHeader'
 import ThreadHistorySidebar from '../components/ThreadHistorySidebar'
 import { PanelRightIcon } from '../components/SidebarToggleIcon'
+
+// Lazy-load heavy modals — only fetched when user actually opens them
+const ExportModal = lazy(() => import('../components/ExportModal'))
+const CommandPalette = lazy(() => import('../components/CommandPalette'))
+const DocumentReaderModal = lazy(() => import('../components/DocumentReaderModal'))
+const DocumentUploadModal = lazy(() => import('../components/DocumentUploadModal'))
+const DocumentComparisonModal = lazy(() => import('../components/DocumentComparisonModal'))
+const AgentSidecarModal = lazy(() => import('../components/AgentSidecarModal'))
 import {
   getThreads,
   saveThread,
@@ -555,10 +557,12 @@ export default function ChatPage() {
                         streaming={msg.streaming}
                         suggestedQuestions={msg.suggestedQuestions}
                         precedingUserQuery={i > 0 && messages[i - 1]?.role === 'user' ? messages[i - 1].content : null}
+                        isError={msg.isError}
                         onOpenCitation={(idx, srcList) => setActiveCitation({ isOpen: true, index: idx, sources: srcList || [] })}
                         onSelectSuggestion={(q) => sendQuery(q, true, focusDoc?.name || focusDoc)}
                         onOpenReader={handleOpenDocumentReader}
                         onOpenAgentAudit={(cfg) => handleOpenAgentModal(cfg)}
+                        onRetry={(q) => sendQuery(q, true, focusDoc?.name || focusDoc)}
                       />
                   ))}
                   {thinking && (
@@ -1108,47 +1112,54 @@ export default function ChatPage() {
       />
 
       {/* Corporate Export & Share Modal (0 MB RAM) */}
-      <ExportModal
-        isOpen={exportOpen}
-        onClose={() => setExportOpen(false)}
-        messages={messages}
-        user={user}
-        department={user?.role}
-      />
+      <Suspense fallback={null}>
+        {exportOpen && (
+          <ExportModal
+            isOpen={exportOpen}
+            onClose={() => setExportOpen(false)}
+            messages={messages}
+            user={user}
+            department={user?.role}
+          />
+        )}
 
-      {/* macOS Command Palette (⌘K / Ctrl+K) */}
-      <CommandPalette
-        isOpen={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
-        onSelectPrompt={(prompt) => sendQuery(prompt, true, focusDoc?.name || focusDoc)}
-        onNewChat={handleNewChat}
-        onExport={() => setExportOpen(true)}
-        onToggleDocs={() => (isMobile ? setDocsMobileDrawerOpen((v) => !v) : handleToggleDocsPin())}
-        onOpenDocument={(doc) => handleOpenDocumentReader({ docIdOrName: doc.id || doc.name })}
-        onFocusDoc={(doc) => setFocusDoc(doc)}
-        onOpenUpload={() => setUploadModalOpen(true)}
-        onToggleThreads={() => (isMobile ? setThreadsMobileDrawerOpen((v) => !v) : handleToggleThreadsPin())}
-        onSelectThread={handleSelectThread}
-        onOpenComparison={handleOpenComparison}
-        onOpenAgentModal={handleOpenAgentModal}
-        user={user}
-        documents={docs}
-        threads={threads}
-      />
+        {/* macOS Command Palette (⌘K / Ctrl+K) */}
+        {commandPaletteOpen && (
+          <CommandPalette
+            isOpen={commandPaletteOpen}
+            onClose={() => setCommandPaletteOpen(false)}
+            onSelectPrompt={(prompt) => sendQuery(prompt, true, focusDoc?.name || focusDoc)}
+            onNewChat={handleNewChat}
+            onExport={() => setExportOpen(true)}
+            onToggleDocs={() => (isMobile ? setDocsMobileDrawerOpen((v) => !v) : handleToggleDocsPin())}
+            onOpenDocument={(doc) => handleOpenDocumentReader({ docIdOrName: doc.id || doc.name })}
+            onFocusDoc={(doc) => setFocusDoc(doc)}
+            onOpenUpload={() => setUploadModalOpen(true)}
+            onToggleThreads={() => (isMobile ? setThreadsMobileDrawerOpen((v) => !v) : handleToggleThreadsPin())}
+            onSelectThread={handleSelectThread}
+            onOpenComparison={handleOpenComparison}
+            onOpenAgentModal={handleOpenAgentModal}
+            user={user}
+            documents={docs}
+            threads={threads}
+          />
+        )}
 
-      {/* In-App Document Reader with Highlighted Chunks */}
-      <DocumentReaderModal
-        isOpen={readerState.isOpen}
-        onClose={() => setReaderState((prev) => ({ ...prev, isOpen: false }))}
-        docIdOrName={readerState.docIdOrName}
-        highlightChunkIndex={readerState.chunkIndex}
-        highlightChunkId={readerState.chunkId}
-        highlightSnippet={readerState.snippet}
-        onAskQuestion={(prompt) => sendQuery(prompt, true, focusDoc?.name || focusDoc)}
-        onFocusDoc={(doc) => setFocusDoc(doc)}
-        onCompareDoc={(doc) => handleOpenComparison(doc, null)}
-        onAuditDoc={handleOpenAgentModal}
-      />
+        {/* In-App Document Reader with Highlighted Chunks */}
+        {readerState.isOpen && (
+          <DocumentReaderModal
+            isOpen={readerState.isOpen}
+            onClose={() => setReaderState((prev) => ({ ...prev, isOpen: false }))}
+            docIdOrName={readerState.docIdOrName}
+            highlightChunkIndex={readerState.chunkIndex}
+            highlightChunkId={readerState.chunkId}
+            highlightSnippet={readerState.snippet}
+            onAskQuestion={(prompt) => sendQuery(prompt, true, focusDoc?.name || focusDoc)}
+            onFocusDoc={(doc) => setFocusDoc(doc)}
+            onCompareDoc={(doc) => handleOpenComparison(doc, null)}
+            onAuditDoc={handleOpenAgentModal}
+          />
+        )}
 
       {/* Full-Window Drag & Drop Overlay */}
       {windowDragging && (
@@ -1181,51 +1192,58 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* Drag & Drop Corporate Document Ingestion Drawer */}
-      <DocumentUploadModal
-        isOpen={uploadModalOpen}
-        onClose={() => {
-          setUploadModalOpen(false)
-          setDroppedFile(null)
-        }}
-        user={user}
-        initialFile={droppedFile}
-        onUploadSuccess={() => {
-          fetchDocs()
-        }}
-        onOpenReader={(doc) => handleOpenDocumentReader({ docIdOrName: doc.docIdOrName || doc.id || doc.filename })}
-        onFocusDoc={(doc) => setFocusDoc(doc)}
-      />
+        {/* Drag & Drop Corporate Document Ingestion Drawer */}
+        {uploadModalOpen && (
+          <DocumentUploadModal
+            isOpen={uploadModalOpen}
+            onClose={() => {
+              setUploadModalOpen(false)
+              setDroppedFile(null)
+            }}
+            user={user}
+            initialFile={droppedFile}
+            onUploadSuccess={() => {
+              fetchDocs()
+            }}
+            onOpenReader={(doc) => handleOpenDocumentReader({ docIdOrName: doc.docIdOrName || doc.id || doc.filename })}
+            onFocusDoc={(doc) => setFocusDoc(doc)}
+          />
+        )}
 
-      {/* Side-by-Side Multi-Document Comparison Matrix Modal */}
-      <DocumentComparisonModal
-        isOpen={comparisonModalOpen}
-        onClose={() => {
-          setComparisonModalOpen(false)
-          setComparisonDocs({ docA: null, docB: null })
-        }}
-        documents={docs}
-        userRole={user?.role}
-        initialDocA={comparisonDocs.docA}
-        initialDocB={comparisonDocs.docB}
-        onOpenDocumentReader={handleOpenDocumentReader}
-        onOpenInChat={(prompt) => {
-          handleNewChat()
-          sendQuery(prompt, true)
-        }}
-      />
+        {/* Side-by-Side Multi-Document Comparison Matrix Modal */}
+        {comparisonModalOpen && (
+          <DocumentComparisonModal
+            isOpen={comparisonModalOpen}
+            onClose={() => {
+              setComparisonModalOpen(false)
+              setComparisonDocs({ docA: null, docB: null })
+            }}
+            documents={docs}
+            userRole={user?.role}
+            initialDocA={comparisonDocs.docA}
+            initialDocB={comparisonDocs.docB}
+            onOpenDocumentReader={handleOpenDocumentReader}
+            onOpenInChat={(prompt) => {
+              handleNewChat()
+              sendQuery(prompt, true)
+            }}
+          />
+        )}
 
-      {/* Autonomous Multi-Agent Workflows & Governance Sidecar Modal */}
-      <AgentSidecarModal
-        isOpen={agentModalOpen}
-        onClose={() => setAgentModalOpen(false)}
-        initialScenario={agentModalConfig.scenario}
-        initialPersona={agentModalConfig.persona}
-        initialDoc={agentModalConfig.focusDoc}
-        docs={docs}
-        userRole={user?.role}
-        onOpenReader={handleOpenDocumentReader}
-      />
+        {/* Autonomous Multi-Agent Workflows & Governance Sidecar Modal */}
+        {agentModalOpen && (
+          <AgentSidecarModal
+            isOpen={agentModalOpen}
+            onClose={() => setAgentModalOpen(false)}
+            initialScenario={agentModalConfig.scenario}
+            initialPersona={agentModalConfig.persona}
+            initialDoc={agentModalConfig.focusDoc}
+            docs={docs}
+            userRole={user?.role}
+            onOpenReader={handleOpenDocumentReader}
+          />
+        )}
+      </Suspense>
 
     </div>
   )

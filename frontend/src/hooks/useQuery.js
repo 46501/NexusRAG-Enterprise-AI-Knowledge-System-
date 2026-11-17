@@ -85,12 +85,23 @@ export function useQuery() {
           window.location.href = '/login'
           return
         }
-        let errDetail = 'Request failed'
-        try {
-          const err = await res.json()
-          errDetail = err.detail ?? errDetail
-        } catch (_) { }
-        updateLastAssistant({ content: errDetail, streaming: false })
+        let errDetail = 'Unable to complete request. Please try again.'
+        if (res.status === 502 || res.status === 503 || res.status === 504) {
+          errDetail = 'The backend service is currently waking up from standby (Render cold start) or connecting to the knowledge base. Please try asking again in a moment.'
+        } else {
+          try {
+            const err = await res.json()
+            errDetail = err.detail ?? errDetail
+          } catch (_) {
+            try {
+              const text = await res.text()
+              if (text && text.length < 200 && !text.includes('<!DOCTYPE')) {
+                errDetail = text
+              }
+            } catch (_) {}
+          }
+        }
+        updateLastAssistant({ content: errDetail, streaming: false, isError: true })
         return
       }
 

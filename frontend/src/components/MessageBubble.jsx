@@ -129,10 +129,12 @@ export default function MessageBubble({
   streaming,
   suggestedQuestions,
   precedingUserQuery,
+  isError: isErrorProp = false,
   onOpenCitation,
   onSelectSuggestion,
   onOpenReader,
   onOpenAgentAudit,
+  onRetry,
 }) {
   const { isDark } = useTheme()
   const isUser = role === 'user'
@@ -162,6 +164,22 @@ export default function MessageBubble({
       }
     }
   }
+
+  const isError = Boolean(
+    isErrorProp ||
+    (!isUser && (
+      cleanContent.startsWith('Request failed') ||
+      cleanContent.startsWith('A connection error') ||
+      cleanContent.startsWith('The backend service') ||
+      cleanContent.startsWith('Backend service is waking up') ||
+      cleanContent.startsWith('Unable to complete request') ||
+      cleanContent.startsWith('An internal processing error') ||
+      cleanContent === 'An error occurred while processing your request.' ||
+      cleanContent === 'Query failed' ||
+      cleanContent.includes('Gateway Timeout') ||
+      cleanContent.includes('Bad Gateway')
+    ))
+  )
 
   if (!isUser && (!followUpList || followUpList.length === 0) && suggestedQuestions && suggestedQuestions.length > 0) {
     followUpList = suggestedQuestions.slice(0, 3)
@@ -345,131 +363,11 @@ export default function MessageBubble({
       style={{ maxWidth: 700, width: '100%', animation: 'msgFadeIn 0.2s ease forwards' }}
     >
       <div className={`relative ${isUser ? 'max-w-[85%]' : 'max-w-[90%] w-fit'} max-w-full`}>
-        {/* Floating macOS-Style Action Bar (Top Right of Assistant Bubble) */}
-        {!isUser && !streaming && cleanContent && (
-          <div
-            className="no-print absolute -top-3.5 right-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all duration-150 z-20 flex items-center gap-0.5 p-1 rounded-xl shadow-lg border backdrop-blur-2xl select-none"
-            style={{
-              background: isDark ? 'rgba(18, 20, 28, 0.94)' : 'rgba(255, 255, 255, 0.96)',
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1',
-              boxShadow: isDark
-                ? '0 6px 16px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)'
-                : '0 6px 16px rgba(15,23,42,0.08), 0 0 0 1px rgba(0,0,0,0.03)',
-            }}
-          >
-            <button
-              type="button"
-              onClick={handleCopyAnswer}
-              className="p-1.5 rounded-lg text-xs transition-transform hover:scale-105 cursor-pointer flex items-center gap-1"
-              style={{
-                color: copied ? '#10b981' : isDark ? 'rgba(255,255,255,0.75)' : '#475569',
-                background: copied ? (isDark ? 'rgba(16,185,129,0.15)' : '#d1fae5') : 'transparent',
-              }}
-              title={copied ? 'Copied to clipboard!' : 'Copy response (Markdown)'}
-            >
-              <span>{copied ? '✓' : '📋'}</span>
-              {copied && <span className="text-[10px] font-semibold">Copied</span>}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleCopyBrief}
-              className="p-1.5 rounded-lg text-xs transition-transform hover:scale-105 cursor-pointer flex items-center gap-1"
-              style={{
-                color: copiedBrief ? '#8b5cf6' : isDark ? 'rgba(255,255,255,0.75)' : '#475569',
-                background: copiedBrief ? (isDark ? 'rgba(139,92,246,0.15)' : '#ede9fe') : 'transparent',
-              }}
-              title="Copy executive brief with verified sources"
-            >
-              <span>{copiedBrief ? '✓' : '🏛️'}</span>
-              {copiedBrief && <span className="text-[10px] font-semibold">Brief!</span>}
-            </button>
-
-            {unique.length > 0 && onOpenReader && (
-              <button
-                type="button"
-                onClick={() => {
-                  const first = unique[0]
-                  onOpenReader({
-                    docIdOrName: first.doc_id || first.source || first.file_name || first.name,
-                    chunkIndex: first.chunk_index ?? 0,
-                    chunkId: first.chunk_id,
-                    snippet: first.text || '',
-                  })
-                }}
-                className="p-1.5 rounded-lg text-xs transition-transform hover:scale-105 cursor-pointer"
-                style={{
-                  color: isDark ? '#38bdf8' : '#0284c7',
-                }}
-                title={`Open primary source (${unique[0].source || 'document'}) in Document Reader`}
-              >
-                📖
-              </button>
-            )}
-
-            {onOpenAgentAudit && (
-              <button
-                type="button"
-                onClick={() => onOpenAgentAudit({ scenario: precedingUserQuery || cleanContent })}
-                className="p-1.5 rounded-lg text-xs transition-transform hover:scale-105 cursor-pointer"
-                style={{
-                  color: isDark ? '#c084fc' : '#9333ea',
-                }}
-                title="Launch Policy Compliance & Risk Auditor on this query"
-              >
-                🤖
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={handleToggleSpeech}
-              className="p-1.5 rounded-lg text-xs transition-transform hover:scale-105 cursor-pointer"
-              style={{
-                color: isSpeaking ? '#818cf8' : isDark ? 'rgba(255,255,255,0.75)' : '#475569',
-              }}
-              title={isSpeaking ? 'Stop reading' : 'Listen aloud'}
-            >
-              <span>{isSpeaking ? '⏹' : '🔊'}</span>
-            </button>
-
-            <span className="w-px h-3.5 bg-black/10 dark:bg-white/10 mx-0.5" />
-
-            <button
-              type="button"
-              onClick={handleThumbsUp}
-              disabled={submittingFeedback || feedbackStatus === 'positive'}
-              className="p-1.5 rounded-lg text-xs transition-transform hover:scale-105 cursor-pointer"
-              style={{
-                color: feedbackStatus === 'positive' ? '#10b981' : isDark ? 'rgba(255,255,255,0.75)' : '#475569',
-                background: feedbackStatus === 'positive' ? (isDark ? 'rgba(16,185,129,0.15)' : '#d1fae5') : 'transparent',
-              }}
-              title="Helpful response"
-            >
-              👍
-            </button>
-
-            <button
-              type="button"
-              onClick={handleThumbsDownClick}
-              disabled={submittingFeedback}
-              className="p-1.5 rounded-lg text-xs transition-transform hover:scale-105 cursor-pointer"
-              style={{
-                color: feedbackStatus === 'negative' ? '#ef4444' : isDark ? 'rgba(255,255,255,0.75)' : '#475569',
-                background: feedbackStatus === 'negative' ? (isDark ? 'rgba(239,68,68,0.15)' : '#fee2e2') : 'transparent',
-              }}
-              title="Report inaccurate response"
-            >
-              👎
-            </button>
-          </div>
-        )}
-
         <div
           onClick={handleContentClick}
           className="text-sm select-text break-words [overflow-wrap:anywhere]"
           style={{
-            padding: isUser ? '12px 18px' : '15px 20px',
+            padding: isUser ? '12px 18px' : isError ? '14px 18px' : '15px 20px',
             lineHeight: 1.62,
             borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
             letterSpacing: '-0.005em',
@@ -483,6 +381,13 @@ export default function MessageBubble({
                   boxShadow: `0 4px 14px ${userBg}40`,
                   fontWeight: 450,
                 }
+              : isError
+              ? {
+                  background: isDark ? 'rgba(239, 68, 68, 0.08)' : '#fef2f2',
+                  color: isDark ? '#fca5a5' : '#991b1b',
+                  border: isDark ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid #fecaca',
+                  boxShadow: '0 2px 8px rgba(239, 68, 68, 0.05)',
+                }
               : {
                   background: isDark
                     ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.03) 100%)'
@@ -495,12 +400,39 @@ export default function MessageBubble({
                 })
           }}
         >
-          {isUser
-            ? content
-            : <div dangerouslySetInnerHTML={{ __html: toRichMarkdownHtml(cleanContent, isDark) }} />
-          }
+          {isUser ? (
+            content
+          ) : isError ? (
+            <div className="flex items-start gap-2.5">
+              <span className="text-base select-none shrink-0 mt-0.5">⚠️</span>
+              <div className="flex-1">
+                <p className="font-medium text-xs sm:text-sm">{cleanContent}</p>
+              </div>
+            </div>
+          ) : (
+            <div dangerouslySetInnerHTML={{ __html: toRichMarkdownHtml(cleanContent, isDark) }} />
+          )}
         </div>
       </div>
+
+      {/* If error: Show Retry Button */}
+      {!isUser && !streaming && isError && onRetry && (
+        <div className="no-print flex items-center gap-2 mt-0.5">
+          <button
+            type="button"
+            onClick={() => onRetry(precedingUserQuery || 'retry')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-sm hover:scale-[1.02]"
+            style={{
+              background: isDark ? 'rgba(124, 58, 237, 0.25)' : '#ede9fe',
+              border: isDark ? '1px solid rgba(139, 92, 246, 0.4)' : '1px solid #ddd6fe',
+              color: isDark ? '#c4b5fd' : '#6d28d9',
+            }}
+          >
+            <span>↻</span>
+            <span>Retry Question</span>
+          </button>
+        </div>
+      )}
 
       {/* Grounding Confidence & Sources Bar */}
       {!isUser && !streaming && ((sources && sources.length > 0) || confidenceScore != null) && (
@@ -545,7 +477,7 @@ export default function MessageBubble({
       )}
 
       {/* Quick Action Toolbar (Copy, Share Brief & Feedback) */}
-      {!isUser && !streaming && cleanContent && (
+      {!isUser && !streaming && cleanContent && !isError && (
         <div className="no-print flex items-center gap-1.5 mt-0.5 max-w-[78%] flex-wrap">
           <button
             type="button"
@@ -576,6 +508,31 @@ export default function MessageBubble({
             <span>{copiedBrief ? '✓' : '🏛️'}</span>
             <span>{copiedBrief ? 'Brief Copied!' : 'Share Brief'}</span>
           </button>
+
+          {unique.length > 0 && onOpenReader && (
+            <button
+              type="button"
+              onClick={() => {
+                const first = unique[0]
+                onOpenReader({
+                  docIdOrName: first.doc_id || first.source || first.file_name || first.name,
+                  chunkIndex: first.chunk_index ?? 0,
+                  chunkId: first.chunk_id,
+                  snippet: first.text || '',
+                })
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all opacity-70 hover:opacity-100 cursor-pointer"
+              style={{
+                background: isDark ? 'rgba(56,189,248,0.14)' : '#f0f9ff',
+                border: isDark ? '1px solid rgba(56,189,248,0.28)' : '1px solid #bae6fd',
+                color: isDark ? '#7dd3fc' : '#0284c7',
+              }}
+              title={`Open primary source (${unique[0].source || 'document'}) in Document Reader`}
+            >
+              <span>📖</span>
+              <span>Read Source</span>
+            </button>
+          )}
 
           {onOpenAgentAudit && (
             <button

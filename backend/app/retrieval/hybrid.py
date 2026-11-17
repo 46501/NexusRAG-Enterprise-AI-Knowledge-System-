@@ -53,7 +53,11 @@ async def hybrid_search(
     # Run dense I/O and in-memory sparse retrieval concurrently to reduce overall pipeline latency
     dense_task = asyncio.create_task(dense_search(query, allowed_roles, top_k=dense_k, focus_doc=focus_doc))
     sparse_hits = sparse_search(query, allowed_roles, top_k=sparse_k, focus_doc=focus_doc)
-    dense_hits = await dense_task
+    try:
+        dense_hits = await dense_task
+    except Exception as exc:
+        logger.warning("Dense retrieval task raised exception: %s", exc)
+        dense_hits = []
 
     fused = _rrf_fusion(dense_hits, sparse_hits, top_k=top_k)
     logger.info("Hybrid search fused to %d results (focus_doc=%s)", len(fused), focus_doc)
