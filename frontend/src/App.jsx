@@ -1,23 +1,29 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
-import LandingPage from './pages/LandingPage'
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
-import AdminLoginPage from './pages/AdminLoginPage'
-import AdminPage from './pages/AdminPage'
-import ChatPage from './pages/ChatPage'
-import AccessDeniedPage from './pages/AccessDeniedPage'
+
+const LandingPage = lazy(() => import('./pages/LandingPage'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const SignupPage = lazy(() => import('./pages/SignupPage'))
+const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'))
+const AdminPage = lazy(() => import('./pages/AdminPage'))
+const ChatPage = lazy(() => import('./pages/ChatPage'))
+const AccessDeniedPage = lazy(() => import('./pages/AccessDeniedPage'))
+
+function PageFallback() {
+  const { isDark } = useTheme()
+  return (
+    <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#f8fafc]'}`}>
+      <div className={`w-6 h-6 border-2 rounded-full animate-spin ${isDark ? 'border-white/20 border-t-violet-500' : 'border-slate-300 border-t-violet-600'}`} />
+    </div>
+  )
+}
 
 function RootRoute() {
   const { user } = useAuth()
-  const { isDark } = useTheme()
   if (user === undefined) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#f8fafc]'}`}>
-        <div className={`w-6 h-6 border-2 rounded-full animate-spin ${isDark ? 'border-white/20 border-t-violet-500' : 'border-slate-300 border-t-violet-600'}`} />
-      </div>
-    )
+    return <PageFallback />
   }
   if (user === null) {
     return <Navigate to="/login" replace />
@@ -27,7 +33,7 @@ function RootRoute() {
 
 function RequireAuth({ children }) {
   const { user } = useAuth()
-  if (user === undefined) return null
+  if (user === undefined) return <PageFallback />
   if (user === null) return <Navigate to="/login" replace />
   return children
 }
@@ -39,7 +45,7 @@ function DepartmentRoute() {
   const location = useLocation()
 
   // 1. Loading user state
-  if (user === undefined) return null
+  if (user === undefined) return <PageFallback />
 
   // 2. Unauthenticated or session expired -> redirect to Login
   if (user === null) {
@@ -93,7 +99,6 @@ function RequireDemoAdmin({ children }) {
 
 function RequireGuest({ children }) {
   const { user } = useAuth()
-  if (user === undefined) return null
   if (user) {
     if (user.role === 'admin') return <Navigate to="/admin-panel" replace />
     if (user.role === 'demo_admin') return <Navigate to="/demo-admin" replace />
@@ -107,34 +112,36 @@ export default function App() {
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            {/* Root: Unauthenticated visitors see Login; Authenticated visitors see Dashboard */}
-            <Route path="/" element={<RootRoute />} />
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
+              {/* Root: Unauthenticated visitors see Login; Authenticated visitors see Dashboard */}
+              <Route path="/" element={<RootRoute />} />
 
-            {/* Authentication Routes */}
-            <Route path="/login" element={<RequireGuest><LoginPage /></RequireGuest>} />
-            <Route path="/signup" element={<RequireGuest><SignupPage /></RequireGuest>} />
-            <Route path="/admin" element={<RequireGuest><AdminLoginPage /></RequireGuest>} />
+              {/* Authentication Routes */}
+              <Route path="/login" element={<RequireGuest><LoginPage /></RequireGuest>} />
+              <Route path="/signup" element={<RequireGuest><SignupPage /></RequireGuest>} />
+              <Route path="/admin" element={<RequireGuest><AdminLoginPage /></RequireGuest>} />
 
-            {/* Protected Administrative Routes */}
-            <Route path="/admin-panel" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
-            <Route path="/demo-admin" element={<RequireDemoAdmin><AdminPage /></RequireDemoAdmin>} />
+              {/* Protected Administrative Routes */}
+              <Route path="/admin-panel" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
+              <Route path="/demo-admin" element={<RequireDemoAdmin><AdminPage /></RequireDemoAdmin>} />
 
-            {/* Department & Chat Workspaces */}
-            <Route path="/chat" element={<DepartmentRoute />} />
-            <Route path="/chat/:department" element={<DepartmentRoute />} />
-            <Route path="/departments/:department" element={<DepartmentRoute />} />
-            <Route path="/workspace/:department" element={<DepartmentRoute />} />
-            <Route path="/hr" element={<DepartmentRoute />} />
-            <Route path="/engineering" element={<DepartmentRoute />} />
-            <Route path="/finance" element={<DepartmentRoute />} />
+              {/* Department & Chat Workspaces */}
+              <Route path="/chat" element={<DepartmentRoute />} />
+              <Route path="/chat/:department" element={<DepartmentRoute />} />
+              <Route path="/departments/:department" element={<DepartmentRoute />} />
+              <Route path="/workspace/:department" element={<DepartmentRoute />} />
+              <Route path="/hr" element={<DepartmentRoute />} />
+              <Route path="/engineering" element={<DepartmentRoute />} />
+              <Route path="/finance" element={<DepartmentRoute />} />
 
-            {/* Standalone Access Denied Screen */}
-            <Route path="/access-denied" element={<RequireAuth><AccessDeniedPage /></RequireAuth>} />
+              {/* Standalone Access Denied Screen */}
+              <Route path="/access-denied" element={<RequireAuth><AccessDeniedPage /></RequireAuth>} />
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

@@ -1,3 +1,4 @@
+import asyncio
 from app.retrieval.dense import dense_search
 from app.retrieval.sparse import sparse_search
 from app.utils.logger import get_logger
@@ -49,8 +50,10 @@ async def hybrid_search(
     sparse_k: int = 20,
     focus_doc: str | None = None,
 ) -> list[dict]:
-    dense_hits = await dense_search(query, allowed_roles, top_k=dense_k, focus_doc=focus_doc)
+    # Run dense I/O and in-memory sparse retrieval concurrently to reduce overall pipeline latency
+    dense_task = asyncio.create_task(dense_search(query, allowed_roles, top_k=dense_k, focus_doc=focus_doc))
     sparse_hits = sparse_search(query, allowed_roles, top_k=sparse_k, focus_doc=focus_doc)
+    dense_hits = await dense_task
 
     fused = _rrf_fusion(dense_hits, sparse_hits, top_k=top_k)
     logger.info("Hybrid search fused to %d results (focus_doc=%s)", len(fused), focus_doc)

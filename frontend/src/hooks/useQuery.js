@@ -71,8 +71,9 @@ export function useQuery() {
 
     appendMessage({ role: 'assistant', content: '', sources: [], streaming: true })
 
+    const apiBase = import.meta.env.VITE_API_BASE_URL || '/api/v1'
     try {
-      const res = await fetch('/api/v1/query', {
+      const res = await fetch(`${apiBase}/query`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

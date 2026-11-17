@@ -17,9 +17,10 @@ engine = create_async_engine(
         "prepared_statement_cache_size": 0,
     },
     # Lean connection pool prevents socket/buffer memory exhaustion on 512MB RAM
-    pool_size=int(os.getenv("DB_POOL_SIZE", "3")),
-    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "3")),
+    pool_size=int(os.getenv("DB_POOL_SIZE", "5")),
+    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "5")),
     pool_pre_ping=True,
+    pool_recycle=300,
     echo=_settings.app_env == "development",
 )
 

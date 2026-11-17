@@ -26,6 +26,11 @@ def load_embedder() -> None:
     if _model is None:
         _model = SentenceTransformer("BAAI/bge-small-en-v1.5", device="cpu")
         _model.eval()
+        try:
+            with torch.inference_mode():
+                _model.encode(["warmup"], batch_size=1, show_progress_bar=False)
+        except Exception:
+            pass
 
 
 def get_embedder() -> SentenceTransformer:

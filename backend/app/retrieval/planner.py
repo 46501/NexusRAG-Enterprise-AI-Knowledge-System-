@@ -123,10 +123,13 @@ async def decompose_query(
             max_output_tokens=150,
         )
 
-        response = await client.aio.models.generate_content(
-            model=settings.gemini_model,
-            contents=prompt,
-            config=config,
+        response = await asyncio.wait_for(
+            client.aio.models.generate_content(
+                model=settings.gemini_model,
+                contents=prompt,
+                config=config,
+            ),
+            timeout=1.8,
         )
 
         raw_text = (response.text or "").strip()
@@ -183,7 +186,7 @@ def fuse_multi_query_hits(sub_query_hits_list: list[list[dict]], top_k: int) -> 
     return results
 
 
-def merge_contiguous_chunks(ranked_chunks: list[dict], max_char_length: int = 3500) -> list[dict]:
+def merge_contiguous_chunks(ranked_chunks: list[dict], max_char_length: int = 2000) -> list[dict]:
     """Hierarchical / Parent-Child Context Expansion.
     
     Identifies contiguous or adjacent chunks from the same document (e.g. chunk_index i and i+1)
