@@ -8,6 +8,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TRANSFORMERS_CACHE=/app/.cache/huggingface \
     TORCH_HOME=/app/.cache/torch \
     MALLOC_ARENA_MAX=2 \
+    MALLOC_TRIM_THRESHOLD_=65536 \
+    MALLOC_MMAP_THRESHOLD_=131072 \
+    PYTORCH_NO_CUDA_MEMORY_CACHING=1 \
     TORCH_NUM_THREADS=1 \
     OMP_NUM_THREADS=1 \
     MKL_NUM_THREADS=1 \
@@ -28,8 +31,9 @@ RUN pip install -r requirements.txt
 
 # Pre-download models to shared app cache inside image layer
 RUN python - <<'EOF'
-from sentence_transformers import SentenceTransformer
-SentenceTransformer("BAAI/bge-small-en-v1.5", device="cpu")
+from transformers import AutoTokenizer, AutoModel
+AutoTokenizer.from_pretrained("BAAI/bge-small-en-v1.5")
+AutoModel.from_pretrained("BAAI/bge-small-en-v1.5")
 EOF
 
 RUN groupadd --gid 1001 appgroup && \

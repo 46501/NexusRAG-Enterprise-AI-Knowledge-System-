@@ -1,8 +1,11 @@
 import gc
 import os
 import torch
-import numpy as np
-from sentence_transformers import SentenceTransformer
+import torch.nn.functional as F
+from transformers import AutoTokenizer, AutoModel
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Optimize PyTorch CPU memory for memory-constrained containers (e.g. Render 512MB)
 os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -18,37 +21,53 @@ try:
 except Exception:
     pass
 
-_model: SentenceTransformer | None = None
+_MODEL_NAME = "BAAI/bge-small-en-v1.5"
+_tokenizer: AutoTokenizer | None = None
+_model: AutoModel | None = None
 
 
 def load_embedder() -> None:
-    global _model
-    if _model is None:
-        _model = SentenceTransformer("BAAI/bge-small-en-v1.5", device="cpu")
+    global _tokenizer, _model
+    if _model is None or _tokenizer is None:
+        logger.info("Loading lightweight embedder (%s) via Transformers AutoModel...", _MODEL_NAME)
+        _tokenizer = AutoTokenizer.from_pretrained(_MODEL_NAME)
+        _model = AutoModel.from_pretrained(_MODEL_NAME)
         _model.eval()
         gc.collect()
+        logger.info("Embedder (%s) loaded successfully", _MODEL_NAME)
 
 
-def get_embedder() -> SentenceTransformer:
-    if _model is None:
+def get_embedder() -> tuple[AutoTokenizer, AutoModel]:
+    if _model is None or _tokenizer is None:
         load_embedder()
-    return _model
+    return _tokenizer, _model
 
 
 def embed(texts: list[str]) -> list[list[float]]:
     if not texts:
         return []
-    # Conservative batching (16) prevents peak activation spikes on 512MB RAM
+
+    tokenizer, model = get_embedder()
     batch_size = 16 if len(texts) > 1 else 1
-    with torch.inference_mode():
-        vecs: np.ndarray = get_embedder().encode(
-            texts,
-            batch_size=batch_size,
-            normalize_embeddings=True,
-            show_progress_bar=False,
-            convert_to_numpy=True,
+    all_embeddings: list[list[float]] = []
+
+    for i in range(0, len(texts), batch_size):
+        batch_texts = texts[i : i + batch_size]
+        encoded = tokenizer(
+            batch_texts,
+            padding=True,
+            truncation=True,
+            max_length=512,
+            return_tensors="pt",
         )
-    res = vecs.tolist()
+        with torch.inference_mode():
+            outputs = model(**encoded)
+            # BAAI/bge-small-en-v1.5 uses [CLS] token representation normalized with L2
+            cls_embeddings = outputs[0][:, 0]
+            normalized = F.normalize(cls_embeddings, p=2, dim=1)
+            all_embeddings.extend(normalized.cpu().numpy().tolist())
+
     if len(texts) >= 16:
         gc.collect()
-    return res
+
+    return all_embeddings

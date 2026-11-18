@@ -1,3 +1,4 @@
+import gc
 import os
 import torch
 from app.utils.logger import get_logger
@@ -11,6 +12,8 @@ try:
 except Exception:
     pass
 
+_MODEL_NAME = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+_tokenizer = None
 _model = None
 
 
@@ -20,17 +23,16 @@ def load_reranker() -> None:
 
 
 def get_reranker():
-    global _model
-    if _model is None:
-        logger.info("Lazy-loading reranker model...")
-        from sentence_transformers import CrossEncoder
-        _model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2", device="cpu")
-        try:
-            _model.model.eval()
-        except Exception:
-            pass
+    global _tokenizer, _model
+    if _model is None or _tokenizer is None:
+        logger.info("Lazy-loading reranker model via Transformers AutoModel...")
+        from transformers import AutoTokenizer, AutoModelForSequenceClassification
+        _tokenizer = AutoTokenizer.from_pretrained(_MODEL_NAME)
+        _model = AutoModelForSequenceClassification.from_pretrained(_MODEL_NAME)
+        _model.eval()
+        gc.collect()
         logger.info("Reranker model loaded successfully")
-    return _model
+    return _tokenizer, _model
 
 
 def rerank(query: str, hits: list[dict], top_k: int = 5) -> list[dict]:
@@ -40,9 +42,14 @@ def rerank(query: str, hits: list[dict], top_k: int = 5) -> list[dict]:
     # If reranker is explicitly enabled via ENABLE_RERANKER=true, use CrossEncoder
     if os.getenv("ENABLE_RERANKER", "false").lower() == "true":
         try:
-            pairs = [[query, hit["text"]] for hit in hits]
+            tokenizer, model = get_reranker()
+            pairs_q = [query] * len(hits)
+            pairs_d = [hit["text"] for hit in hits]
+            inputs = tokenizer(pairs_q, pairs_d, padding=True, truncation=True, max_length=512, return_tensors="pt")
             with torch.inference_mode():
-                scores = get_reranker().predict(pairs, batch_size=8, show_progress_bar=False)
+                scores = model(**inputs).logits.squeeze(-1).numpy().tolist()
+                if isinstance(scores, float):
+                    scores = [scores]
             ranked = sorted(zip(scores, hits), key=lambda x: x[0], reverse=True)
             results = []
             for score, hit in ranked[:top_k]:
@@ -50,7 +57,6 @@ def rerank(query: str, hits: list[dict], top_k: int = 5) -> list[dict]:
                 entry["rerank_score"] = float(score)
                 results.append(entry)
             logger.info("Reranker selected %d results from %d candidates", len(results), len(hits))
-            import gc
             gc.collect()
             return results
         except Exception as e:
@@ -64,4 +70,3 @@ def rerank(query: str, hits: list[dict], top_k: int = 5) -> list[dict]:
         results.append(entry)
     logger.info("RRF ranking selected %d results", len(results))
     return results
-

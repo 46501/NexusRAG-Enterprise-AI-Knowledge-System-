@@ -1,4 +1,5 @@
 import asyncio
+import gc
 import re
 from collections.abc import AsyncIterator
 
@@ -227,6 +228,7 @@ async def run_query(
     result["sources"] = scrub_sources(result.get("sources", []))
 
     logger.info("RAG query complete role=%s sources=%d", role, len(result["sources"]))
+    gc.collect()
     return result
 
 

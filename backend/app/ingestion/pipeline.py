@@ -96,6 +96,13 @@ def ingest_file(
         ]
         client.upsert(collection_name=_s.qdrant_collection, points=points_slice)
 
+        del chunk_slice
+        del texts_slice
+        del vectors_slice
+        del points_slice
+        import gc
+        gc.collect()
+
     logger.info("Upserted %d chunks to Qdrant for doc_id=%s in batches of %d", total_chunks, doc_meta.doc_id, INGEST_BATCH_SIZE)
 
     doc_record = Document(
@@ -113,6 +120,8 @@ def ingest_file(
 
 
 def rebuild_bm25_index(db: Session | None = None) -> None:
+    import gc
+
     corpus_texts: list[str] = []
     doc_metadata: list[dict] = []
 
@@ -126,7 +135,7 @@ def rebuild_bm25_index(db: Session | None = None) -> None:
         batch, next_offset = client.scroll(
             collection_name=_s.qdrant_collection,
             scroll_filter=None,
-            limit=500,
+            limit=200,
             offset=offset,
             with_payload=True,
             with_vectors=False,
@@ -145,13 +154,17 @@ def rebuild_bm25_index(db: Session | None = None) -> None:
                 "chunk_index": payload.get("chunk_index"),
                 "total_chunks": payload.get("total_chunks"),
             })
+        del batch
         if next_offset is None:
             break
         offset = next_offset
 
-    save_sparse_index(corpus_texts, doc_metadata)
-    from app.retrieval.sparse import reload_sparse_index
-    reload_sparse_index()
-    import gc
-    gc.collect()
-    logger.info("BM25 index rebuilt and reloaded with %d chunks", len(corpus_texts))
+    try:
+        save_sparse_index(corpus_texts, doc_metadata)
+        from app.retrieval.sparse import reload_sparse_index
+        reload_sparse_index()
+    finally:
+        del corpus_texts
+        del doc_metadata
+        gc.collect()
+    logger.info("BM25 index rebuilt and reloaded")
