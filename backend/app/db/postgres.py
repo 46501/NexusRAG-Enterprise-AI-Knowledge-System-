@@ -37,8 +37,12 @@ async def init_db() -> None:
         try:
             await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(255);"))
             await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP WITH TIME ZONE;"))
+            
+            # Ensure Row Level Security (RLS) is strictly enabled across all public tables
+            for tbl in ("users", "refresh_tokens", "documents", "query_logs", "feedbacks", "security_audit_logs", "eval_results"):
+                await conn.execute(text(f"ALTER TABLE IF EXISTS public.{tbl} ENABLE ROW LEVEL SECURITY;"))
         except Exception as e:
-            logger.warning("Optional users column migration skipped or already present: %s", e)
+            logger.warning("Optional users column or RLS migration skipped or already present: %s", e)
     logger.info("Database tables initialised")
 
 
